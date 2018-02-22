@@ -1,0 +1,340 @@
+{
+   "apiVersion": "v1",
+   "kind": "Template",
+   "labels": {
+      "template": "radargun"
+   },
+   "metadata": {
+      "annotations": {
+         "description": "RadarGun ....",
+         "tags": "radargun",
+         "openshift.io/display-name": "RadarGun ....",
+         "openshift.io/documentation-url": "http://radargun.github.io/radargun/",
+         "openshift.io/long-description": "RadarGun ...."
+      },
+      "name": "radargun"
+   },
+   "objects": [
+      {
+         "apiVersion": "v1",
+         "kind": "Service",
+         "metadata": {
+             "labels": {
+                "application": "radargun-slave"
+             },
+             "name": "radargun-slave-router"
+         },
+         "spec": {
+             "clusterIP": "None",
+             "ports": [
+                {
+                   "name": "ispn",
+                   "port": 7800,
+                   "protocol": "TCP",
+                   "targetPort": 7800
+                }
+             ],
+             "selector": {
+                 "application": "radargun-slave"
+             },
+             "sessionAffinity": "None",
+             "type": "ClusterIP"
+         },
+         "status": {
+             "loadBalancer": {}
+         }
+      },
+      {
+         "apiVersion": "v1",
+         "kind": "Service",
+         "metadata": {
+            "annotations": {
+               "description": "RadarGun Master service"
+            },
+            "labels": {
+               "application": "radargun-master"
+            },
+            "name": "radargun-master"
+         },
+         "spec": {
+            "ports": [
+               {
+                  "name": "radargun-master",
+                  "port": 2103,
+                  "targetPort": 2103
+               }
+            ],
+            "selector": {
+               "statefulSet": "radargun-master"
+            }
+         }
+      },
+      {
+         "apiVersion": "apps/v1beta1",
+         "kind": "StatefulSet",
+         "metadata": {
+            "labels": {
+               "application": "radargun-master"
+            },
+            "name": "radargun-master"
+         },
+         "spec": { 
+            "replicas": 1,
+            "strategy": {
+               "type": "Rolling",
+               "rollingParams": {
+                  "updatePeriodSeconds": 20,
+                  "intervalSeconds": 20,
+                  "timeoutSeconds": 1200,
+                  "maxUnavailable": 1,
+                  "maxSurge": 1
+               }
+            },
+            "template": {
+               "metadata": {
+                  "labels": {
+                     "application": "radargun-master",
+                     "statefulSet": "radargun-master",
+                     "template": "radargun"
+                  },
+                  "name": "radargun-master"
+               },
+               "spec": {
+                  "containers": [
+                     {
+                        "env": [
+                           {
+                              "name": "RADARGUN_CONFIG",
+                              "value": "${RADARGUN_CONFIG}"
+                           },
+                           {
+                              "name": "CUSTOM_JAVA_OPTS",
+                              "value": "${CUSTOM_JAVA_OPTS}"
+                           }
+                        ],
+                        "image": "radargun:latest",
+                        "name": "radargun-master",
+                        "command": [
+                           "/opt/radargun/run_master.sh"
+                        ],
+                        "volumeMounts": [
+                            {
+                                "name": "radargun-configs-volume",
+                                "mountPath": "/opt/radargun-configs"
+                            },
+                            {
+                                "name": "data",
+                                "mountPath": "/opt/radargun-data"
+                            }
+                        ],
+                        "ports": [
+                           {
+                              "containerPort": 2103,
+                              "name": "master-port",
+                              "protocol": "TCP"
+                           }
+                        ],
+                        "resources": {
+                           "requests": {
+                              "cpu": "0.5",
+                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                           },
+                           "limits": {
+                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                           }
+                        }
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "name": "radargun-configs-volume",
+                        "configMap": {
+                           "name": "radargun-configs"
+                        }
+                     }
+                  ],
+                  "terminationGracePeriodSeconds": 60
+               }
+            },
+            "triggers": [
+               {
+                  "type": "ConfigChange"
+               }
+            ],
+            "volumeClaimTemplates": [
+               {
+                  "metadata": {
+                     "name": "data",
+                     "labels": {
+                        "template": "radargun"
+                     }
+                  },
+                  "spec": {
+                     "accessModes": [
+                        "ReadWriteOnce"
+                     ],
+                     "resources": {
+                        "requests": {
+                           "storage": "1Gi"
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      },
+      {
+         "apiVersion": "apps/v1beta1",
+         "kind": "StatefulSet",
+         "metadata": {
+            "labels": {
+               "application": "radargun-slave",
+               "template": "radargun"
+            },
+            "name": "radargun-slave"
+         },
+         "spec": { 
+            "replicas": "${{NUMBER_OF_SLAVES}}",
+            "podManagementPolicy": "Parallel",
+            "strategy": {
+               "type": "Rolling",
+               "rollingParams": {
+                  "updatePeriodSeconds": 20,
+                  "intervalSeconds": 20,
+                  "timeoutSeconds": 1200,
+                  "maxUnavailable": 1,
+                  "maxSurge": 1
+               }
+            },
+            "template": {
+               "metadata": {
+                  "labels": {
+                     "application": "radargun-slave",
+                     "statefulSet": "radargun-slave",
+                     "template": "radargun"
+                  },
+                  "name": "radargun-slave"
+               },
+               "spec": {
+                  "containers": [
+                     {
+                        "env": [
+                           {
+                              "name": "RADARGUN_MASTER",
+                              "value": "${RADARGUN_MASTER}"
+                           },
+                           {
+                              "name": "CUSTOM_JAVA_OPTS",
+                              "value": "${CUSTOM_JAVA_OPTS}"
+                           }
+                        ],
+                        "image": "radargun:latest",
+                        "name": "radargun-slave",
+                        "command": [
+                           "/opt/radargun/run_slave.sh"
+                        ],
+                        "volumeMounts": [
+                            {
+                                "name": "radargun-configs-volume",
+                                "mountPath": "/opt/radargun-configs"
+                            },
+                            {
+                                "name": "data",
+                                "mountPath": "/opt/radargun-data"
+                            }
+                        ],
+                        "ports": [
+                           {
+                              "containerPort": 7800,
+                              "name": "clustering-port",
+                              "protocol": "TCP"
+                           }
+                        ],
+                        "resources": {
+                           "requests": {
+                              "cpu": "0.5",
+                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                           },
+                           "limits": {
+                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                           }
+                        }
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "name": "radargun-configs-volume",
+                        "configMap": {
+                           "name": "radargun-configs"
+                        }
+                     }
+                  ],
+                  "terminationGracePeriodSeconds": 60
+               }
+            },
+            "triggers": [
+               {
+                  "type": "ConfigChange"
+               }
+            ],
+            "volumeClaimTemplates": [
+               {
+                  "metadata": {
+                     "name": "data",
+                     "labels": {
+                        "template": "radargun"
+                     }
+                  },
+                  "spec": {
+                     "accessModes": [
+                        "ReadWriteOnce"
+                     ],
+                     "resources": {
+                        "requests": {
+                           "storage": "1Gi"
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      }
+   ],
+   "parameters": [
+      {
+         "description": "The hostname of radargun Master node.",
+         "name": "RADARGUN_MASTER",
+         "displayName": "RadarGun Master hostname",
+         "required": true,
+         "value": "radargun-master.myproject.svc"
+      },
+      {
+         "description": "RadarGun configuration/benchmark file",
+         "name": "RADARGUN_CONFIG",
+         "displayName": "RadarGun configuration file",
+         "required": true,
+         "value": "benchmark-dist.xml"
+      },
+      {
+         "description": "Number of instances in the cluster.",
+         "name": "NUMBER_OF_SLAVES",
+         "displayName": "Number of slaves",
+         "required": true,
+         "value": "1"
+      },
+      {
+         "description": "Total container memory in MiB.",
+         "displayName": "Total Memory",
+         "name": "TOTAL_CONTAINER_MEM",
+         "required": false,
+         "value": "512"
+      },
+      {
+         "description": "Custom Java opts",
+         "displayName": "Custom Java opts",
+         "name": "CUSTOM_JAVA_OPTS",
+         "required": false,
+         "value": ""
+      }
+   ]
+}
