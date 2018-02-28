@@ -1,0 +1,95 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster>
+         <group name="openshift" size="1" />
+         <group name="client" size="1"/>
+      </cluster>
+   </clusters>
+
+   <configurations>
+      <config name="OpenShift Client Server Test">
+         <setup group="openshift" plugin="${productName:openshift}" lazy-init="false">
+            <openshift xmlns="urn:radargun:plugins:openshift:3.0"
+                            template-file="${template.file:infinispan-server-template.json}"
+                            master-url="https://127.0.0.1:443"
+                            oauth-token="..."
+                            namespace="myproject"
+                            cleanup="true">
+               <!-- Parameters for the template -->
+               <params>
+                   APPLICATION_USER=user
+                   APPLICATION_USER_PASSWORD=changeme
+                   NUMBER_OF_INSTANCES=2
+               </params>
+               <!-- Wait for pods to be ready -->
+               <pods-selector>
+                   deploymentConfig=infinispan-server-app
+               </pods-selector>
+               <resolve-pod-addresses>
+                  infinispan-server-app-0
+                  infinispan-server-app-1
+               </resolve-pod-addresses>
+               <resolve-service-addresses>
+                  infinispan-server-app-hotrod
+               </resolve-service-addresses>
+            </openshift>
+         </setup>
+         <setup group="client" plugin="infinispan91" lazy-init="true">
+            <hotrod xmlns="urn:radargun:plugins:infinispan91:3.0" cache="default">
+               <servers>${openshift.0.infinispan-server-app-0}:11222;${openshift.0.infinispan-server-app-1}:11222</servers>
+            </hotrod>
+         </setup>
+      </config>
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
+      <define var="num.entries" value="10" />
+      <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:100}" />
+
+      <!-- The openshift plugin group has only 1 member but it spins up two Pods
+           in OpenShift so we need to set a specific expect-num-slaves -->
+      <service-start groups="openshift" validate-cluster="true" expect-num-slaves="2"/>
+      <service-start groups="client" validate-cluster="false" />
+
+      <jvm-monitor-start />
+
+      <cache:load groups="client" num-entries="${num.entries}" entry-size="${entry.size}" num-threads="1"/>
+      <l:basic-operations-test groups="client"
+                               test-name="reads1"
+                               duration="10s"
+                               num-threads-per-node="1"
+                               entry-size="${entry.size}"
+                               get-ratio="1"
+                               put-ratio="0">
+         <statistics>
+            <common/>
+         </statistics>
+         <l:key-selector>
+            <l:concurrent-keys total-entries="${num.entries}" />
+         </l:key-selector>
+      </l:basic-operations-test>
+
+      <jvm-monitor-stop />
+      
+   </rg:scenario>
+
+   <reports>
+     <reporter type="serialized">
+       <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
+     </reporter>
+     <reporter type="csv">
+       <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
+     </reporter>
+     <reporter type="html">
+       <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
+     </reporter>
+   </reports>
+
+</benchmark>
