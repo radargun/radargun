@@ -216,7 +216,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
             discard = new DISCARD();
             log.debug("No DISCARD protocol in stack for " + channel.getName() + ", inserting new instance");
             try {
-               channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+               insertProtocol(channel, discard);
             } catch (Exception e) {
                log.error("Failed to insert the DISCARD protocol to stack for " + channel.getName());
                return;
@@ -230,6 +230,11 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          }
       }
       log.debug("Started discarding packets");
+   }
+
+   protected void insertProtocol(JChannel channel, DISCARD discard) throws Exception {
+
+      channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
    }
 
    protected synchronized void stopDiscarding() {
