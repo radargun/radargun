@@ -6,11 +6,11 @@
    },
    "metadata": {
       "annotations": {
-         "description": "RadarGun ....",
+         "description": "RadarGun benchmarking framework for data grids and distributed caches",
          "tags": "radargun",
-         "openshift.io/display-name": "RadarGun ....",
+         "openshift.io/display-name": "RadarGun",
          "openshift.io/documentation-url": "http://radargun.github.io/radargun/",
-         "openshift.io/long-description": "RadarGun ...."
+         "openshift.io/long-description": "RadarGun benchmarking framework for data grids and distributed caches"
       },
       "name": "radargun"
    },
@@ -105,7 +105,7 @@
                         "env": [
                            {
                               "name": "RADARGUN_CONFIG",
-                              "value": "${RADARGUN_CONFIG}"
+                              "value": "/opt/radargun-configs/${RADARGUN_CONFIG}"
                            },
                            {
                               "name": "CUSTOM_JAVA_OPTS",

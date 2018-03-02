@@ -93,10 +93,6 @@ public class Slave extends SlaveBase {
       Slave slave = new Slave(new RemoteMasterConnection(ArgsHolder.getMasterHost(), ArgsHolder.getMasterPort()));
       try {
          slave.run(ArgsHolder.getSlaveIndex());
-      } catch (IOException e) {
-         System.err.println("Communication with master failed");
-         e.printStackTrace();
-         ShutDownHook.exit(127);
       } catch (Exception e) {
          System.err.println("Unexpected error in scenario");
          e.printStackTrace();

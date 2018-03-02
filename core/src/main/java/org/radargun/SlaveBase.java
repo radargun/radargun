@@ -156,10 +156,6 @@ public abstract class SlaveBase {
       public void run() {
          try {
             scenarioLoop();
-         } catch (IOException e) {
-            log.error("Communication with master failed", e);
-            e.printStackTrace();
-            ShutDownHook.exit(127);
          } catch (Throwable t) {
             log.error("Unexpected error in scenario", t);
             t.printStackTrace();

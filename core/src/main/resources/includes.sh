@@ -108,7 +108,7 @@ tail_log() {
    tail -f ${1} | while true
    do
       # Read from stdin with a 10 min timeout
-      IFS= read -r -u 0 -t 200
+      IFS= read -r -u 0 -t 600
       if (($? == 0))
       then
          echo "${REPLY}"

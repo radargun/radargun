@@ -9,23 +9,40 @@ export RADARGUN_HOME
 OSE_MAIN_VERSION=v3.7.1
 OSE_SHA1_VERSION=ab0f056
 TEST_PROJECT=myproject
+LOGIN_COMMAND=""
 RADARGUN_IMAGE=radargun
 FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
 RADARGUN_MASTER="radargun-master.${TEST_PROJECT}.svc"
 CONFIG_DIR=configs/
-RADARGUN_CONFIG="/opt/radargun-configs/library-dist-reads.xml"
+RADARGUN_CONFIG="library-dist-reads.xml"
 CUSTOM_JAVA_OPTS="-Xmx300M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
-                                    #-Dlog4j.configurationFile=file:///opt/radargun-configs/log4j2-trace.xml           
 TOTAL_CONTAINER_MEM=768
 NUMBER_OF_SLAVES=2
 
 help_and_exit() {
-  echo "Usage: TBD"
+  echo "Usage: "
+  echo '  $ openshift [OPTIONS] COMMAND'
+  echo ""
+  echo "COMMAND:"
+  wrappedecho "  login" "Login to OpenShift."
+  wrappedecho '  newproject' 'Create new project within OpenShift. This is be default named "myproject".'
+  wrappedecho "  build" "Build and push Docker image to OpenShift Docker registry."
+  wrappedecho "  deploy" "Deploy RadarGun to OpenShift."
+  wrappedecho "  results" "Download RadarGun logs and benchmark results from OpenShift to localhost."
+  wrappedecho "  purge" "Purge OpenShift project. All RadarGun related objects will be removed from the OpenShift project."
+  wrappedecho ""
+  echo "OPTIONS:"
+  wrappedecho '  -L LOGIN_COMMAND' 'Login command specific to your OpenShift provider. Defaults to empty string. Must start with oc. Applicable to login command.'
+  wrappedecho "  -cd CONFIG_DIR" "Directory with confiration files for RadarGun and its plugins. Defaults to configs/. Applicable to deploy command."
+  wrappedecho "  -cf CONFIG_FILE" "RadarGun benchmark file. Must be placed in CONFIG_DIR. Defaults to library-dist-reads.xml. Applicable to deploy command."
+  wrappedecho "  -s NUMBER_OF_SLAVES" "Number of RadarGun slaves. Defaults to 2. Applicable to deploy command."
+  wrappedecho "  -j CUSTOM_JAVA_OPTS" "Custom JAVA_OPTS that will be passed to the slave and master process JVM. Applicable to deploy command."
+  wrappedecho "  -m TOTAL_CONTAINER_MEM" "Total container memory for Master and Slave containers. Defaults to 768MiB. Applicable to deploy command."
   exit 0
 }
 
 function wrappedecho {
-  echo "${1}" | fold -s -w 80
+  printf '%-25s' "${1}"; echo "${2}"
 }
 
 function download_oc_client {
@@ -73,7 +90,7 @@ function deploy_template {
 
 function create_config_map {
     ./oc create configmap radargun-configs \
-    --from-file=${CONFIG_DIR}
+    --from-file="${CONFIG_DIR}"
     ./oc label configmap radargun-configs template=radargun
 }
 
@@ -98,46 +115,49 @@ download_oc_client
 while ! [ -z $1 ]
 do
   case "$1" in
-    "-n"|"--newproject")
-        new_project
-    ;;
-    "-p"|"--purge")
-        purge_project
-    ;;
-    "-b"|"--build")
-        build_radargun_image
-    ;;
-    "-d"|"--deploy")
-        create_config_map
-        deploy_template 
-    ;;
     "-m")
         TOTAL_CONTAINER_MEM=$2
         shift
     ;;
-    "-n")
+    "-s")
         NUMBER_OF_SLAVES=$2
         shift
     ;;
-    "-cd"|"--config-dir")
+    "-cd")
         CONFIG_DIR=$2
         shift
     ;;
-    "-cf"|"--config-file")
+    "-cf")
         RADARGUN_CONFIG=$2
         shift
     ;;
-    "-r"|"--results")
-        get_results
-    ;;
-    "-J")
+    "-j")
         CUSTOM_JAVA_OPTS=$2
         shift
     ;;
-    "-L"|"--login")
+    "-L")
         LOGIN_COMMAND=$2
+        shift
+    ;;
+   "login")
         exec ./${LOGIN_COMMAND}
         shift
+    ;;
+    "newproject")
+        new_project
+    ;;
+    "purge")
+        purge_project
+    ;;
+    "build")
+        build_radargun_image
+    ;;
+    "deploy")
+        create_config_map
+        deploy_template 
+    ;;
+    "results")
+        get_results
     ;;
     *)
       echo "Warning: unknown argument ${1}" 
