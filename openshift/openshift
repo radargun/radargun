@@ -13,9 +13,8 @@ RADARGUN_IMAGE=radargun
 FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
 RADARGUN_MASTER="radargun-master.${TEST_PROJECT}.svc"
 CONFIG_DIR=configs/
-RADARGUN_CONFIG="/opt/radargun-configs/library-dist-reads.xml"
+RADARGUN_CONFIG="library-dist-reads.xml"
 CUSTOM_JAVA_OPTS="-Xmx300M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
-                                    #-Dlog4j.configurationFile=file:///opt/radargun-configs/log4j2-trace.xml           
 TOTAL_CONTAINER_MEM=768
 NUMBER_OF_SLAVES=2
 
