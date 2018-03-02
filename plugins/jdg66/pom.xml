@@ -16,8 +16,6 @@
    <properties>
       <version.infinispan>${jdg66.infinispan.version}</version.infinispan>
       <version.infinispan.public>8.0.1.Final</version.infinispan.public>
-      <version.jbossts>4.17.29.Final-redhat-1</version.jbossts>
-      <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
 
    <profiles>
@@ -72,7 +70,6 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-core</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -89,7 +86,6 @@
        <dependency>
            <groupId>org.jboss.jbossts.jta</groupId>
            <artifactId>narayana-jta</artifactId>
-           <version>${version.jbossts}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -102,7 +98,6 @@
        <dependency>
            <groupId>org.jboss.spec.javax.transaction</groupId>
            <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-           <version>${version.jta-spec}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -115,42 +110,36 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-client-hotrod</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-query</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-jdbc</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-client</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-server</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-leveldb</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
@@ -163,7 +152,6 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-jcache</artifactId>
-           <version>${version.infinispan}</version>
        </dependency>
        
        <dependency>
@@ -181,5 +169,17 @@
        </dependency>     
        
    </dependencies>
+
+   <dependencyManagement>
+      <dependencies>      
+         <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-parent</artifactId>
+            <version>${version.infinispan}</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
 
 </project>

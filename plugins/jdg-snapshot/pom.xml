@@ -10,61 +10,32 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-jdg71</artifactId>
-   <name>JDG 7.1.x plugin for RadarGun</name>
+   <artifactId>plugin-jdg-snapshot</artifactId>
+   <name>JDG nightly build plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${jdg71.infinispan.version}</version.infinispan>
-      <version.infinispan.public>8.2.1.Final</version.infinispan.public>
+      <version.infinispan>${jdg-snapshot.infinispan.version}</version.infinispan>
    </properties>
 
    <profiles>
       <profile>
-         <id>jdg71-infinispan-version-default</id>
+         <id>jdg-snapshot.infinispan.version-default</id>
          <activation>
             <property>
-               <name>!jdg71.infinispan.version</name>
+               <name>!jdg-snapshot.infinispan.version</name>
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.4.0.Final-redhat-2</version.infinispan>
+            <version.infinispan>8.5.0-redhat-SNAPSHOT</version.infinispan>
          </properties>
-      </profile>
-      <profile>
-         <id>demos</id>
-         <activation>
-            <property>
-               <name>!no-demos</name>
-            </property>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-distexec-demo</artifactId>
-               <version>${version.infinispan.public}</version>
-               <optional>true</optional>
-               <exclusions>
-                   <exclusion>
-                       <groupId>org.infinispan</groupId>
-                       <artifactId>infinispan-embedded</artifactId>
-                   </exclusion>
-               </exclusions>
-            </dependency>
-         </dependencies>
       </profile>
    </profiles>
 
    <dependencies>
        <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-jdg70</artifactId>
+         <artifactId>plugin-${plugins.jdg-latest}</artifactId>
          <version>${project.version}</version>
-       </dependency>
-
-       <dependency>
-           <groupId>org.radargun</groupId>
-           <artifactId>plugin-infinispan90</artifactId>
-           <version>${project.version}</version>
        </dependency>
 
        <dependency>
@@ -81,6 +52,11 @@
                    <artifactId>jboss-logging</artifactId>
                </exclusion>
            </exclusions>
+       </dependency>
+
+       <dependency>
+          <groupId>org.infinispan</groupId>
+          <artifactId>infinispan-clustered-counter</artifactId>
        </dependency>
 
        <dependency>

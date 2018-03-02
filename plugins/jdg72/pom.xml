@@ -15,9 +15,6 @@
 
    <properties>
       <version.infinispan>${jdg72.infinispan.version}</version.infinispan>
-      <version.infinispan.public>9.1.4.Final</version.infinispan.public>
-      <version.narayanajta>5.2.21.Final-redhat-1</version.narayanajta>
-      <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
 
    <profiles>
@@ -29,30 +26,8 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.5.0.Final-redhat-1</version.infinispan>
+            <version.infinispan>8.5.0.ER3-redhat-1</version.infinispan>
          </properties>
-      </profile>
-      <profile>
-         <id>demos</id>
-         <activation>
-            <property>
-               <name>!no-demos</name>
-            </property>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-distexec-demo</artifactId>
-               <version>${version.infinispan.public}</version>
-               <optional>true</optional>
-               <exclusions>
-                   <exclusion>
-                       <groupId>org.infinispan</groupId>
-                       <artifactId>infinispan-embedded</artifactId>
-                   </exclusion>
-               </exclusions>
-            </dependency>
-         </dependencies>
       </profile>
    </profiles>
 
@@ -70,9 +45,14 @@
        </dependency>
 
        <dependency>
+           <groupId>org.radargun</groupId>
+           <artifactId>plugin-jcache</artifactId>
+           <version>${project.version}</version>
+       </dependency>
+
+       <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-core</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -89,13 +69,11 @@
        <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-clustered-counter</artifactId>
-          <version>${version.infinispan}</version>
        </dependency>
 
        <dependency>
            <groupId>org.jboss.narayana.jta</groupId>
            <artifactId>narayana-jta</artifactId>
-           <version>${version.narayanajta}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -108,7 +86,6 @@
        <dependency>
            <groupId>org.jboss.spec.javax.transaction</groupId>
            <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-           <version>${version.jta-spec}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
@@ -121,56 +98,55 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-client-hotrod</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-query</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-jdbc</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-client</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-server</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-leveldb</artifactId>
-           <version>${version.infinispan}</version>
            <optional>true</optional>
-       </dependency>
-
-       <dependency>
-           <groupId>org.radargun</groupId>
-           <artifactId>plugin-jcache</artifactId>
-           <version>${project.version}</version>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-jcache</artifactId>
-           <version>${version.infinispan}</version>
        </dependency>
    </dependencies>
+
+   <dependencyManagement>
+      <dependencies>      
+         <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-parent</artifactId>
+            <version>${version.infinispan}</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
 
 </project>
