@@ -29,13 +29,13 @@ public class Configuration implements Serializable {
       return name;
    }
 
-   public Setup addSetup(String base, String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs, Map<String, Definition> envs) {
+   public Setup addSetup(String base, String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs, Map<String, Definition> envs, boolean lazyInit) {
       for (Setup s : setups) {
          if (s.group.equals(group)) {
             throw new IllegalArgumentException("Setup for group '" + group + "' already set!");
          }
       }
-      Setup setup = new Setup(base, group, plugin, service, propertyDefinitions, vmArgs, envs);
+      Setup setup = new Setup(base, group, plugin, service, propertyDefinitions, vmArgs, envs, lazyInit);
       setups.add(setup);
       return setup;
    }
@@ -87,12 +87,14 @@ public class Configuration implements Serializable {
       public final String group;
       public final String plugin;
       public final String service;
+      public boolean lazyInit;
 
-      public Setup(String base, String group, String plugin, String service, Map<String, Definition> properties, Map<String, Definition> vmArgs, Map<String, Definition> envs) {
+      public Setup(String base, String group, String plugin, String service, Map<String, Definition> properties, Map<String, Definition> vmArgs, Map<String, Definition> envs, boolean lazyInit) {
          super(base, vmArgs, properties, envs);
          this.plugin = plugin;
          this.service = service;
          this.group = group;
+         this.lazyInit = lazyInit;
       }
 
       public Configuration getConfiguration() {
@@ -118,7 +120,7 @@ public class Configuration implements Serializable {
          Map<String, Definition> newProperties = merge(lineage, setupBase -> setupBase.properties);
          Map<String, Definition> newVmArgs = merge(lineage, setupBase -> setupBase.vmArgs);
          Map<String, Definition> newEnvs = merge(lineage, setupBase -> setupBase.envs);
-         return new Setup(null, group, plugin, service, newProperties, newVmArgs, newEnvs);
+         return new Setup(null, group, plugin, service, newProperties, newVmArgs, newEnvs, lazyInit);
       }
    }
 

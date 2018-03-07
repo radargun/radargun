@@ -20,6 +20,7 @@ interface ConfigSchema {
    String ATTR_TYPE = "type";
    String ATTR_URL = "url";
    String ATTR_VALUE = "value";
+   String ATTR_LAZY_INIT = "lazy-init";
 
    String ELEMENT_BENCHMARK = "benchmark";
    String ELEMENT_CLEANUP = "cleanup";

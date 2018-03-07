@@ -100,6 +100,7 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       addAttribute(configComplex, ATTR_NAME, true);
       addAttribute(setupComplex, ATTR_PLUGIN, true);
       addAttribute(setupComplex, ATTR_GROUP, false);
+      addAttribute(setupComplex, ATTR_LAZY_INIT, false);
 
       createComplexType(TYPE_INIT, CORE_PREFIX + class2xmlId(ScenarioInitStage.class), true, false, null);
       createReference(benchmarkSequence, ELEMENT_INIT, THIS_PREFIX + TYPE_INIT, 0, 1);

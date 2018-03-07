@@ -2,6 +2,7 @@ package org.radargun;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -12,6 +13,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.ScenarioCleanupStage;
+import org.radargun.stages.lifecycle.ServiceStartStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
 import org.radargun.utils.TimeService;
@@ -28,6 +30,7 @@ public abstract class SlaveBase {
    protected Configuration configuration;
    protected Cluster cluster;
    protected Scenario scenario;
+   protected Object service;
 
    protected void scenarioLoop() throws IOException {
       Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
@@ -37,30 +40,39 @@ public abstract class SlaveBase {
       state.setService(setup.service);
       state.setTimeline(new Timeline(state.getSlaveIndex()));
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
-      ServiceHelper.setServiceContext(setup.plugin, configuration.name, state.getSlaveIndex());
-      Object service = ServiceHelper.createService(setup.plugin, setup.service, setup.getProperties(), extras);
-      Map<Class<?>, Object> traits = null;
+      ServiceContext context =
+         new ServiceContext(group.name, setup.plugin, state.getSlaveIndex());
+      ServiceHelper.setServiceContext(context);
+
       try {
-         log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
-         traits = TraitHelper.retrieve(service);
-         state.setTraits(traits);
+         //eager services created before any stages are executed
+         if (!setup.lazyInit) {
+            createService(setup, extras);
+         }
+
          for (;;) {
             int stageId = getNextStageId();
-            Map<String, Object> masterData = getNextMasterData();
-            for (Map.Entry<String, Object> entry : masterData.entrySet()) {
-               state.put(entry.getKey(), entry.getValue());
-            }
             log.trace("Received stage ID " + stageId);
+            processMasterData(getNextMasterData());
             DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
+
             if (stage instanceof ScenarioCleanupStage) {
                // this is always the last stage and is ran in main thread (not sc-main)
                break;
             }
+            //lazy services created during ServiceStartStage
+            if (stage instanceof ServiceStartStage && setup.lazyInit) {
+               stage.initOnSlave(state);
+               if (stage.shouldExecute() && service == null) {
+                  createService(setup, extras);
+               }
+            }
+
             TraitHelper.InjectResult result = null;
             DistStageAck response;
             Exception initException = null;
             try {
-               result = TraitHelper.inject(stage, traits);
+               result = TraitHelper.inject(stage, state.getTraits());
                InitHelper.init(stage);
                stage.initOnSlave(state);
             } catch (Exception e) {
@@ -106,12 +118,45 @@ public abstract class SlaveBase {
             sendResponse(response);
          }
       } finally {
-         if (traits != null) {
-            for (Object trait : traits.values()) {
+         if (state.getTraits() != null) {
+            for (Object trait : state.getTraits().values()) {
                InitHelper.destroy(trait);
             }
          }
-         InitHelper.destroy(service);
+         if (service != null) {
+            InitHelper.destroy(service);
+         }
+      }
+   }
+
+   private void createService(Configuration.Setup setup, Map<String, String> extras) {
+      service = ServiceHelper.createService(setup.service, setup.getProperties(), extras);
+      log.info((setup.lazyInit ? "Lazy" : "Eager") + " Service " + service.getClass().getSimpleName() + PropertyHelper.toString(service) + " loaded.");
+      state.setTraits(TraitHelper.retrieve(service));
+   }
+
+   private void processMasterData(Map<String, Object> masterData) throws IOException {
+      for (Map.Entry<String, Object> entry : masterData.entrySet()) {
+         if (entry.getKey().equals(ServiceContext.class.getName())) {
+            updateServiceContexts(entry.getValue());
+         } else {
+            state.put(entry.getKey(), entry.getValue());
+         }
+      }
+   }
+
+   private void updateServiceContexts(Object propertyMap) {
+      if (propertyMap instanceof Map) {
+         String excludePrefix = ServiceHelper.getContext().getPrefix();
+         Map<String, Object> properties = (Map<String, Object>) propertyMap;
+         //exclude own properties
+         Map<String, Object> filtered = properties.entrySet()
+               .stream()
+               .filter(p -> ! (p == null || p.getKey().startsWith(excludePrefix)))
+               .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+         ServiceHelper.getContext().addProperties((Map) propertyMap);
+      } else {
+         log.warn("Unable to update service context properties.");
       }
    }
 

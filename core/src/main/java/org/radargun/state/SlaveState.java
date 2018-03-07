@@ -87,6 +87,10 @@ public class SlaveState extends StateBase<ServiceListener> {
       return indexInGroup;
    }
 
+   public Map<Class<?>, Object> getTraits() {
+      return traits;
+   }
+
    public void setTraits(Map<Class<?>, Object> traits) {
       this.traits = traits;
    }

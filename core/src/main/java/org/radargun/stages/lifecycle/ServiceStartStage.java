@@ -85,7 +85,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       try {
          LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
       } catch (RuntimeException e) {
-         return errorResponse("Issues while instantiating/starting cache wrapper", e);
+         return errorResponse("Issues while instantiating/starting service", e);
       }
       log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
       if (configurationProvider != null && dumpConfig) {

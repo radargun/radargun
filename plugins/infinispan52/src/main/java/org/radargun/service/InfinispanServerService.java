@@ -102,7 +102,7 @@ public class InfinispanServerService extends JavaProcessService {
          }
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
-         Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
+         Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
          
          if (resource != null) {
             try (InputStream is = resource.openStream()) {
@@ -176,13 +176,13 @@ public class InfinispanServerService extends JavaProcessService {
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
       command.add(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh")).toString());
-      command.add("-Djboss.node.name=slave" + ServiceHelper.getSlaveIndex());
+      command.add("-Djboss.node.name=slave" + ServiceHelper.getContext().getSlaveIndex());
       if (logDir != null) {
          command.add("-Djboss.server.log.dir=" + logDir);
       }
       command.addAll(args);
       command.add("-server-config");
-      command.add("radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
+      command.add("radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
       return command;
    }
 

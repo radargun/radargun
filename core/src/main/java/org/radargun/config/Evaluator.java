@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
+import org.radargun.ServiceContext;
+import org.radargun.ServiceHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Tokenizer;
@@ -156,16 +158,26 @@ public final class Evaluator {
       String strValue = System.getProperty(property);
       if (strValue != null && !strValue.isEmpty()) {
          value = new Value(strValue.trim());
-      } else {
+      } else if (property.startsWith("env.")) {
          if (property.startsWith("env.")) {
             String env = System.getenv(property.substring(4));
             if (env != null && !env.isEmpty()) {
                value = new Value(env.trim());
             }
-         } else if (property.startsWith("random.")) {
-            value = random(property);
+         }
+      } else if (property.startsWith("random.")) {
+         value = random(property);
+      } else {
+         //check also service context properties
+         ServiceContext context = ServiceHelper.getContext();
+         if (context != null) {
+            Object v = context.getProperties().get(property);
+            if (v != null) {
+               value = new Value(v.toString());
+            }
          }
       }
+
       if (value != null) {
          return value;
       } else if (def != null) {

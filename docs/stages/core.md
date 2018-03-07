@@ -14,6 +14,13 @@ Adds custom result to given test
 > test-name (**mandatory**) - Name of the test.  
 > value (**mandatory**) - Value used as aggregation value in the test.  
 
+### after-service-start
+DO NOT USE DIRECTLY. This stage is automatically inserted after the ServiceStartStage.
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+
 ### analyze-test
 Analyzes results of already executed test.
 > analyzis-type (**mandatory**) - How do we process the data. We can search for maximum, minimum or average.  
@@ -28,6 +35,13 @@ Analyzes results of already executed test.
 > store-result-to (**mandatory**) - Name of the target property where the result should be stored.  
 > test-name (**mandatory**) - Name of the test whose result should be analyzed.  
 > thread-grouping (**optional**) - How should the thread statistics be aggregated. By default all statistics are merged.  
+
+### before-service-start
+DO NOT USE DIRECTLY. This stage is automatically inserted before the ServiceStartStage.
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 
 ### cluster-split-verify
 Verifies that there weren't any changes to the cluster size during testing.

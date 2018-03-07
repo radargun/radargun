@@ -14,12 +14,15 @@ import org.radargun.ShutDownHook;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.ReporterHelper;
+import org.radargun.stages.AfterServiceStartStage;
+import org.radargun.stages.BeforeServiceStartStage;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.ScenarioDestroyStage;
 import org.radargun.stages.ScenarioInitStage;
 import org.radargun.stages.control.RepeatBeginStage;
 import org.radargun.stages.control.RepeatContinueStage;
 import org.radargun.stages.control.RepeatEndStage;
+import org.radargun.stages.lifecycle.ServiceStartStage;
 import org.radargun.utils.Utils;
 import org.w3c.dom.*;
 
@@ -262,6 +265,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                String plugin = getAttribute(setupElement, ATTR_PLUGIN);
                String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
                String base = getAttribute(setupElement, ATTR_BASE, null);
+               String lazyInit = getAttribute(setupElement, ATTR_LAZY_INIT, Boolean.FALSE.toString());
                Map<String, Definition> propertyDefinitions = Collections.EMPTY_MAP;
                Map<String, Definition> vmArgs = Collections.EMPTY_MAP;
                Map<String, Definition> envs = Collections.EMPTY_MAP;
@@ -281,7 +285,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                      throw notExternal(setupChildElement);
                   }
                }
-               config.addSetup(base, group, plugin, service, propertyDefinitions, vmArgs, envs);
+               config.addSetup(base, group, plugin, service, propertyDefinitions, vmArgs, envs, Boolean.parseBoolean(lazyInit));
             }
             masterConfig.addConfig(config);
          } else if (ELEMENT_TEMPLATE.equals(configElement.getLocalName())) {
@@ -490,14 +494,23 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void addScenarioItem(Scenario scenario, Element element) {
       if (element.getLocalName().equalsIgnoreCase(ELEMENT_REPEAT)) {
-         wrapStages(scenario, element, new Class[] {RepeatBeginStage.class}, new Class[] {RepeatContinueStage.class, RepeatEndStage.class});
+         wrapChildStages(scenario, element, new Class[] {RepeatBeginStage.class}, new Class[] {RepeatContinueStage.class, RepeatEndStage.class});
       } else {
-         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNamespaceURI(), element.getLocalName()), parseProperties(element, true), null);
+         Class<? extends org.radargun.Stage> stageClass = StageHelper.
+            getStageClassByDashedName(element.getNamespaceURI(), element.getLocalName());
+
+         if (ServiceStartStage.class.isAssignableFrom(stageClass)) {
+            scenario.addStage(BeforeServiceStartStage.class, Collections.EMPTY_MAP, null);
+         }
+         scenario.addStage(stageClass, parseProperties(element, true), null);
+         if (ServiceStartStage.class.isAssignableFrom(stageClass)) {
+            scenario.addStage(AfterServiceStartStage.class, Collections.EMPTY_MAP, null);
+         }
       }
    }
 
-   private void wrapStages(Scenario scenario, Element element,
-                           Class<? extends org.radargun.Stage>[] stagesBefore, Class<? extends org.radargun.Stage>[] stagesAfter) {
+   private void wrapChildStages(Scenario scenario, Element element,
+                                Class<? extends org.radargun.Stage>[] stagesBefore, Class<? extends org.radargun.Stage>[] stagesAfter) {
       String labelName = getAttribute(element, ATTR_NAME, "");
       Map<String, Definition> properties = parseProperties(element, false);
       for (Class<? extends org.radargun.Stage> stage : stagesBefore) {
