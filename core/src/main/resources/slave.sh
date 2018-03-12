@@ -182,4 +182,10 @@ fi
 if [ $WAIT == "true" ]
 then
   wait $SLAVE_PID
+  EXIT_VALUE=$?
+  if [ ! $EXIT_VALUE -eq 0 ]; then
+    echo "Slave $SLAVE_PID finished with value $EXIT_VALUE"
+    exit $EXIT_VALUE
+  fi
+  wait_pid `ps -ef | grep ${LOG4J_PREFIX} | grep org.radargun.Slave | awk '{print $2}'`
 fi

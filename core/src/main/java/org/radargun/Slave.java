@@ -94,6 +94,7 @@ public class Slave extends SlaveBase {
       try {
          slave.run(ArgsHolder.getSlaveIndex());
       } catch (Exception e) {
+         System.err.println("Unexpected error in scenario");
          e.printStackTrace();
          ShutDownHook.exit(127);
       }
