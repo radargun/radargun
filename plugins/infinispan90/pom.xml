@@ -133,7 +133,7 @@
    </dependencies>
 
    <dependencyManagement>
-      <dependencies>      
+      <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-parent</artifactId>

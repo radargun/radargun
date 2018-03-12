@@ -117,9 +117,10 @@
       <extension.jpa />
       <extension.mapreduce />
       <extension.rest />
-      <extensions.counter/>
+      <extension.counter/>
+      <extension.multimap/>
    </properties>
-   
+
    <profiles>
       <!-- Extensions -->
       <profile>
@@ -238,6 +239,21 @@
          </modules>
          <properties>
             <extension.counter>counter</extension.counter>
+         </properties>
+      </profile>
+      <profile>
+         <id>multimap</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-multimap</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../extensions/multimap</module>
+         </modules>
+         <properties>
+            <extension.multimap>multimap</extension.multimap>
          </properties>
       </profile>
       <!-- Reporters -->
@@ -598,7 +614,7 @@
       </profile>
    </profiles>
 
-   
+
 
    <build>
       <plugins>
