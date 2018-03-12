@@ -1,0 +1,113 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <clusters>
+      <cluster size="2"/>
+   </clusters>
+   <configurations>
+
+      <config name="dist">
+         <setup plugin="${env.PLUGINNAME}">
+            <vm-args>
+               <properties>
+                  <property name="infinispan.jgroups.config"
+                            value="${env.JGROUPS_CONFIG:default-configs/default-jgroups-udp.xml}"/>
+               </properties>
+            </vm-args>
+            <embedded xmlns="urn:radargun:plugins:${env.PLUGINNAME}:3.0"
+                      file="${env.WORKSPACE}/jdg-qe/configs/${env.PLUGINNAME}-library/library-multimap.xml"
+                      cache="multimapCache"/>
+         </setup>
+      </config>
+
+   </configurations>
+
+   <init/>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:mmapcache="urn:radargun:stages:multimap:3.0">
+
+      <define var="num.entries" value="#{ ( 8 * 8000000000 ) / ( ${env.BENCHMARK_ENTRY_SIZE:10000} * 2 ) }"/>
+      <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:10000}"/>
+
+      <service-start/>
+      <jvm-monitor-start/>
+      <cluster-split-verify/>
+
+      <mmapcache:multimap-cache-operations-test test-name="warmup"
+                                                num-threads-per-node="2"
+                                                entry-size="${entry.size}"
+                                                duration="2m"
+                                                put-ratio="1"
+                                                get-ratio="0">
+
+         <cache:key-selector>
+            <cache:colliding-keys num-entries="${num.entries}"/>
+         </cache:key-selector>
+
+         <cache:cache-selector>
+            <cache:default/>
+         </cache:cache-selector>
+
+         <cache:value-generator>
+            <cache:byte-array/>
+         </cache:value-generator>
+
+         <cache:key-generator>
+            <cache:string/>
+         </cache:key-generator>
+
+      </mmapcache:multimap-cache-operations-test>
+
+      <rg:repeat from="1" to="1000" inc="100">
+         <mmapcache:multimap-cache-operations-test test-name="operation-N-values-per-key"
+                                                   amend-test="true"
+                                                   duration="2m"
+                                                   num-threads-per-node="10"
+                                                   entry-size="${entry.size}"
+                                                   iteration-property="num-values-per-key"
+                                                   num-values-per-key="${repeat.counter}">
+            <cache:key-selector>
+               <cache:colliding-keys num-entries="${num.entries}"/>
+            </cache:key-selector>
+
+            <cache:cache-selector>
+               <cache:default/>
+            </cache:cache-selector>
+
+            <cache:value-generator>
+               <cache:byte-array/>
+            </cache:value-generator>
+
+            <cache:key-generator>
+               <cache:string/>
+            </cache:key-generator>
+
+            <statistics>
+               <common/>
+            </statistics>
+         </mmapcache:multimap-cache-operations-test>
+      </rg:repeat>
+
+      <cluster-split-verify verify="true"/>
+      <jvm-monitor-stop/>
+      <service-stop/>
+   </rg:scenario>
+
+   <cleanup check-memory="false" check-memory-released="false" check-threads="false"/>
+
+   <reports>
+      <reporter type="serialized">
+         <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized"/>
+      </reporter>
+      <reporter type="csv">
+         <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv"/>
+      </reporter>
+      <reporter type="html">
+         <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html"/>
+      </reporter>
+   </reports>
+
+</benchmark>
+

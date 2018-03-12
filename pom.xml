@@ -31,7 +31,7 @@
       <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
    </properties>
 
-   <profiles>      
+   <profiles>
       <profile>
          <id>site</id>
          <activation>
@@ -154,7 +154,7 @@
                            </sequential>
                         </macrodef>
 
-                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce},${extension.rest},${extension.counter}" param="extension">
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce},${extension.rest},${extension.counter},${extension.multimap}" param="extension">
                            <sequential>
                               <package-extension extension="@{extension}" build-dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}"/>
                            </sequential>

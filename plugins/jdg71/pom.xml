@@ -156,15 +156,15 @@
    </dependencies>
 
    <dependencyManagement>
-      <dependencies>      
+      <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-parent</artifactId>
-            <version>${version.infinispan}</version>
+           <version>${version.infinispan}</version>
             <type>pom</type>
             <scope>import</scope>
-         </dependency>
-      </dependencies>
+       </dependency>
+   </dependencies>
    </dependencyManagement>
 
 </project>
