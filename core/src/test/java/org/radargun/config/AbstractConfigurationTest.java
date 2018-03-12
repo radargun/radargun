@@ -171,10 +171,10 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     */
    public void testScenario() {
       Scenario scenario = masterConfig.getScenario();
-      assertEquals(scenario.getStageCount(), 10);
+      assertEquals(scenario.getStageCount(), 12);
       List<Scenario.StageDescription> stages = scenario.getStages();
 
-      Map<String, Definition> basicOperationTestProperties = stages.get(4).properties;
+      Map<String, Definition> basicOperationTestProperties = stages.get(6).properties;
       assertEquals(basicOperationTestProperties.size(), 2);
 
       assertTrue(basicOperationTestProperties.containsKey("var"));
