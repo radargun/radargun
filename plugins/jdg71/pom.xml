@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <parent>
@@ -44,10 +44,10 @@
                <version>${version.infinispan.public}</version>
                <optional>true</optional>
                <exclusions>
-                   <exclusion>
-                       <groupId>org.infinispan</groupId>
-                       <artifactId>infinispan-embedded</artifactId>
-                   </exclusion>
+                  <exclusion>
+                     <groupId>org.infinispan</groupId>
+                     <artifactId>infinispan-embedded</artifactId>
+                  </exclusion>
                </exclusions>
             </dependency>
          </dependencies>
@@ -55,104 +55,104 @@
    </profiles>
 
    <dependencies>
-       <dependency>
+      <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-jdg70</artifactId>
          <version>${project.version}</version>
-       </dependency>
+      </dependency>
 
-       <dependency>
-           <groupId>org.radargun</groupId>
-           <artifactId>plugin-infinispan90</artifactId>
-           <version>${project.version}</version>
-       </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan90</artifactId>
+         <version>${project.version}</version>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-core</artifactId>
-           <optional>true</optional>
-           <exclusions>
-               <exclusion>
-                   <groupId>log4j</groupId>
-                   <artifactId>log4j</artifactId>
-               </exclusion>
-               <exclusion>
-                   <groupId>org.jboss.logging</groupId>
-                   <artifactId>jboss-logging</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-core</artifactId>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
 
-       <dependency>
-           <groupId>org.jboss.narayana.jta</groupId>
-           <artifactId>narayana-jta</artifactId>
-           <optional>true</optional>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.jboss.logging</groupId>
-                   <artifactId>jboss-logging-spi</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
+      <dependency>
+         <groupId>org.jboss.narayana.jta</groupId>
+         <artifactId>narayana-jta</artifactId>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
 
-       <dependency>
-           <groupId>org.jboss.spec.javax.transaction</groupId>
-           <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-           <optional>true</optional>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.jboss.logging</groupId>
-                   <artifactId>jboss-logging-spi</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
+      <dependency>
+         <groupId>org.jboss.spec.javax.transaction</groupId>
+         <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-client-hotrod</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-client-hotrod</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-query</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-query</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-cachestore-jdbc</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-jdbc</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-remote-query-client</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-remote-query-client</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-remote-query-server</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-remote-query-server</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-cachestore-leveldb</artifactId>
-           <optional>true</optional>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-leveldb</artifactId>
+         <optional>true</optional>
+      </dependency>
 
-       <dependency>
-           <groupId>org.radargun</groupId>
-           <artifactId>plugin-jcache</artifactId>
-           <version>${project.version}</version>
-       </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-jcache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
 
-       <dependency>
-           <groupId>org.infinispan</groupId>
-           <artifactId>infinispan-jcache</artifactId>
-       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jcache</artifactId>
+      </dependency>
    </dependencies>
 
    <dependencyManagement>
@@ -160,11 +160,11 @@
          <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-parent</artifactId>
-           <version>${version.infinispan}</version>
+            <version>${version.infinispan}</version>
             <type>pom</type>
             <scope>import</scope>
-       </dependency>
-   </dependencies>
+         </dependency>
+      </dependencies>
    </dependencyManagement>
 
 </project>
