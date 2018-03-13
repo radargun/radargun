@@ -15,9 +15,12 @@ FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
 RADARGUN_MASTER="radargun-master.${TEST_PROJECT}.svc"
 CONFIG_DIR=configs/
 RADARGUN_CONFIG="library-dist-reads.xml"
-CUSTOM_JAVA_OPTS="-Xmx300M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
-TOTAL_CONTAINER_MEM=768
+DEFAULT_JAVA_OPTS="-XX:+UseG1GC -verbose:gc -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
+CUSTOM_JAVA_OPTS=""
+TOTAL_CONTAINER_MEM_SLAVE=1024
 NUMBER_OF_SLAVES=2
+
+JVM_NATIVE_MB=80
 
 help_and_exit() {
   echo "Usage: "
@@ -37,7 +40,7 @@ help_and_exit() {
   wrappedecho "  -cf CONFIG_FILE" "RadarGun benchmark file. Must be placed in CONFIG_DIR. Defaults to library-dist-reads.xml. Applicable to deploy command."
   wrappedecho "  -s NUMBER_OF_SLAVES" "Number of RadarGun slaves. Defaults to 2. Applicable to deploy command."
   wrappedecho "  -j CUSTOM_JAVA_OPTS" "Custom JAVA_OPTS that will be passed to the slave and master process JVM. Applicable to deploy command."
-  wrappedecho "  -m TOTAL_CONTAINER_MEM" "Total container memory for Master and Slave containers. Defaults to 768MiB. Applicable to deploy command."
+  wrappedecho "  -m TOTAL_CONTAINER_MEM_SLAVE" "Total container memory for Slave containers. Defaults to 1024MiB. Applicable to deploy command."
   exit 0
 }
 
@@ -78,10 +81,21 @@ function new_project {
     ./oc new-project ${TEST_PROJECT} || true
 }
 
+function compute_heap_size {
+    MEM=$(expr ${TOTAL_CONTAINER_MEM_SLAVE} - ${JVM_NATIVE_MB})
+    XMS="-Xms${MEM}M"
+    XMX="-Xmx${MEM}M"
+    echo "======= Max heap size: ${XMX} ======="
+}
+
 function deploy_template {
+    if [ "$CUSTOM_JAVA_OPTS" == "" ]; then
+        compute_heap_size
+        CUSTOM_JAVA_OPTS="${XMS} ${XMX} $DEFAULT_JAVA_OPTS"
+    fi
     ./oc create -f radargun-template.json
     ./oc process radargun \
-           -p TOTAL_CONTAINER_MEM=${TOTAL_CONTAINER_MEM} \
+           -p TOTAL_CONTAINER_MEM=${TOTAL_CONTAINER_MEM_SLAVE} \
            -p NUMBER_OF_SLAVES=${NUMBER_OF_SLAVES} \
            -p RADARGUN_MASTER=${RADARGUN_MASTER} \
            -p RADARGUN_CONFIG=${RADARGUN_CONFIG} \
@@ -116,7 +130,7 @@ while ! [ -z $1 ]
 do
   case "$1" in
     "-m")
-        TOTAL_CONTAINER_MEM=$2
+        TOTAL_CONTAINER_MEM_SLAVE=$2
         shift
     ;;
     "-s")

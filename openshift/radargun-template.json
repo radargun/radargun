@@ -109,7 +109,7 @@
                            },
                            {
                               "name": "CUSTOM_JAVA_OPTS",
-                              "value": "${CUSTOM_JAVA_OPTS}"
+                              "value": "-Xms412M -Xmx412M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -Xloggc:gc-master.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
                            }
                         ],
                         "image": "radargun:latest",
@@ -137,10 +137,10 @@
                         "resources": {
                            "requests": {
                               "cpu": "0.5",
-                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                              "memory": "512Mi"
                            },
                            "limits": {
-                              "memory": "${TOTAL_CONTAINER_MEM}Mi"
+                              "memory": "512Mi"
                            }
                         }
                      }
@@ -323,7 +323,7 @@
          "value": "1"
       },
       {
-         "description": "Total container memory in MiB.",
+         "description": "Total container memory in MiB for RadarGun slaves.",
          "displayName": "Total Memory",
          "name": "TOTAL_CONTAINER_MEM",
          "required": false,
