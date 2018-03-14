@@ -251,7 +251,8 @@ public class OpenShiftService implements Lifecycle {
    public String getPodIP(String name) {
       TimeService.waitFor(() -> {
             try {
-               return openShiftClient.pods().withName(name).get().getStatus().getPodIP() != null;
+               Pod pod = openShiftClient.pods().withName(name).get();
+               return pod != null && pod.getStatus().getPodIP() != null;
             } catch (KubernetesClientException e) {
                log.errorf("Failed to retrieve pod address. Retrying... ", e);
                return false;
