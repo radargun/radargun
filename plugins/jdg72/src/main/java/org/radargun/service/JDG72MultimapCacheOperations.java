@@ -21,12 +21,7 @@ public class JDG72MultimapCacheOperations extends Infinispan92MultimapCacheOpera
       org.infinispan.multimap.api.MultimapCache<K, V> mmcache = multimapCacheManager.get(multimapCacheName);
       return new MultimapCacheImpl(mmcache);
    }
-
-   @Override
-   public String getCacheName() {
-      return multimapCacheName;
-   }
-
+   
    protected static class MultimapCacheImpl<K, V> implements MultimapCacheOperations.MultimapCache<K, V> {
 
       protected org.infinispan.multimap.api.MultimapCache<K, V> multimapCache;
