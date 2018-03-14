@@ -1,13 +1,18 @@
 <benchmark xmlns="urn:radargun:benchmark:3.0">
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
    <clusters>
-      <cluster size="2"/>
+      <scale from="4" to="8" inc="4">
+         <cluster/>
+      </scale>
    </clusters>
+
    <configurations>
 
       <config name="dist">
          <setup plugin="${env.PLUGINNAME}">
             <vm-args>
+               <memory max="16G" min="16G"/>
                <properties>
                   <property name="infinispan.jgroups.config"
                             value="${env.JGROUPS_CONFIG:default-configs/default-jgroups-udp.xml}"/>
@@ -28,15 +33,17 @@
                 xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:mmapcache="urn:radargun:stages:multimap:3.0">
 
-      <define var="num.entries" value="#{ ( 8 * 8000000000 ) / ( ${env.BENCHMARK_ENTRY_SIZE:10000} * 2 ) }"/>
       <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:10000}"/>
+      <define var="num.values.per.key.max" value="${env.NUM_VALUES_PER_KEY_MAX:100}"/>
+      <define var="num.entries"
+              value="#{ 8000000000 / ( ${env.BENCHMARK_ENTRY_SIZE:10000} * ${num.values.per.key.max} ) }"/>
 
       <service-start/>
       <jvm-monitor-start/>
       <cluster-split-verify/>
 
       <mmapcache:multimap-cache-operations-test test-name="warmup"
-                                                num-threads-per-node="2"
+                                                num-threads-per-node="10"
                                                 entry-size="${entry.size}"
                                                 duration="2m"
                                                 put-ratio="1"
@@ -60,7 +67,7 @@
 
       </mmapcache:multimap-cache-operations-test>
 
-      <rg:repeat from="1" to="1000" inc="100">
+      <rg:repeat from="1" to="${num.values.per.key.max}" inc="10">
          <mmapcache:multimap-cache-operations-test test-name="operation-N-values-per-key"
                                                    amend-test="true"
                                                    duration="2m"
