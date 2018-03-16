@@ -48,6 +48,13 @@ function wrappedecho {
   printf '%-25s' "${1}"; echo "${2}"
 }
 
+function assert_linux {
+  if [ ! `uname` == Linux ]; then
+    echo "Only Linux supported!"
+    exit 1;
+  fi
+}
+
 function download_oc_client {
   if [ -f ./oc ]; then
     echo "OC client installed"
@@ -123,6 +130,7 @@ function get_results {
     done
 }
 
+assert_linux
 download_oc_client
 
 ## read in any command-line params
