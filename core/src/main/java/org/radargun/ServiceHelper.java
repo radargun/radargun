@@ -20,60 +20,48 @@ public final class ServiceHelper {
    private static final Log log = LogFactory.getLog(ServiceHelper.class);
    private static final String SERVICE_PROPERTY_PREFIX = "service.";
 
-   private static String currentPlugin;
-   private static String currentConfigName;
-   private static int currentSlaveIndex;
+   private static ServiceContext serviceContext;
 
    private ServiceHelper() {}
 
-   public static String getPlugin() {
-      return currentPlugin;
-   }
-
-   public static String getConfigName() {
-      return currentConfigName;
-   }
-
-   public static int getSlaveIndex() {
-      return currentSlaveIndex;
-   }
-
    /**
     * As we expect only one service at time to be running on one node, this sets current
-    * plugin, configuration name and slave index that can be later retrieved, e.g. in some
-    * init method (annotated by {@link org.radargun.config.Init}) that would not be able
-    * to retrieve this information in another way.
-    *
-    * @param plugin
-    * @param configName
-    * @param slaveIndex
+    * service context (including plugin, configuration name and slave index) that can be
+    * later retrieved, e.g. in some init method (annotated by
+    * {@link org.radargun.config.Init}) that would not be able to retrieve this information
+    * in another way.
     */
-   public static void setServiceContext(String plugin, String configName, int slaveIndex) {
-      currentPlugin = plugin;
-      currentConfigName = configName;
-      currentSlaveIndex = slaveIndex;
+   public static void setServiceContext(ServiceContext context) {
+      serviceContext = context;
+   }
+
+   public static ServiceContext getContext() {
+      return serviceContext;
    }
 
    /**
-    * Instantiates the service, looking up file plugin.properties for the service name
+    * Instantiates the service, looking up file plugin.customProperties for the service name
     * (in form of service./service name/ /service class/
     * The service class must have public no-arg constructor.
-    * Then, sets up all properties declared on the service (and its superclasses).
+    * Then, sets up all customProperties declared on the service (and its superclasses).
     * Finally calls any methods of the class annotated by {@link org.radargun.config.Init @Init}.
     *
-    * Don't forget to call {@link #setServiceContext(String, String, int)} before calling this method.
+    * Don't forget to call {@link #setServiceContext(ServiceContext)} before calling this method.
     */
-   public static Object createService(String plugin, String service,
-                                      Map<String, Definition> properties, Map<String, String> extras) {
-      String serviceClassName = Utils.getPluginProperty(plugin, SERVICE_PROPERTY_PREFIX + service);
+   public static Object createService(String service,
+                                      Map<String, Definition> properties,
+                                      Map<String, String> extras) {
+      log.info("ServiceContext properties: " + serviceContext.getProperties());
+      String serviceClassName = Utils.getPluginProperty(
+         serviceContext.getPlugin(), SERVICE_PROPERTY_PREFIX + service);
       if (serviceClassName == null) {
-         throw new IllegalStateException(String.format("Cannot find service %s for plugin %s", service, plugin));
+         throw new IllegalStateException(String.format("Cannot find service %s for plugin %s", service, serviceContext.getPlugin()));
       }
       Class<?> serviceClazz = null;
       try {
          serviceClazz = Class.forName(serviceClassName);
       } catch (Throwable t) {
-         throw new IllegalArgumentException("Cannot load class " + serviceClassName + " from plugin " + plugin, t);
+         throw new IllegalArgumentException("Cannot load class " + serviceClassName + " from plugin " + serviceContext.getPlugin(), t);
       }
       boolean isService = false;
       for (Annotation annotation : serviceClazz.getDeclaredAnnotations()) {
@@ -84,7 +72,6 @@ public final class ServiceHelper {
       if (!isService) {
          throw new IllegalArgumentException("Class " + serviceClassName + " is not declared as a Service");
       }
-
       Object instance;
       try {
          instance = serviceClazz.newInstance();
@@ -92,7 +79,7 @@ public final class ServiceHelper {
          throw new RuntimeException("Cannot instantiate service " + serviceClassName, e);
       }
 
-      // The properties are evaluated only on the slave, using the extras (such as ${slave.index} etc...)
+      // The customProperties are evaluated only on the slave, using the extras (such as ${slave.index} etc...)
       Map<String, String> backupExtras = new HashMap<String, String>();
       for (Map.Entry<String, String> extra : extras.entrySet()) {
          backupExtras.put(extra.getKey(), System.getProperty(extra.getKey()));

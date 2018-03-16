@@ -88,7 +88,7 @@ public class TomcatServerService extends JavaProcessService {
       try {
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
-         Path target = FileSystems.getDefault().getPath(catalinaBase, "conf", "radargun-tomcat-" + ServiceHelper.getSlaveIndex() + ".xml");
+         Path target = FileSystems.getDefault().getPath(catalinaBase, "conf", "radargun-tomcat-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
          if (resource != null) {
             try (InputStream is = resource.openStream()) {
                log.info("Found " + file + " as a resource");
@@ -135,7 +135,7 @@ public class TomcatServerService extends JavaProcessService {
       cmd.add("-Djava.io.tmpdir=" + catalinaBase + "/temp");
       cmd.add("org.apache.catalina.startup.Bootstrap");
       cmd.add("-config");
-      cmd.add(catalinaBase + "/conf/radargun-tomcat-" + ServiceHelper.getSlaveIndex() + ".xml");
+      cmd.add(catalinaBase + "/conf/radargun-tomcat-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
       cmd.add("start");
 
       return cmd;

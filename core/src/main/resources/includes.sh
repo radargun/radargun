@@ -119,7 +119,7 @@ tail_log() {
          fi
       else
          # Kill tail if no java process spawned from the shell script is found
-         if ! (ps -ef | grep "${3}" &>/dev/null)
+         if ! (ps -ef | grep "${3}" | grep -v "grep" | grep -v "tail" &>/dev/null)
          then
             kill -9 `pgrep -P $$ tail`
             break
@@ -127,4 +127,16 @@ tail_log() {
       fi
    done
    return 0
+}
+
+wait_pid() {
+    PID=$1
+    if [ ! "$PID" == "" ]; then
+        echo "Waiting for process $PID"
+        while [ -e /proc/$PID ]
+        do
+            sleep 5
+        done
+        echo "Process $PID has finished"
+    fi
 }
