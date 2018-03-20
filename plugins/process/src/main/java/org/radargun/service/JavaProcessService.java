@@ -113,9 +113,12 @@ public class JavaProcessService extends ProcessService {
    }
 
    public String getJavaPIDs() {
-      if (lifecycle.getPid() != null) {
+
+      String currentPid = lifecycle.getPid();
+
+      if (currentPid != null) {
          ProcessBuilder pb = new ProcessBuilder()
-               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), lifecycle.getPid()));
+               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), currentPid));
          pb.redirectError(ProcessBuilder.Redirect.INHERIT);
          pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
          try {
@@ -126,13 +129,18 @@ public class JavaProcessService extends ProcessService {
                while ((line = reader.readLine()) != null)
                   sb.append(line);
             }
-            return sb.toString().split(" ")[0];
+
+            log.info("All Java PIDs: '" + sb.toString() + "'");
+
+            currentPid = sb.toString().split(" ")[0];
          } catch (IOException e) {
             log.error("Failed to read JVM PIDs", e);
-            return null;
          }
       }
-      return null;
+
+      log.info("Java PIDs: '" + currentPid + "'");
+
+      return currentPid;
    }
 
    @Override

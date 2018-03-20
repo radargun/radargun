@@ -70,6 +70,9 @@ public final class PerNodeRollingRandomAccessFileAppender implements org.apache.
       }
    }
 
+   @Override
+   public void initialize() {
+   }
 
    @Override
    public void append(LogEvent event) {
