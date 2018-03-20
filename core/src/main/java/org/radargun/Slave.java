@@ -127,10 +127,25 @@ public class Slave extends SlaveBase {
       extras.put(Properties.PROPERTY_GROUP_NAME, group.name);
       extras.put(Properties.PROPERTY_GROUP_SIZE, String.valueOf(group.size));
       for (Cluster.Group g : cluster.getGroups()) {
-         for(int i = 0; i != g.size; i++){
-            SlaveConnectionInfo ifaces = state.getSlaveAddresses(cluster, g.name, i);
-            for (String s: ifaces.getInterfaceNames()) {
-               extras.put(Properties.PROPERTY_GROUP_PREFIX + g.name + "." + i + "." + s, ifaces.getAddressesAsString(s, ","));
+         for(int slaveIndex = 0; slaveIndex != g.size; slaveIndex++){
+            SlaveConnectionInfo ifaces = state.getSlaveAddresses(cluster, g.name, slaveIndex);
+            for (String ifaceName: ifaces.getInterfaceNames()) {
+               int numAddresses = ifaces.getAddresses(ifaceName).size();
+               if (numAddresses == 1) {
+                  String propertyName =
+                     String.format("%s%s.%d.%s", Properties.PROPERTY_GROUP_PREFIX, g.name,
+                        slaveIndex, ifaceName);
+                  extras.put(propertyName, ifaces.getAddresses(ifaceName).get(0).getHostAddress());
+               } else {
+                  for (int addrIndex = 0; addrIndex != numAddresses; addrIndex++) {
+                     //Each address of the interface has its own index as well
+                     //Example: ${group.servers.0.eth2.0}
+                     String propertyName =
+                        String.format("%s%s.%d.%s.%d", Properties.PROPERTY_GROUP_PREFIX, g.name,
+                           slaveIndex, ifaceName, addrIndex);
+                     extras.put(propertyName, ifaces.getAddresses(ifaceName).get(addrIndex).getHostAddress());
+                  }
+               }
             }
          }
       }
