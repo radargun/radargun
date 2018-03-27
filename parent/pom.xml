@@ -110,6 +110,7 @@
       <plugins.spark />
       <plugins.spymemcached />
       <plugins.tomcat/>
+      <plugins.etcd/>
       <reporter.default />
       <reporter.perfrepo />
       <extension.cache />
@@ -514,7 +515,6 @@
             <plugins.jdg-snapshot>jdg-snapshot</plugins.jdg-snapshot>
          </properties>
       </profile>
-
       <profile>
          <id>process</id>
          <activation>
@@ -626,6 +626,20 @@
          </modules>
          <properties>
             <plugins.openshift>openshift</plugins.openshift>
+         </properties>
+      </profile>
+      <profile>
+         <id>etcd</id>
+         <activation>
+            <property>
+               <name>!no-etcd</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/etcd</module>
+         </modules>
+         <properties>
+            <plugins.etcd>etcd</plugins.etcd>
          </properties>
       </profile>
    </profiles>
