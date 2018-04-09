@@ -169,7 +169,8 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       // For local caches it has there is no transport - check that we have at least one clustered cache
       boolean hasClustered = false;
       for (String cacheName : service.cacheManager.getCacheNames()) {
-         if (service.isCacheClustered(service.cacheManager.getCache(cacheName))) {
+         if (service.cacheManager.isRunning(cacheName)
+                  && service.isCacheClustered(service.cacheManager.getCache(cacheName))) {
             hasClustered = true;
             break;
          }
