@@ -6,15 +6,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.MasterState;
-import org.radargun.sysmonitor.AbstractMonitors;
-import org.radargun.sysmonitor.CpuUsageMonitor;
-import org.radargun.sysmonitor.GcMonitor;
-import org.radargun.sysmonitor.InternalsMonitor;
-import org.radargun.sysmonitor.MasterMonitors;
-import org.radargun.sysmonitor.MemoryUsageMonitor;
-import org.radargun.sysmonitor.NetworkBytesMonitor;
-import org.radargun.sysmonitor.OpenFilesMonitor;
-import org.radargun.sysmonitor.SlaveMonitors;
+import org.radargun.sysmonitor.*;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
@@ -75,6 +67,8 @@ public class MonitorStartStage extends AbstractDistStage {
       monitors.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, timeline));
       monitors.addMonitor(new GcMonitor(jmxConnectionProvider, timeline));
       monitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, timeline));
+      monitors.addMonitor(new ClassLoadingCountMonitor(jmxConnectionProvider, timeline));
+
       if (interfaceName != null) {
          monitors.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, timeline));
          monitors.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, timeline));
