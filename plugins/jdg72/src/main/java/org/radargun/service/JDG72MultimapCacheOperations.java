@@ -3,8 +3,8 @@ package org.radargun.service;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import org.infinispan.multimap.api.EmbeddedMultimapCacheManagerFactory;
-import org.infinispan.multimap.api.MultimapCacheManager;
+import org.infinispan.multimap.api.embedded.EmbeddedMultimapCacheManagerFactory;
+import org.infinispan.multimap.api.embedded.MultimapCacheManager;
 import org.radargun.traits.MultimapCacheOperations;
 
 
@@ -18,15 +18,15 @@ public class JDG72MultimapCacheOperations extends Infinispan92MultimapCacheOpera
    public <K, V> MultimapCache<K, V> getMultimapCache(String cacheName) {
       multimapCacheName = (cacheName == null || cacheName.isEmpty()) ? service.cacheName : cacheName;
       MultimapCacheManager<K, V> multimapCacheManager = EmbeddedMultimapCacheManagerFactory.from(service.getCacheManager());
-      org.infinispan.multimap.api.MultimapCache<K, V> mmcache = multimapCacheManager.get(multimapCacheName);
+      org.infinispan.multimap.api.embedded.MultimapCache<K, V> mmcache = multimapCacheManager.get(multimapCacheName);
       return new MultimapCacheImpl(mmcache);
    }
    
    protected static class MultimapCacheImpl<K, V> implements MultimapCacheOperations.MultimapCache<K, V> {
 
-      protected org.infinispan.multimap.api.MultimapCache<K, V> multimapCache;
+      protected org.infinispan.multimap.api.embedded.MultimapCache<K, V> multimapCache;
 
-      public MultimapCacheImpl(org.infinispan.multimap.api.MultimapCache<K, V> multimapCache) {
+      public MultimapCacheImpl(org.infinispan.multimap.api.embedded.MultimapCache<K, V> multimapCache) {
          this.multimapCache = multimapCache;
       }
 
