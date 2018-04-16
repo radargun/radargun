@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.5.0.ER4-redhat-10</version.infinispan>
+            <version.infinispan>8.5.0.Final-redhat-6</version.infinispan>
          </properties>
       </profile>
    </profiles>
@@ -50,6 +50,11 @@
          <artifactId>radargun-multimap</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
+      </dependency>
+      
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-multimap</artifactId>
       </dependency>
 
       <dependency>
