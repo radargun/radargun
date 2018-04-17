@@ -231,8 +231,9 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             } else if (expectedValue == null) {
                return true;
             } else {
-               log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
-               if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+               if (manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+                  log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
+               } else {
                   log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
                   return true;
                }
