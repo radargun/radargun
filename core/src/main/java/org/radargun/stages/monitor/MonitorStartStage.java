@@ -76,7 +76,9 @@ public class MonitorStartStage extends AbstractDistStage {
       monitors.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, timeline));
       monitors.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, timeline));
       monitors.addMonitor(new GcMonitor(jmxConnectionProvider, timeline));
-      monitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, timeline));
+      if (!SystemUtils.IS_WINDOWS) {
+         monitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, timeline));
+      }
       if (SystemUtils.IS_LINUX) {
          monitors.addMonitor(new RssMonitor(timeline));
       }
