@@ -34,18 +34,18 @@ This benchmark is using colliding-keys [key selector]({{page.path_to_root}}bench
 
 **[benchmark-hotrod-rest-memcached.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-hotrod-rest-memcached.xml)** - Shows performance testing for same-server/different-client configurations
 
-> Environment variables:
+> Environment variables:  
 > * *ISPN_8_HOME*	- pointing to Infinispan server home directory  
 
 **[benchmark-hotrod-spark-mapreduce.xml](https://github.com/radargun/radargun/blob/master/extensions/mapreduce/src/main/resources/benchmark-hotrod-spark-mapreduce.xml)** - Shows how to benchmark [mapreduce]({{page.path_to_root}}stages/mapreduce.html) operations on Infinispan coupled with Spark
 
-> Environment variables:
+> Environment variables:  
 > * *SPARK_161_HOME*	- pointing to Spark home directory
 > * *ISPN_82_HOME*	- pointing to Infinispan server home directory  
 
 **[benchmark-hotrod-streaming.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-hotrod-streaming.xml)** - Shows how to compare memory usage on Infinispan clients using and not using Streaming API
 
-> Environment variables:
+> Environment variables:  
 > * *ISPN_9_ZIP_PATH*	- path to Infinispan server distribution file  
 > * *RG_WORK*		- the directory RadarGun will use to unpack Infinispan server instances to  
 
@@ -63,7 +63,7 @@ This benchmark is using colliding-keys [key selector]({{page.path_to_root}}bench
 
 This benchmark requires re-packaged Redis distribution, in order to run it you will have to download and build it according to instruction on [Redis homepage](https://redis.io/), then pack the folder contents (not folder itself) as `redisdistro.zip` and provide path to it as environment variable.
 
-> Environment variables:
+> Environment variables:  
 > * *REDIS_DISTRO_ZIP_PATH*  - pointing to zip containing built Redis  
 
 **[benchmark-rest-cs-tomcat.xml](https://github.com/radargun/radargun/blob/master/extensions/rest/src/main/resources/benchmark-rest-cs-tomcat.xml)** - Shows how to call REST operation on web server using [rest-operations-test]({{page.path_to_root}}stages/rest.html#rest-operations-test) stage
@@ -79,7 +79,7 @@ This configurations requires manual intervention in Tomcat installation which is
 
 * [clusterbench ee7](https://github.com/clusterbench/clusterbench) application has to be deployed as `clusterbench`, follow instructions on the site
 
-> Environment variables:
+> Environment variables:  
 > * *CATALINA_HOME*	- path to tomcat folder  
 
 **[benchmark-stream.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-stream.xml)** - Shows how to execute distributed stream tasks via [stream]({{page.path_to_root}}stages/cache.html#stream) stage
@@ -87,3 +87,22 @@ This configurations requires manual intervention in Tomcat installation which is
 **[benchmark-xsite-jmx.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-xsite-jmx.xml)** - Shows how to invoke JMX-exposed methods via [jmx-invocation]({{page.path_to_root}}stages/core.html#jmx-invocation) stage and how to test cross-site replication via [xs-repl-check]({{page.path_to_root}}stages/cache.html#xs-repl-check) stage
 
 **[benchmark-xsite-repl.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-xsite-repl.xml)** - Shows hot to test cross-site replication via [xs-repl-check]({{page.path_to_root}}stages/cache.html#xs-repl-check) stage
+
+**[benchmark-tomcat-docker.xml](https://github.com/radargun/radargun/blob/master/core/src/main/resources/benchmark-tomcat-docker.xml)** - shows how to configure and run Docker container as part of the benchmark 
+
+Requires same manual setup as **benchmark-rest-cs-tomcat.xml** (above) and also these:
+
+* Tomcat version that includes `org.jboss.modcluster.container.catalina.standalone.ModClusterListener`, preferably JWS
+
+* addition of following line into `conf/server.xml` file:
+
+{% highlight xml %}
+    <Listener className="org.jboss.modcluster.container.catalina.standalone.ModClusterListener" advertise="false" stickySession="true" stickySessionForce="false" stickySessionRemove="true" proxyList="localhost:6666"/>
+{% endhighlight %}
+
+* working [Docker](https://www.docker.com/) installation
+
+* read and write access to `/var/run/docker.sock` file
+
+> Environment variables:
+> * *CATALINA_HOME*	- path to tomcat folder  
