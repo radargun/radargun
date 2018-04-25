@@ -17,8 +17,8 @@
             <docker xmlns="urn:radargun:plugins:docker:3.0" 
                             server-uri="${server.uri:unix:///var/run/docker.sock}" 
                             docker-registry="${docker.registry:registry.hub.docker.com}"
-                            username="${docker.username}"
-                            password="${docker.password}"
+                            username="${docker.username:}"
+                            password="${docker.password:}"
                             image="${image.name:karm/mod_cluster-master-dockerhub}" 
                             container-name="mod_cluster">
                <!-- Ports exposed from the running container. Available for incoming requests. -->
@@ -38,7 +38,7 @@
          <setup group="tomcat" plugin="${productName:tomcat8}">
             <tomcat xmlns="urn:radargun:plugins:tomcat8:3.0" file="${server.config:server.xml}">
                <!-- path to tomcat server -->
-               <catalina-home>${CATALINA_HOME}</catalina-home>
+               <catalina-home>${env.CATALINA_HOME}</catalina-home>
                <!-- user and password for the user with manager-script role defined in tomcat-users.xml -->
                <user>tomcat</user>
                <pass>tomcat</pass>
@@ -57,7 +57,7 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+		xmlns:rest="urn:radargun:stages:rest:3.0">
 
       <service-start groups="mod_cluster"/>
       <service-start groups="tomcat"/>
@@ -67,13 +67,13 @@
      
       <sleep time="10000" />
      
-      <l:rest-operations-test groups="clients"
+      <rest:rest-operations-test groups="clients"
                               test-name="clusterbench"
-                              duration="10s"
+                              duration="30s"
                               num-threads-per-node="1"
                               delay-between-requests="200"
-                              context-path="/clusterbench/session">
-      </l:rest-operations-test>
+                              context-path="clusterbench/session">
+      </rest:rest-operations-test>
       
       <jvm-monitor-stop /> 
       

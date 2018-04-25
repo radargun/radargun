@@ -30,7 +30,8 @@
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
   <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
-
+  <Listener className="org.jboss.modcluster.container.catalina.standalone.ModClusterListener" advertise="false" stickySession="true" stickySessionForce="false" stickySessionRemove="true" proxyList="localhost:6666"/>
+  
   <!-- Global JNDI resources
        Documentation at /docs/jndi-resources-howto.html
   -->
