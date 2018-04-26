@@ -18,8 +18,8 @@ import static java.lang.management.ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DO
 import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 /**
- * In each invocation of the {@link #run()} method, retrieves information
- * about garbage collection from JMX and reports it into the {@link Timeline}.
+ * In each invocation of the {@link #run()} method, retrieves information about garbage collection
+ * from JMX and reports it into the {@link Timeline}.
  *
  * @author Galder Zamarreno
  */
@@ -33,7 +33,7 @@ public class GcMonitor extends JmxMonitor implements Serializable {
       super(jmxConnectionProvider, timeline);
    }
 
-   public synchronized void run() {
+   public synchronized void runMonitor() {
       try {
          if (connection == null) {
             log.warn("MBean connection is not open, cannot read GC stats");
@@ -41,7 +41,7 @@ public class GcMonitor extends JmxMonitor implements Serializable {
          }
 
          OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
-            ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          int procCount = os.getAvailableProcessors();
 
          List<GarbageCollectorMXBean> gcMbeans = getGarbageCollectorMXBeans(connection);

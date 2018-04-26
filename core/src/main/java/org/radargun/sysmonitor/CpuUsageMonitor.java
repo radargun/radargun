@@ -26,7 +26,7 @@ public class CpuUsageMonitor extends JmxMonitor {
       super(jmxConnectionProvider, timeline);
    }
 
-   public synchronized void run() {
+   public synchronized void runMonitor() {
       try {
          if (connection == null) {
             log.warn("MBean connection is not open, cannot read CPU stats");
@@ -35,7 +35,7 @@ public class CpuUsageMonitor extends JmxMonitor {
 
          long cpuTimeMultiplier = getCpuMultiplier(connection);
          OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
-            ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          int procCount = os.getAvailableProcessors();
 
          long jmxCpuTime = (Long) connection.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);

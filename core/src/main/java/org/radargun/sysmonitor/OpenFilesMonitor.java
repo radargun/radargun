@@ -20,15 +20,15 @@ public class OpenFilesMonitor extends JmxMonitor {
       super(jmxConnectionProvider, timeline);
    }
 
-   public synchronized void run() {
+   public synchronized void runMonitor() {
       try {
          if (connection == null) {
             log.warn("MBean connection is not open, cannot read open files stats");
             return;
          }
 
-         OperatingSystemMXBean osBean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME,
-            OperatingSystemMXBean.class);
+         OperatingSystemMXBean osBean = ManagementFactory.newPlatformMXBeanProxy(connection,
+               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          Long openFiles = (Long) connection.getAttribute(osBean.getObjectName(), OPEN_FILE_DESCRIPTOR_COUNT);
          Long maxOpenFiles = (Long) connection.getAttribute(osBean.getObjectName(), MAX_FILE_DESCRIPTOR_COUNT);
          if (openFiles != null) {
@@ -52,4 +52,3 @@ public class OpenFilesMonitor extends JmxMonitor {
       timeline.addValue(Timeline.Category.sysCategory(OPEN_FILES), new Timeline.Value(0));
    }
 }
-

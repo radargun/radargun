@@ -173,13 +173,16 @@ public class Utils {
    }
 
    public static void shutdownAndWait(ExecutorService executor) {
-      executor.shutdownNow();
-      try {
-         if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-            log.error("Failed to terminate executor.");
+      List<Runnable> tasks = executor.shutdownNow();
+      if (!tasks.isEmpty()) {
+         log.info(String.format("Waiting for '%s' tasks to terminate.", tasks.size()));
+         try {
+            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+               log.error("Failed to terminate executor.");
+            }
+         } catch (InterruptedException e) {
+            log.error("Interrupted when waiting for the executor to finish.");
          }
-      } catch (InterruptedException e) {
-         log.error("Interrupted when waiting for the executor to finish.");
       }
    }
 
