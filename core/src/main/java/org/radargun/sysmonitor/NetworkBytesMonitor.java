@@ -16,7 +16,7 @@ import org.radargun.reporting.Timeline;
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-public class NetworkBytesMonitor implements Monitor {
+public class NetworkBytesMonitor extends AbstractMonitor {
 
    private static final int TRANSMIT_BYTES_INDEX = 8;
    private static final int RECEIVE_BYTES_INDEX = 0;
@@ -46,8 +46,9 @@ public class NetworkBytesMonitor implements Monitor {
       return new NetworkBytesMonitor(iface, TRANSMIT_BYTES_INDEX, timeline);
    }
 
-   public void run() {
-      try (FileInputStream inputStream = new FileInputStream("/proc/net/dev"); BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+   public void runMonitor() {
+      try (FileInputStream inputStream = new FileInputStream("/proc/net/dev");
+         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
          try {
             String line = br.readLine();
             while (line != null) {
@@ -79,28 +80,23 @@ public class NetworkBytesMonitor implements Monitor {
    }
 
    private Timeline.Category getCategory() {
-      return Timeline.Category.sysCategory(String.format("Network %s on %s [bytes per second]", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface));
-   }
-
-   @Override
-   public void start() {
-      // nothing to do
-   }
-
-   @Override
-   public void stop() {
-      // nothing to do
+      return Timeline.Category.sysCategory(String.format("Network %s on %s [bytes per second]",
+            valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface));
    }
 
    @Override
    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
 
       NetworkBytesMonitor that = (NetworkBytesMonitor) o;
 
-      if (valueIndex != that.valueIndex) return false;
-      if (!iface.equals(that.iface)) return false;
+      if (valueIndex != that.valueIndex)
+         return false;
+      if (!iface.equals(that.iface))
+         return false;
 
       return true;
    }

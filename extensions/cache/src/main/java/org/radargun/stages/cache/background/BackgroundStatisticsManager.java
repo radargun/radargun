@@ -16,9 +16,11 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.TimeService;
+import org.radargun.utils.Utils;
 
 /**
- * Coordinator for collecting statistics from background stressor threads started by {@link org.radargun.stages.cache.background.BackgroundOpsManager}.
+ * Coordinator for collecting statistics from background stressor threads started by
+ * {@link org.radargun.stages.cache.background.BackgroundOpsManager}.
  *
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -37,7 +39,8 @@ public final class BackgroundStatisticsManager implements ServiceListener {
    private SizeThread sizeThread;
    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
-   private BackgroundStatisticsManager() {}
+   private BackgroundStatisticsManager() {
+   }
 
    private BackgroundStatisticsManager(BackgroundOpsManager backgroundOpsManager, long statsIterationDuration) {
       this.backgroundOpsManager = backgroundOpsManager;
@@ -45,13 +48,16 @@ public final class BackgroundStatisticsManager implements ServiceListener {
    }
 
    /**
-    * Returns {@link org.radargun.stages.cache.background.BackgroundStatisticsManager} instance. Creates {@link org.radargun.stages.cache.background.BackgroundOpsManager}
-    * internally, if not found in slave state.
+    * Returns {@link org.radargun.stages.cache.background.BackgroundStatisticsManager} instance.
+    * Creates {@link org.radargun.stages.cache.background.BackgroundOpsManager} internally, if not
+    * found in slave state.
     */
-   public static BackgroundStatisticsManager getOrCreateInstance(SlaveState slaveState, String name, long statsIterationDuration) {
+   public static BackgroundStatisticsManager getOrCreateInstance(SlaveState slaveState, String name,
+                                                                 long statsIterationDuration) {
       BackgroundStatisticsManager statisticsManager = getInstance(slaveState, name);
       if (statisticsManager == null) {
-         statisticsManager = new BackgroundStatisticsManager(BackgroundOpsManager.getOrCreateInstance(slaveState, name), statsIterationDuration);
+         statisticsManager = new BackgroundStatisticsManager(BackgroundOpsManager.getOrCreateInstance(slaveState, name),
+               statsIterationDuration);
          slaveState.put(PREFIX + name, statisticsManager);
       }
       return statisticsManager;
@@ -82,8 +88,19 @@ public final class BackgroundStatisticsManager implements ServiceListener {
 
    public synchronized void stopStats() {
       if (statsTask != null) {
-         statsTask.cancel(true);
-         statsTask = null;
+
+         if (statsTask.cancel(true)) {
+            statsTask = null;
+         } else {
+            log.error("Statistics task was not cancelled");
+         }
+         Utils.shutdownAndWait(executor);
+         if (!executor.isTerminated()) {
+            log.warn("Failed to terminate statistics executor service.");
+         }
+
+         this.statsTask = null;
+         this.executor = Executors.newScheduledThreadPool(1);
       }
       if (sizeThread != null) {
          log.debug("Interrupting size thread");
@@ -118,7 +135,8 @@ public final class BackgroundStatisticsManager implements ServiceListener {
          if (threads == null) {
             stats = Collections.EMPTY_LIST;
          } else {
-            stats = Arrays.asList(threads).stream().filter(t -> t != null).map(t -> t.getStatsSnapshot(true)).collect(Collectors.toList());
+            stats = Arrays.asList(threads).stream().filter(t -> t != null).map(t -> t.getStatsSnapshot(true))
+                  .collect(Collectors.toList());
          }
          Timeline timeline = backgroundOpsManager.getSlaveState().getTimeline();
          long now = TimeService.currentTimeMillis();
@@ -132,7 +150,8 @@ public final class BackgroundStatisticsManager implements ServiceListener {
                }
             }
          } else {
-            Statistics aggregated = stats.stream().reduce(Statistics.MERGE).orElseThrow(() -> new IllegalStateException("No statistics!"));
+            Statistics aggregated = stats.stream().reduce(Statistics.MERGE)
+                  .orElseThrow(() -> new IllegalStateException("No statistics!"));
             for (String operation : aggregated.getOperations()) {
                OperationThroughput throughput = aggregated.getRepresentation(operation, OperationThroughput.class);
                Timeline.Category category = Timeline.Category.customCategory(operation + " Throughput");

@@ -12,6 +12,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.state.StateBase;
 import org.radargun.state.StateListener;
+import org.radargun.utils.Utils;
 
 /**
  * Base class for holding and maintaining various slave and master state
@@ -73,11 +74,9 @@ public abstract class AbstractMonitors<S extends StateBase<T>, T extends StateLi
       for (Monitor m : monitors) {
          m.stop();
       }
-      exec.shutdownNow();
-      try {
-         exec.awaitTermination(2 * period, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException e) {
-         log.error("Failed to terminate local monitoring.");
+      Utils.shutdownAndWait(exec);
+      if (!exec.isTerminated()) {
+         log.warn("Failed to terminate monitor executor service.");
       }
       this.exec = null;
    }

@@ -19,7 +19,7 @@ import org.radargun.traits.JmxConnectionProvider;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public abstract class JmxMonitor implements Monitor {
+public abstract class JmxMonitor extends AbstractMonitor {
    protected final Log log = LogFactory.getLog(getClass());
 
    static final ObjectName OS_NAME = getOSName();
@@ -66,6 +66,7 @@ public abstract class JmxMonitor implements Monitor {
 
    @Override
    public synchronized void start() {
+      super.start();
       if (jmxConnectionProvider == null) {
          connection = ManagementFactory.getPlatformMBeanServer();
       } else {
@@ -82,6 +83,7 @@ public abstract class JmxMonitor implements Monitor {
 
    @Override
    public synchronized void stop() {
+      super.stop();
       if (connector != null) {
          try {
             connector.close();

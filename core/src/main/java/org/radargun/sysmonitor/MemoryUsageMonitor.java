@@ -9,8 +9,8 @@ import org.radargun.reporting.Timeline;
 import org.radargun.traits.JmxConnectionProvider;
 
 /**
- * In each invocation of the {@link #run()} method, retrieves information
- * about memory size and usage from JMX and reports it into the {@link Timeline}.
+ * In each invocation of the {@link #run()} method, retrieves information about memory size and
+ * usage from JMX and reports it into the {@link Timeline}.
  *
  * @author Galder Zamarreno
  */
@@ -27,21 +27,21 @@ public class MemoryUsageMonitor extends JmxMonitor {
       super(jmxConnectionProvider, timeline);
    }
 
-   public synchronized void run() {
+   public synchronized void runMonitor() {
       try {
          if (connection == null) {
             log.warn("MBean connection is not open, cannot read memory stats");
             return;
          }
 
-         MemoryMXBean memMbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME,
-            MemoryMXBean.class);
+         MemoryMXBean memMbean = ManagementFactory.newPlatformMXBeanProxy(connection,
+               ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
          MemoryUsage mem = memMbean.getHeapMemoryUsage();
 
          timeline.addValue(Timeline.Category.sysCategory(MEMORY_USAGE), new Timeline.Value(mem.getUsed() / 1048576));
 
-         log.trace("Memory usage: used=" + formatDecimal(mem.getUsed()) + " B, size=" + formatDecimal(mem.getCommitted())
-            + " B, max=" + formatDecimal(mem.getMax()));
+         log.trace("Memory usage: used=" + formatDecimal(mem.getUsed()) + " B, size="
+               + formatDecimal(mem.getCommitted()) + " B, max=" + formatDecimal(mem.getMax()));
       } catch (Exception e) {
          log.error("Error in JMX memory stats retrieval", e);
       }

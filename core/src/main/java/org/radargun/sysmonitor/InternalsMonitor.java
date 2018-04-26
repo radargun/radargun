@@ -11,7 +11,7 @@ import org.radargun.utils.TimeService;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InternalsMonitor implements Monitor {
+public class InternalsMonitor extends AbstractMonitor {
    private final InternalsExposition internalsExposition;
    private final Timeline timeline;
 
@@ -21,15 +21,7 @@ public class InternalsMonitor implements Monitor {
    }
 
    @Override
-   public void start() {
-   }
-
-   @Override
-   public void stop() {
-   }
-
-   @Override
-   public void run() {
+   public void runMonitor() {
       long now = TimeService.currentTimeMillis();
       for (Map.Entry<String, Number> entry : internalsExposition.getValues().entrySet()) {
          timeline.addValue(Timeline.Category.customCategory(entry.getKey()), new Timeline.Value(now, entry.getValue()));
