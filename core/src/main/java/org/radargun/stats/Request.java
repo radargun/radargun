@@ -22,8 +22,12 @@ public final class Request {
    private boolean successful = true;
 
    public Request(Statistics statistics) {
+      this(statistics, TimeService.nanoTime());
+   }
+
+   public Request(Statistics statistics, long requestStartTime) {
       this.statistics = statistics;
-      this.requestStartTime = TimeService.nanoTime();
+      this.requestStartTime = requestStartTime;
    }
 
    public void exec(Operation operation, Runnable runnable) {
@@ -62,7 +66,7 @@ public final class Request {
          successful = false;
          throw t;
       } finally {
-         statistics.record(this, operation);
+         record(operation);
       }
       return value;
    }
@@ -73,14 +77,12 @@ public final class Request {
 //   public void responseStarted() {}
 
    public void succeeded(Operation operation) {
-      this.responseCompleteTime = TimeService.nanoTime();
-      statistics.record(this, operation);
+      record(operation);
    }
 
    public void failed(Operation operation) {
-      this.responseCompleteTime = TimeService.nanoTime();
       this.successful = false;
-      statistics.record(this, operation);
+      record(operation);
    }
 
    public void discard() {
@@ -108,5 +110,10 @@ public final class Request {
     */
    public long duration() {
       return responseCompleteTime - requestStartTime;
+   }
+
+   private void record(Operation operation) {
+      this.responseCompleteTime = TimeService.nanoTime();
+      statistics.record(this, operation);
    }
 }

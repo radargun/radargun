@@ -122,7 +122,7 @@ Test using BasicOperations
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > contains-ratio (**optional**) - Ratio of CONTAINS requests. Default is 0.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -146,6 +146,7 @@ Test using BasicOperations
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -158,7 +159,7 @@ Executes operations from BulkOperations trait.
 > bulk-size (**optional**) - Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper supports bulk operations. Default is 10.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -183,6 +184,7 @@ Executes operations from BulkOperations trait.
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -263,7 +265,7 @@ Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -287,6 +289,7 @@ Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -326,7 +329,7 @@ Iterates through all entries.
 > container-name (**optional**) - Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.  
 > converter-class (**optional**) - Full class name of the converter. Default is no converter (Map.Entry<K, V> is returned).  
 > converter-param (**optional**) - Parameter for the converter (used to resolve its properties). No defaults.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > fail-on-failed-iteration (**optional**) - Fail the stage if some of the stressors has failed. Default is true.  
@@ -348,6 +351,7 @@ Iterates through all entries.
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -358,7 +362,7 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-lifespan (**optional**) - With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
@@ -382,6 +386,7 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -508,7 +513,7 @@ Streaming operations test stage
 > buffer-size (**optional**) - Streaming operations buffer size in bytes, default is 100  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -529,6 +534,7 @@ Streaming operations test stage
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -540,7 +546,7 @@ Test using TemporalOperations
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -568,6 +574,7 @@ Test using TemporalOperations
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  

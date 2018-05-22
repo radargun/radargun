@@ -74,6 +74,10 @@ public interface Statistics extends Serializable {
       return new Request(this);
    }
 
+   default Request startRequest(long requestStartTime) {
+      return new Request(this, requestStartTime);
+   }
+
    /**
     * Create an object for tracking non-rpc-like operations.
     */

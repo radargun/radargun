@@ -396,6 +396,7 @@ public class Utils {
       int hours = duration.indexOf('H');
       int minutes = duration.indexOf('M');
       int seconds = duration.indexOf('S');
+      int millis = duration.indexOf('L');
       int lastIndex = 0;
       try {
          if (days > 0) {
@@ -413,6 +414,10 @@ public class Utils {
          if (seconds > 0) {
             durationMillis += TimeUnit.SECONDS.toMillis(Long.parseLong(duration.substring(lastIndex, seconds).trim()));
             lastIndex = seconds + 1;
+         }
+         if (millis > 0) {
+            durationMillis += TimeUnit.MILLISECONDS.toMillis(Long.parseLong(duration.substring(lastIndex, millis).trim()));
+            lastIndex = millis + 1;
          }
          if (lastIndex < duration.length()) {
             durationMillis += Long.parseLong(duration.substring(lastIndex));

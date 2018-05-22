@@ -8,7 +8,7 @@ This page should describe the operations executed using **BackgroundOperationsMa
 
 ### BackgroundStressorLogic and LogValues
 
-Initially we have used tactics known now as BackgroundStressorLogic: we spawn several threads issuing a put/get operation every 100 ms (check property delayBetweenRequests scoped into GeneralConfiguration) - those threads are not terminated after the end of the stage but kept working on the background. There are another threads to retrieve and record statistics. In order to check whether the cache has all entries, we have used CheckCacheDataStage. 
+Initially we have used tactics known now as BackgroundStressorLogic: we spawn several threads issuing a put/get operation every 100 ms (check property thinkTime scoped into GeneralConfiguration) - those threads are not terminated after the end of the stage but kept working on the background. There are another threads to retrieve and record statistics. In order to check whether the cache has all entries, we have used CheckCacheDataStage.
 
 This approach works for checking the lag of response times, see how the throughput drops when one node crashes etc. That makes use of this 'BackgroundStressorLogic' valid for cases, where we want to check the performance during failover.
 
