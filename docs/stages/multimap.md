@@ -14,7 +14,7 @@ Test using MiltimapCacheOperations
 > contains-entry-ratio (**optional**) - Ratio of CONTAINS_ENTRY requests. Default is 0.  
 > contains-key-ratio (**optional**) - Ratio of CONTAINS_KEY requests. Default is 0.  
 > contains-value-ratio (**optional**) - Ratio of CONTAINS_VALUE requests. Default is 0.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -41,6 +41,7 @@ Test using MiltimapCacheOperations
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  

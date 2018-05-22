@@ -61,11 +61,14 @@ public abstract class TestStage extends BaseTestStage {
    @Property(doc = "Delay to let all threads start executing operations. Default is 0.", converter = TimeConverter.class)
    public long rampUp = 0;
 
-   @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.")
-   protected long delayBetweenRequests = 0;
+   @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.", deprecatedName = "delayBetweenRequests")
+   protected long thinkTime = 0;
 
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    public boolean logTransactionExceptions = true;
+
+   @Property(converter = TimeConverter.class, doc = "Intended time between each request. Default is 0.")
+   protected long cycleTime = 0;
 
    @InjectTrait
    protected Transactional transactional;
@@ -90,6 +93,7 @@ public abstract class TestStage extends BaseTestStage {
       if (totalThreads > 0 && numThreadsPerNode > 0)
          throw new IllegalStateException("You have to set only one ot total-threads, num-threads-per-node");
       if (totalThreads < 0 || numThreadsPerNode < 0) throw new IllegalStateException("Number of threads can't be < 0");
+      if (cycleTime > 0 && thinkTime > 0) throw new IllegalStateException("We cannot mix cycleTime and thinkTime");
    }
 
    public DistStageAck executeOnSlave() {
@@ -252,7 +256,7 @@ public abstract class TestStage extends BaseTestStage {
 
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
+         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, threadCountDown);
          stressors.add(stressor);
          stressor.start();
       }

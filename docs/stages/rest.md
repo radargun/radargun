@@ -11,7 +11,7 @@ Stage for starting REST operations in the background
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -28,6 +28,7 @@ Stage for starting REST operations in the background
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -38,7 +39,7 @@ Stage for stopping REST operations running in the background
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -56,6 +57,7 @@ Stage for stopping REST operations running in the background
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
 > test-name-to-stop (**optional**) - Name of the background operations to be stopped. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
@@ -66,7 +68,7 @@ Test using RESTOperations with specific URL
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> delay-between-requests (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -83,6 +85,7 @@ Test using RESTOperations with specific URL
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  

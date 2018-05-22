@@ -46,4 +46,8 @@ public final class Message {
    public long totalTime() {
       return TimeUnit.MILLISECONDS.toNanos(receiveCompleteTime - sendStartTime);
    }
+
+   public long getReceiveCompleteTime() {
+      return receiveCompleteTime;
+   }
 }

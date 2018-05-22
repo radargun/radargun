@@ -58,4 +58,8 @@ public final class RequestSet {
    public boolean isSuccessful() {
       return successful;
    }
+
+   public long getEnd() {
+      return end;
+   }
 }

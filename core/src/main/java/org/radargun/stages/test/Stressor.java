@@ -3,6 +3,8 @@ package org.radargun.stages.test;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.radargun.Operation;
 import org.radargun.logging.Log;
@@ -11,6 +13,7 @@ import org.radargun.stats.Request;
 import org.radargun.stats.RequestSet;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeService;
 
 /**
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
@@ -31,7 +34,7 @@ public class Stressor extends Thread {
    private final OperationSelector operationSelector;
    private final Completion completion;
    private final boolean logTransactionExceptions;
-   private long delayBetweenRequests;
+   private long thinkTime;
 
    private boolean useTransactions;
    private int txRemainingOperations = 0;
@@ -40,8 +43,9 @@ public class Stressor extends Thread {
    private Statistics stats;
    private boolean started = false;
    private CountDownLatch threadCountDown;
+   private UniformRateLimiter uniformRateLimiter;
 
-   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CountDownLatch threadCountDown, long delayBetweenRequests) {
+   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, CountDownLatch threadCountDown) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;
@@ -50,9 +54,10 @@ public class Stressor extends Thread {
       this.random = ThreadLocalRandom.current();
       this.completion = stage.getCompletion();
       this.operationSelector = stage.getOperationSelector();
-      this.logTransactionExceptions = logTransactionExceptions;
+      this.logTransactionExceptions = stage.logTransactionExceptions;
       this.threadCountDown = threadCountDown;
-      this.delayBetweenRequests = delayBetweenRequests;
+      this.thinkTime = stage.thinkTime;
+      this.uniformRateLimiter = new UniformRateLimiter(TimeUnit.MILLISECONDS.toNanos(stage.cycleTime));
    }
 
    private boolean recording() {
@@ -100,8 +105,8 @@ public class Stressor extends Thread {
                Operation operation = operationSelector.next(random);
                try {
                   logic.run(operation);
-                  if (delayBetweenRequests > 0)
-                    sleep(delayBetweenRequests);
+                  if (thinkTime > 0)
+                    sleep(thinkTime);
                } catch (OperationLogic.RequestException e) {
                   // the exception was already logged in makeRequest
                } catch (InterruptedException e) {
@@ -112,6 +117,7 @@ public class Stressor extends Thread {
          }
 
          stats.begin();
+         uniformRateLimiter.start();
          this.started = true;
          completion.start();
          int i = 0;
@@ -120,8 +126,8 @@ public class Stressor extends Thread {
             if (!completion.moreToRun()) break;
             try {
                logic.run(operation);
-               if (delayBetweenRequests > 0)
-                  sleep(delayBetweenRequests);
+               if (thinkTime > 0)
+                  sleep(thinkTime);
             } catch (OperationLogic.RequestException e) {
                // the exception was already logged in makeRequest
             } catch (InterruptedException e) {
@@ -166,7 +172,7 @@ public class Stressor extends Thread {
 
       T result = null;
       Exception exception = null;
-      Request request = recording() ? stats.startRequest() : null;
+      Request request = uniformRateLimiter.next(recording() ? stats.startRequest(uniformRateLimiter.acquire()) : null);
       try {
          result = invocation.invoke();
          succeeded(request, invocation.operation());
@@ -307,6 +313,40 @@ public class Stressor extends Thread {
 
       public Request getRequest() {
          return request;
+      }
+   }
+
+   static class UniformRateLimiter {
+      long start = Long.MIN_VALUE;
+      final long opsPerNano;
+      long opIndex = 0;
+
+      UniformRateLimiter(long opsPerNano) {
+         this.opsPerNano = opsPerNano;
+      }
+
+      void start() {
+         start = TimeService.nanoTime();
+      }
+
+      Request next(Request request) {
+         if (opsPerNano > 0 && request != null) {
+            long intendedTime = request.getRequestStartTime();
+            long now;
+            while ((now = System.nanoTime()) < intendedTime)
+               LockSupport.parkNanos(intendedTime - now);
+         }
+         return request;
+      }
+
+      /* @return intended start time in ns for the operation */
+      long acquire() {
+         if (opsPerNano > 0) {
+            long currOpIndex = opIndex++;
+            return start + currOpIndex * opsPerNano;
+         } else {
+            return 0;
+         }
       }
    }
 }
