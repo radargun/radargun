@@ -5,12 +5,14 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.Lifecycle;
 
 /**
- * Retrieves JMX statistics from slave nodes.
+ * Retrieves probe statistics from slave nodes.
+ *
+ * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
-public class SlaveMonitors extends AbstractMonitors<SlaveState, ServiceListener> implements ServiceListener {
-   public static final String MONITORS = SlaveMonitors.class.getName();
+public class ProbeSlaveMonitor extends AbstractMonitors<SlaveState, ServiceListener> implements ServiceListener {
+   public static final String MONITORS = ProbeSlaveMonitor.class.getName();
 
-   public SlaveMonitors(SlaveState state, long period) {
+   public ProbeSlaveMonitor(SlaveState state, long period) {
       super(state, period);
    }
 
