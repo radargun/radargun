@@ -1,5 +1,7 @@
 package org.radargun.stages;
 
+import java.io.IOException;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
 
@@ -14,6 +16,19 @@ public class JGroupsProbeStage extends AbstractJGroupsProbeStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      return run();
+      try {
+         String[] packetsResponse = run();
+         for (String response : packetsResponse) {
+            if (printResultsAsInfo) {
+               log.info(response);
+            } else {
+               log.trace(response);
+            }
+         }
+         return successfulResponse();
+      } catch (IOException e) {
+         log.error(e.getMessage(), e);
+         return errorResponse(e.getMessage(), e);
+      }
    }
 }

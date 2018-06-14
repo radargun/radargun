@@ -7,18 +7,23 @@ import java.net.MulticastSocket;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.radargun.DistStageAck;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 
 /**
  * Inspired by org.jgroups.tests.Probe.
  *
+ * TODO https://github.com/radargun/radargun/issues/551
+ *
  * @author Matej Cimbora
+ * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
 public abstract class AbstractJGroupsProbeStage extends AbstractDistStage {
+
+   private static final String[] EMPTY_RESPONSE = new String[0];
 
    @Property(doc = "List of queries to be performed.", optional = false, complexConverter = JGroupsProbeStage.ListConverter.class)
    private List<Query> queries = new ArrayList<>();
@@ -37,55 +42,44 @@ public abstract class AbstractJGroupsProbeStage extends AbstractDistStage {
    private int expectedResponseCount = -1;
 
    @Property(doc = "Print results of operation to log (INFO level). By default trace logging needs to be enabled.")
-   private boolean printResultsAsInfo;
+   protected boolean printResultsAsInfo;
 
-   protected DistStageAck run() {
-      if (queries.isEmpty()) {
-         log.info("No queries have been specified");
-         return successfulResponse();
-      }
-      MulticastSocket socket = null;
-      try {
-         socket = new MulticastSocket();
-         socket.setSoTimeout((int) timeout);
-         InetAddress targetAddress = InetAddress.getByName(address);
-         byte[] payload = getQuery().getBytes();
-         DatagramPacket packet = new DatagramPacket(payload, 0, payload.length, targetAddress, port);
-         socket.send(packet);
+   protected String[] run() throws IOException {
+      String[] datagramPacketsResponse = null;
+      if (!queries.isEmpty() && expectedResponseCount > 0) {
+         datagramPacketsResponse = new String[expectedResponseCount];
+         MulticastSocket socket = null;
+         try {
+            socket = new MulticastSocket();
+            socket.setSoTimeout((int) timeout);
+            InetAddress targetAddress = InetAddress.getByName(address);
+            byte[] payload = getQuery().getBytes();
+            DatagramPacket packet = new DatagramPacket(payload, 0, payload.length, targetAddress, port);
+            socket.send(packet);
 
-         // receive responses
-         if (expectedResponseCount == -1) {
-            return successfulResponse();
-         }
-         long start = System.currentTimeMillis();
-         int received = 0;
-         while (received < expectedResponseCount) {
-            if (start + timeout < System.currentTimeMillis()) {
-               String errorMessage = "Timed out waiting for query responses";
-               log.error(errorMessage);
-               return errorResponse(errorMessage);
+            long start = TimeService.currentTimeMillis();
+            int received = 0;
+            while (received < expectedResponseCount) {
+               if (start + timeout < TimeService.currentTimeMillis()) {
+                  String errorMessage = "Timed out waiting for query responses";
+                  throw new IOException(errorMessage);
+               }
+               byte[] buffer = new byte[1024 * 64];
+               DatagramPacket result = new DatagramPacket(buffer, buffer.length);
+               socket.receive(result);
+               datagramPacketsResponse[received++] = String.format("Received response %s from %s:%d", new String(result.getData(), 0, result.getLength()), result.getAddress(), result.getPort());
             }
-            byte[] buffer = new byte[1024 * 64];
-            DatagramPacket result = new DatagramPacket(buffer, buffer.length);
-            socket.receive(result);
-            received++;
-            if (printResultsAsInfo) {
-               log.infof("Received response %s from %s:%d", new String(result.getData(), 0, result.getLength()), result.getAddress(), result.getPort());
-            } else {
-               log.tracef("Received response %s from %s:%d", new String(result.getData(), 0, result.getLength()), result.getAddress(), result.getPort());
+         } catch (IOException e) {
+            String errorMessage = "Exception while performing multicast socket operation. Make sure 'enable_diagnostics' property of TP is enabled " +
+               "and correct diagnostics port is specified";
+            throw new IOException(errorMessage, e);
+         } finally {
+            if (socket != null) {
+               socket.close();
             }
          }
-      } catch (IOException e) {
-         String errorMessage = "Exception while performing multicast socket operation. Make sure 'enable_diagnostics' property of TP is enabled " +
-            "and correct diagnostics port is specified";
-         log.error(errorMessage, e);
-         return errorResponse(errorMessage, e);
-      } finally {
-         if (socket != null) {
-            socket.close();
-         }
       }
-      return successfulResponse();
+      return datagramPacketsResponse != null ? datagramPacketsResponse : EMPTY_RESPONSE;
    }
 
    private String getQuery() {
