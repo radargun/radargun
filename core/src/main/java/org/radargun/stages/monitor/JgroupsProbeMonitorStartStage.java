@@ -26,52 +26,50 @@ public class JgroupsProbeMonitorStartStage extends AbstractJGroupsProbeStage {
    @Override
    public DistStageAck executeOnSlave() {
 
-      if (groups == null || (slaveState.getGroupName() != null && groups.contains(slaveState.getGroupName()))) {
-         ProbeSlaveMonitor slaveMonitors = slaveState.get(ProbeSlaveMonitor.MONITORS) == null ? new ProbeSlaveMonitor(slaveState, period)
-            : (ProbeSlaveMonitor) slaveState.get(ProbeSlaveMonitor.MONITORS);
-         slaveMonitors.addMonitor(new Monitor() {
+      ProbeSlaveMonitor slaveMonitors = slaveState.get(ProbeSlaveMonitor.MONITORS) == null ? new ProbeSlaveMonitor(slaveState, period)
+         : (ProbeSlaveMonitor) slaveState.get(ProbeSlaveMonitor.MONITORS);
+      slaveMonitors.addMonitor(new Monitor() {
 
-            @Override
-            public void run() {
-               try {
-                  monitor(JgroupsProbeMonitorStartStage.this.run());
-               } catch (IOException e) {
-                  log.error(e.getMessage(), e);
+         @Override
+         public void run() {
+            try {
+               monitor(JgroupsProbeMonitorStartStage.this.run());
+            } catch (IOException e) {
+               log.error(e.getMessage(), e);
+            }
+         }
+
+         @Override
+         public void start() {
+            try {
+               monitor(JgroupsProbeMonitorStartStage.this.run());
+            } catch (IOException e) {
+               log.error(e.getMessage(), e);
+            }
+         }
+
+         @Override
+         public void stop() {
+            try {
+               monitor(JgroupsProbeMonitorStartStage.this.run());
+            } catch (IOException e) {
+               log.error(e.getMessage(), e);
+            }
+         }
+
+         public void monitor(String[] packetsResponse) {
+            for (String response : packetsResponse) {
+               // TODO https://github.com/radargun/radargun/issues/553
+               //slaveState.getTimeline().addEvent("JgroupsProbe", new Timeline.TextEvent(TimeService.currentTimeMillis(), packet.getMessage()));
+               if (printResultsAsInfo) {
+                  log.info(response);
+               } else {
+                  log.trace(response);
                }
             }
-
-            @Override
-            public void start() {
-               try {
-                  monitor(JgroupsProbeMonitorStartStage.this.run());
-               } catch (IOException e) {
-                  log.error(e.getMessage(), e);
-               }
-            }
-
-            @Override
-            public void stop() {
-               try {
-                  monitor(JgroupsProbeMonitorStartStage.this.run());
-               } catch (IOException e) {
-                  log.error(e.getMessage(), e);
-               }
-            }
-
-            public void monitor(String[] packetsResponse) {
-               for (String response : packetsResponse) {
-                  // TODO https://github.com/radargun/radargun/issues/553
-                  //slaveState.getTimeline().addEvent("JgroupsProbe", new Timeline.TextEvent(TimeService.currentTimeMillis(), packet.getMessage()));
-                  if (printResultsAsInfo) {
-                     log.info(response);
-                  } else {
-                     log.trace(response);
-                  }
-               }
-            }
-         });
-         slaveMonitors.start();
-      }
+         }
+      });
+      slaveMonitors.start();
 
       return successfulResponse();
    }
