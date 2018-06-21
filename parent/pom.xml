@@ -429,7 +429,7 @@
          </modules>
          <properties>
             <plugins.infinispan-latest>infinispan92</plugins.infinispan-latest>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,${plugins.infinispan-latest}</plugins.infinispan>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,${plugins.infinispan-latest},infinispan-snapshot</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -498,7 +498,7 @@
          </modules>
          <properties>
             <plugins.jdg-latest>jdg72</plugins.jdg-latest>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,${plugins.jdg-latest}</plugins.jdg>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,${plugins.jdg-latest},jdg-snapshot</plugins.jdg>
          </properties>
       </profile>
       <profile>
