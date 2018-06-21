@@ -234,15 +234,8 @@
 
                         <echo message="Packaging plugins: " />
 
-                        <ac:if xmlns:ac="antlib:net.sf.antcontrib">
-                           <isset property="package-latest"/>
-                           <ac:then>
-                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.redis-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}" />
-                           </ac:then>
-                           <ac:else>
-                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.redis},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}"/>
-                           </ac:else>
-                        </ac:if>
+                        <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.redis},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}"/>
+
                         <echo message="Plugin list: ${plugin.list}" />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
                         <ac:for list="${plugin.list}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
