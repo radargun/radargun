@@ -89,16 +89,22 @@
       <plugins.openshift/>
       <plugins.jcache/>
       <plugins.ehcache/>
+      <plugins.ehcache-latest/>
       <plugins.hazelcast/>
+      <plugins.hazelcast-latest/>
       <plugins.redis/>
+      <plugins.redis-latest/>
       <plugins.jbosscache/>
+      <plugins.jbosscache-latest/>
       <plugins.jgroups/>
+      <plugins.jgroups-latest/>
       <plugins.infinispan/>
       <plugins.infinispan-latest/>
       <plugins.jdg-early/>
       <plugins.jdg/>
       <plugins.jdg-latest/>
       <plugins.coherence/>
+      <plugins.coherence-latest/>
       <plugins.process />
       <plugins.resteasy-http />
       <plugins.spark />
@@ -309,7 +315,8 @@
             <module>../plugins/ehcache26</module>
          </modules>
          <properties>
-            <plugins.ehcache>ehcache25,ehcache26</plugins.ehcache>
+            <plugins.ehcache-latest>ehcache26</plugins.ehcache-latest>
+            <plugins.ehcache>ehcache25,${plugins.ehcache-latest}</plugins.ehcache>
          </properties>
       </profile>
       <profile>
@@ -327,7 +334,8 @@
             <module>../plugins/hazelcast39</module>
          </modules>
          <properties>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,hazelcast39</plugins.hazelcast>
+            <plugins.hazelcast-latest>hazelcast39</plugins.hazelcast-latest>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
          </properties>
       </profile>
       <profile>
@@ -341,7 +349,8 @@
             <module>../plugins/redis32</module>
          </modules>
          <properties>
-            <plugins.redis>redis32</plugins.redis>
+            <plugins.redis-latest>redis32</plugins.redis-latest>
+            <plugins.redis>${plugins.redis-latest}</plugins.redis>
          </properties>
       </profile>
       <profile>
@@ -356,7 +365,8 @@
             <module>../plugins/jbosscache3</module>
          </modules>
          <properties>
-            <plugins.jbosscache>jbosscache2,jbosscache3</plugins.jbosscache>
+            <plugins.jbosscache-latest>jbosscache3</plugins.jbosscache-latest>
+            <plugins.jbosscache>jbosscache2,${plugins.jbosscache-latest}</plugins.jbosscache>
          </properties>
       </profile>
       <profile>
@@ -375,7 +385,8 @@
             <module>../plugins/jgroups36</module>
          </modules>
          <properties>
-            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,jgroups36</plugins.jgroups>
+            <plugins.jgroups-latest>jgroups36</plugins.jgroups-latest>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,${plugins.jgroups-latest}</plugins.jgroups>
          </properties>
       </profile>
       <profile>
@@ -415,11 +426,10 @@
             <module>../plugins/infinispan90</module>
             <module>../plugins/infinispan91</module>
             <module>../plugins/infinispan92</module>
-            <module>../plugins/infinispan-snapshot</module>
          </modules>
          <properties>
             <plugins.infinispan-latest>infinispan92</plugins.infinispan-latest>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,infinispan92,infinispan-snapshot</plugins.infinispan>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,${plugins.infinispan-latest},infinispan-snapshot</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -448,7 +458,8 @@
             <module>../plugins/coherence12</module>
          </modules>
          <properties>
-            <plugins.coherence>coherence3,coherence12</plugins.coherence>
+            <plugins.coherence-latest>coherence12</plugins.coherence-latest>
+            <plugins.coherence>coherence3,${plugins.coherence-latest}</plugins.coherence>
          </properties>
       </profile>
 
@@ -484,11 +495,10 @@
             <module>../plugins/jdg70</module>
             <module>../plugins/jdg71</module>
             <module>../plugins/jdg72</module>
-            <module>../plugins/jdg-snapshot</module>
          </modules>
          <properties>
             <plugins.jdg-latest>jdg72</plugins.jdg-latest>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,jdg72,jdg-snapshot</plugins.jdg>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,${plugins.jdg-latest},jdg-snapshot</plugins.jdg>
          </properties>
       </profile>
       <profile>
