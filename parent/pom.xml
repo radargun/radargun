@@ -100,9 +100,11 @@
       <plugins.jgroups-latest/>
       <plugins.infinispan/>
       <plugins.infinispan-latest/>
-      <plugins.jdg-early/>
+      <plugins.infinispan-snapshot/>
       <plugins.jdg/>
+      <plugins.jdg-early/>
       <plugins.jdg-latest/>
+      <plugins.jdg-snapshot/>
       <plugins.coherence/>
       <plugins.coherence-latest/>
       <plugins.process />
