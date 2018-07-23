@@ -6,7 +6,7 @@ import org.radargun.StageResult;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.sysmonitor.MasterMonitors;
-import org.radargun.sysmonitor.SlaveMonitors;
+import org.radargun.sysmonitor.SystemSlaveMonitor;
 
 /**
  *
@@ -19,7 +19,7 @@ public class MonitorStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      SlaveMonitors slaveMonitors = (SlaveMonitors) slaveState.get(SlaveMonitors.MONITORS);
+      SystemSlaveMonitor slaveMonitors = (SystemSlaveMonitor) slaveState.get(SystemSlaveMonitor.MONITORS);
       if (slaveMonitors != null) {
          slaveMonitors.stop();
          return successfulResponse();
