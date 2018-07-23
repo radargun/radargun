@@ -15,7 +15,7 @@ import org.radargun.sysmonitor.MemoryUsageMonitor;
 import org.radargun.sysmonitor.NetworkBytesMonitor;
 import org.radargun.sysmonitor.OpenFilesMonitor;
 import org.radargun.sysmonitor.RssMonitor;
-import org.radargun.sysmonitor.SlaveMonitors;
+import org.radargun.sysmonitor.SystemSlaveMonitor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
@@ -25,11 +25,10 @@ import org.radargun.utils.TimeConverter;
 /**
  *
  * Starts collecting JVM statistics locally on master and each slave node.
- * {@link SlaveMonitors}
+ * {@link SystemSlaveMonitor}
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-
 @Stage(doc = "Starts collecting statistics locally on master and each slave node.", deprecatedName = "jvm-monitor-start")
 public class MonitorStartStage extends AbstractDistStage {
 
@@ -59,8 +58,8 @@ public class MonitorStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      SlaveMonitors slaveMonitors = slaveState.get(SlaveMonitors.MONITORS) == null ? new SlaveMonitors(slaveState, period)
-            : (SlaveMonitors) slaveState.get(SlaveMonitors.MONITORS);
+      SystemSlaveMonitor slaveMonitors = slaveState.get(SystemSlaveMonitor.MONITORS) == null ? new SystemSlaveMonitor(slaveState, period)
+            : (SystemSlaveMonitor) slaveState.get(SystemSlaveMonitor.MONITORS);
 
       addMonitors(slaveMonitors, slaveState.getTimeline());
 
