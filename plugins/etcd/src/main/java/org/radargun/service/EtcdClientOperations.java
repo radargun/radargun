@@ -28,11 +28,11 @@ public class EtcdClientOperations implements BasicOperations {
    }
 
    @Override
-   public Cache<byte[], byte[]> getCache(String cacheName) {
+   public <K, V> Cache<K, V>  getCache(String cacheName) {
       return new EtcdCacheAdapter(service.kvClient);
    }
 
-   private class EtcdCacheAdapter implements BasicOperations.Cache<byte[], byte[]> {
+   private class EtcdCacheAdapter<K, V> implements BasicOperations.Cache<K, V>  {
 
       private KV kvClient;
 
@@ -41,47 +41,47 @@ public class EtcdClientOperations implements BasicOperations {
       }
 
       @Override
-      public byte[] get(byte[] key) {
+      public V get(K key) {
          Optional<KeyValue> value = this.retrieveValueFrom(key);
          return retrieveBytes(value);
       }
 
       @Override
-      public boolean containsKey(byte[] key) {
+      public boolean containsKey(K key) {
          Optional<KeyValue> value = this.retrieveValueFrom(key);
          return value.isPresent();
       }
 
       @Override
-      public void put(byte[] key, byte[] value) {
+      public void put(K key, V value) {
          try {
-            kvClient.put(ByteSequence.fromBytes(key), ByteSequence.fromBytes(value)).get();
+            kvClient.put(createByteSequence(key), createByteSequence(value)).get();
          } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Impossible to put the cache value", e);
          }
       }
 
       @Override
-      public byte[] getAndPut(byte[] key, byte[] value) {
+      public V getAndPut(K key, V value) {
          PutResponse response;
          try {
-            response = kvClient.put(ByteSequence.fromBytes(key), ByteSequence.fromBytes(value), GET_PUT_OPTION).get();
+            response = kvClient.put(createByteSequence(key), createByteSequence(value), GET_PUT_OPTION).get();
          } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Impossible to put the cache value", e);
          }
 
          if (response.hasPrevKv()) {
-            return response.getPrevKv().getValue().getBytes();
+            return (V) response.getPrevKv().getValue().getBytes();
          } else {
             return null;
          }
       }
 
       @Override
-      public boolean remove(byte[] key) {
+      public boolean remove(K key) {
          DeleteResponse response;
          try {
-            response = kvClient.delete(ByteSequence.fromBytes(key)).get();
+            response = kvClient.delete(createByteSequence(key)).get();
          } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Impossible to delete the cache", e);
          }
@@ -89,17 +89,17 @@ public class EtcdClientOperations implements BasicOperations {
       }
 
       @Override
-      public byte[] getAndRemove(byte[] key) {
+      public V getAndRemove(K key) {
          DeleteResponse response;
          try {
-            response = kvClient.delete(ByteSequence.fromBytes(key), GET_DELETE_OPTION).get();
+            response = kvClient.delete(createByteSequence(key), GET_DELETE_OPTION).get();
          } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Impossible to delete the cache", e);
          }
 
          List<KeyValue> prevKvs = response.getPrevKvs();
          if (prevKvs != null && prevKvs.size() > 0) {
-            return prevKvs.get(0).getValue().getBytes();
+            return (V) prevKvs.get(0).getValue().getBytes();
          } else {
             return null;
          }
@@ -110,17 +110,17 @@ public class EtcdClientOperations implements BasicOperations {
          throw new UnsupportedOperationException("Clearing etcd is not supported.");
       }
 
-      private byte[] retrieveBytes(Optional<KeyValue> optionalKeyValue) {
+      private V retrieveBytes(Optional<KeyValue> optionalKeyValue) {
          if (!optionalKeyValue.isPresent()) {
             throw new NullPointerException("Cache value cannot be null");
          }
-         return optionalKeyValue.get().getValue().getBytes();
+         return (V) optionalKeyValue.get().getValue().getBytes();
       }
 
-      private Optional<KeyValue> retrieveValueFrom(byte[] key) {
+      private Optional<KeyValue> retrieveValueFrom(K key) {
          GetResponse response;
          try {
-            response = kvClient.get(ByteSequence.fromBytes(key), DEFAULT_GET_OPTION).get();
+            response = kvClient.get(createByteSequence(key), DEFAULT_GET_OPTION).get();
          } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Impossible to retrieve the cache value", e);
          }
@@ -130,6 +130,18 @@ public class EtcdClientOperations implements BasicOperations {
             keyValue = values.get(0);
          }
          return Optional.ofNullable(keyValue);
+      }
+
+      private ByteSequence createByteSequence(Object object) {
+         ByteSequence etcdKey;
+         if (object instanceof String) {
+            etcdKey = ByteSequence.fromString((String) object);
+         } else if (object instanceof byte[]) {
+            etcdKey = ByteSequence.fromBytes((byte[]) object);
+         } else {
+            throw new IllegalArgumentException("I don't know hot to decode: " + object + ", class type: " + object.getClass());
+         }
+         return etcdKey;
       }
    }
 }
