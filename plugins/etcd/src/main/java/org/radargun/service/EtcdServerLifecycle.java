@@ -17,6 +17,7 @@ public class EtcdServerLifecycle extends ProcessLifecycle<EtcdServerService> {
             Utils.unzip(service.distributionZip, service.distributionDir);
             // the extraction erases the executable bits
             Utils.setPermissions(service.distributionDir + "/etcd", "rwxr-xr-x");
+            Utils.setPermissions(service.distributionDir + "/etcdctl", "rwxr-xr-x");
          }
       } catch (IOException e) {
          throw new RuntimeException("Failed to prepare etcd distribution!", e);
