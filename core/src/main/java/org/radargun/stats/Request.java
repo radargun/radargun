@@ -77,10 +77,12 @@ public final class Request {
 //   public void responseStarted() {}
 
    public void succeeded(Operation operation) {
+      this.responseCompleteTime = TimeService.nanoTime();
       record(operation);
    }
 
    public void failed(Operation operation) {
+      this.responseCompleteTime = TimeService.nanoTime();
       this.successful = false;
       record(operation);
    }
@@ -113,7 +115,6 @@ public final class Request {
    }
 
    private void record(Operation operation) {
-      this.responseCompleteTime = TimeService.nanoTime();
       statistics.record(this, operation);
    }
 }
