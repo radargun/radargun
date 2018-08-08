@@ -43,7 +43,11 @@ public class Stressor extends Thread {
    private Statistics stats;
    private boolean started = false;
    private CountDownLatch threadCountDown;
-   private UniformRateLimiter uniformRateLimiter;
+
+   // uniform rate limiter
+   final long uniformRateLimiterOpsPerNano;
+   long uniformRateLimiterOpIndex = 0;
+   long uniformRateLimiterStart = Long.MIN_VALUE;
 
    public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, CountDownLatch threadCountDown) {
       super("Stressor-" + threadIndex);
@@ -57,7 +61,7 @@ public class Stressor extends Thread {
       this.logTransactionExceptions = stage.logTransactionExceptions;
       this.threadCountDown = threadCountDown;
       this.thinkTime = stage.thinkTime;
-      this.uniformRateLimiter = new UniformRateLimiter(TimeUnit.MILLISECONDS.toNanos(stage.cycleTime));
+      this.uniformRateLimiterOpsPerNano = TimeUnit.MILLISECONDS.toNanos(stage.cycleTime);
    }
 
    private boolean recording() {
@@ -116,8 +120,8 @@ public class Stressor extends Thread {
             }
          }
 
+         uniformRateLimiterStart = TimeService.nanoTime();
          stats.begin();
-         uniformRateLimiter.start();
          this.started = true;
          completion.start();
          int i = 0;
@@ -172,7 +176,7 @@ public class Stressor extends Thread {
 
       T result = null;
       Exception exception = null;
-      Request request = uniformRateLimiter.next(recording() ? stats.startRequest(uniformRateLimiter.acquire()) : null);
+      Request request = nextRequest();
       try {
          result = invocation.invoke();
          succeeded(request, invocation.operation());
@@ -316,37 +320,19 @@ public class Stressor extends Thread {
       }
    }
 
-   static class UniformRateLimiter {
-      long start = Long.MIN_VALUE;
-      final long opsPerNano;
-      long opIndex = 0;
-
-      UniformRateLimiter(long opsPerNano) {
-         this.opsPerNano = opsPerNano;
-      }
-
-      void start() {
-         start = TimeService.nanoTime();
-      }
-
-      Request next(Request request) {
-         if (opsPerNano > 0 && request != null) {
+   private Request nextRequest() {
+      Request request = null;
+      if (recording()) {
+         if (uniformRateLimiterOpsPerNano > 0) {
+            request = stats.startRequest(uniformRateLimiterStart + (++uniformRateLimiterOpIndex) * uniformRateLimiterOpsPerNano);
             long intendedTime = request.getRequestStartTime();
             long now;
             while ((now = System.nanoTime()) < intendedTime)
                LockSupport.parkNanos(intendedTime - now);
-         }
-         return request;
-      }
-
-      /* @return intended start time in ns for the operation */
-      long acquire() {
-         if (opsPerNano > 0) {
-            long currOpIndex = opIndex++;
-            return start + currOpIndex * opsPerNano;
          } else {
-            return 0;
+            request = stats.startRequest();
          }
       }
+      return request;
    }
 }
