@@ -1,11 +1,8 @@
 package org.radargun.stages.cache.test;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -17,7 +14,6 @@ import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
-import org.radargun.traits.Transactional;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -45,34 +41,6 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
 
    @InjectTrait
    protected BasicOperations basicOperations;
-
-   @Init
-   @Override
-   public void init() {
-      super.init();
-      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total",
-         new HashSet<>(Arrays.asList(
-            BasicOperations.GET,
-            CacheInvocations.Get.GET_NULL,
-            BasicOperations.CONTAINS_KEY,
-            BasicOperations.PUT,
-            BasicOperations.GET_AND_PUT,
-            BasicOperations.REMOVE,
-            BasicOperations.GET_AND_REMOVE)));
-      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total.TX",
-         new HashSet<>(Arrays.asList(
-            CacheInvocations.Get.TX,
-            CacheInvocations.ContainsKey.TX,
-            CacheInvocations.Put.TX,
-            CacheInvocations.GetAndPut.TX,
-            CacheInvocations.Remove.TX,
-            CacheInvocations.GetAndRemove.TX,
-            Transactional.BEGIN,
-            Transactional.COMMIT,
-            Transactional.DURATION,
-            Transactional.ROLLBACK
-         )));
-   }
 
    @Override
    protected OperationSelector createOperationSelector() {
