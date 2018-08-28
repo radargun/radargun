@@ -69,28 +69,29 @@ public class HistogramChart {
          long totalCount = LongStream.of(h.counts).sum();
          if (totalCount == 0) {
             percents.add(new double[0]);
-         }
-         double[] percents = new double[buckets];
+         } else {
+            double[] percents = new double[buckets];
 
-         long accCount = 0;
-         double current = min * exponent;
-         int j = 0;
-         for (int i = 1; i < h.ranges.length; ++i) {
-            if (h.ranges[i] >= current) {
-               percents[j] = (double) accCount / (double) totalCount;
-               if (++j >= buckets) {
-                  break;
+            long accCount = 0;
+            double current = min * exponent;
+            int j = 0;
+            for (int i = 1; i < h.ranges.length; ++i) {
+               if (h.ranges[i] >= current) {
+                  percents[j] = (double) accCount / (double) totalCount;
+                  if (++j >= buckets) {
+                     break;
+                  }
+                  current *= exponent;
+                  accCount = h.counts[i - 1];
+               } else {
+                  accCount += h.counts[i - 1];
                }
-               current *= exponent;
-               accCount = h.counts[i - 1];
-            } else {
-               accCount += h.counts[i - 1];
             }
+            if (j < buckets) {
+               percents[j] = (double) accCount / (double) totalCount;
+            }
+            this.percents.add(percents);
          }
-         if (j < buckets) {
-            percents[j] = (double) accCount / (double) totalCount;
-         }
-         this.percents.add(percents);
       }
    }
 
