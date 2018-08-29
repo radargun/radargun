@@ -592,7 +592,7 @@ public abstract class ReportDocument extends HtmlDocument {
       protected int histogramHeight = 600;
 
       @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
-      protected double[] percentiles = new double[] {95d, 99d};
+      protected double[] percentiles = new double[] {50d, 90d, 95d, 99d, 99.9d, 99.99d};
 
       @Property(doc = "Generate statistics for each node (expandable menu). Default is true.")
       protected boolean generateNodeStats = true;
