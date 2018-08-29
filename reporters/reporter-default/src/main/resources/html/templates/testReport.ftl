@@ -171,8 +171,9 @@
           <th colspan="4"> Configuration ${testReport.getSingleTestName(i)}</th>
           <th>requests</th>
           <th>errors</th>
-          <th>mean</th>
-          <th>std.dev</th>
+          <th>latency mean</th>
+          <th>latency std.dev</th>
+          <th>latency max</th>
 
           <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
             <th>throughput</th>
@@ -351,8 +352,9 @@
           <th colspan="4"> Configuration ${testReport.getSingleTestName(i)}</th>
           <th>requests</th>
           <th>errors</th>
-          <th>mean</th>
-          <th>std.dev</th>
+          <th>latency mean</th>
+          <th>latency std.dev</th>
+          <th>latency max</th>
 
           <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
             <th>throughput</th>
@@ -541,6 +543,14 @@
       <td class="${rowClass} rowStyle" title="${tooltip}"/>
       <td class="${rowClass} rowStyle" title="${tooltip}"/>
     </#if>
+  </#if>
+
+  <#if defaultOutcome?? && defaultOutcome?has_content>
+    <td class="${rowClass} rowStyle" title="${tooltip}">
+    ${testReport.formatTime(defaultOutcome.responseTimeMax)}
+    </td>
+  <#else >
+    <td class="${rowClass} rowStyle" title="${tooltip}"/>
   </#if>
 
   <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT)>
@@ -739,46 +749,4 @@
       });
     }
   </script>
-</#macro>
-
-<#macro writeTotalRepresentations statistics report aggregation node operation>
-
-  <#if statistics?has_content>
-    <#local period = testReport.period(statistics)!0 />
-  </#if>
-
-  <#local defaultOutcome = statistics.getRepresentation(operation, testReport.defaultOutcomeClass())! />
-
-
-  <#local rowClass = testReport.rowClass(aggregation.anySuspect(operation)) />
-  <#if defaultOutcome?? && defaultOutcome?has_content>
-    <td class="${rowClass} firstCellStyle">
-      ${defaultOutcome.requests}
-    </td>
-    <td class="${rowClass} rowStyle">
-      ${defaultOutcome.errors}
-    </td>
-  <#else >
-    <td class="${rowClass} firstCellStyle"/>
-    <td class="${rowClass} rowStyle"/>
-  </#if>
-
-  <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT)>
-
-    <#if operationStats?has_content>
-      <#local operationThroughput = statistics.getRepresentation(operation, testReport.operationThroughputClass(), period)! />
-    </#if>
-
-    <#if operationThroughput?has_content>
-      <td class="${rowClass} rowStyle">
-        ${testReport.formatOperationThroughput(operationThroughput.gross)}
-      </td>
-      <td class="${rowClass} rowStyle">
-        ${testReport.formatOperationThroughput(operationThroughput.net)}
-      </td>
-    <#else >
-      <td class="${rowClass} rowStyle"/>
-      <td class="${rowClass} rowStyle"/>
-    </#if>
-  </#if>
 </#macro>
