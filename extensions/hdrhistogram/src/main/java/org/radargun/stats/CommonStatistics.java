@@ -23,7 +23,7 @@ public class CommonStatistics extends MultiStatistics {
    private int digits = 2;
 
    public CommonStatistics() {
-      super(new Statistics[] {new BasicStatistics(), new PeriodicStatistics(), new BasicStatistics(new HistogramOperationStats())});
+      super(new Statistics[] {new PeriodicStatistics(), new BasicStatistics(new HistogramOperationStats())});
    }
 
    private CommonStatistics(Statistics[] internal) {
@@ -32,8 +32,8 @@ public class CommonStatistics extends MultiStatistics {
 
    @Init
    public void init() {
-      ((PeriodicStatistics) internal[1]).setPeriod(period);
-      ((HistogramOperationStats) ((BasicStatistics) internal[2]).prototype).init(maxValue, digits);
+      ((PeriodicStatistics) internal[0]).setPeriod(period);
+      ((HistogramOperationStats) ((BasicStatistics) internal[1]).prototype).init(maxValue, digits);
    }
 
    @Override
