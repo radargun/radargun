@@ -9,12 +9,12 @@
    </clusters>
 
    <configurations>
-      <config name="redis">
-         <setup group="client" plugin="redis">
-            <jedis xmlns="urn:radargun:plugins:redis:3.0" >
-               <!-- Add the Redis servers addresses separated by comma -->
-               <servers></servers>
-               <max-pool-size>8</max-pool-size>
+      <config name="redis-enterprise">
+         <setup group="client" plugin="redis-enterprise">
+            <jedis xmlns="urn:radargun:plugins:redis-enterprise:3.0" >
+               <!-- Add RedisLabs Enterprise endpoint address -->
+               <server></server>
+               <max-pool-size>80</max-pool-size>
             </jedis>
          </setup>
       </config>
@@ -24,14 +24,14 @@
                 xmlns="urn:radargun:stages:core:3.0"
                 xmlns:cache="urn:radargun:stages:cache:3.0">
 
-      <define var="numberOfEntries" value="4000000" />
+      <define var="numberOfEntries" value="166666" />
       <define var="entrySize" value="1000" />
-      <define var="numberOfThreads" value="64" />
+      <define var="numberOfThreads" value="16" />
 
-      <jvm-monitor-start />
+      <jvm-monitor-start/>
       <service-start groups="client"/>
 
-      <cache:load groups="client" num-entries="${numberOfEntries}" entry-size="${entrySize}" num-threads="${numberOfThreads}" log-period="10000">
+      <cache:load groups="client" num-entries="${numberOfEntries}" entry-size="${entrySize}" num-threads="${numberOfThreads}" log-period="1">
          <cache:key-generator>
             <cache:byte-array-key />
          </cache:key-generator>
@@ -52,7 +52,7 @@
       <!-- hack to stop the connections of the previously used Jedis clients, cleaning up JedisPool -->
       <cache:clear />
 
-      <cache:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:5m}" num-threads-per-node="${numberOfThreads}"  get-ratio="4" put-ratio="1">
+      <cache:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:2m}" num-threads-per-node="${numberOfThreads}"  get-ratio="4" put-ratio="1">
          <cache:key-selector>
             <cache:concurrent-keys total-entries="${numberOfEntries}"/>
          </cache:key-selector>

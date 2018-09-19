@@ -92,8 +92,12 @@
       <plugins.ehcache-latest/>
       <plugins.hazelcast/>
       <plugins.hazelcast-latest/>
+      <plugins.hazelcast-enterprise/>
+      <plugins.hazelcast-enterprise-latest/>
       <plugins.redis/>
       <plugins.redis-latest/>
+      <plugins.redis-enterprise/>
+      <plugins.redis-enterprise-latest/>
       <plugins.jbosscache/>
       <plugins.jbosscache-latest/>
       <plugins.jgroups/>
@@ -334,10 +338,26 @@
             <module>../plugins/hazelcast37</module>
             <module>../plugins/hazelcast38</module>
             <module>../plugins/hazelcast39</module>
+            <module>../plugins/hazelcast310</module>
          </modules>
          <properties>
             <plugins.hazelcast-latest>hazelcast39</plugins.hazelcast-latest>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,hazelcast39,hazelcast310,${plugins.hazelcast-latest}</plugins.hazelcast>
+         </properties>
+      </profile>
+      <profile>
+         <id>hazelcast-enterprise</id>
+         <activation>
+            <property>
+               <name>!no-hazelcast-enterprise</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/hazelcast-enterprise310</module>
+         </modules>
+         <properties>
+            <plugins.hazelcast-enterprise-latest>hazelcast-enterprise310</plugins.hazelcast-enterprise-latest>
+            <plugins.hazelcast-enterprise>hazelcast-enterprise310,${plugins.hazelcast-enterprise-latest}</plugins.hazelcast-enterprise>
          </properties>
       </profile>
       <profile>
@@ -348,11 +368,26 @@
             </property>
          </activation>
          <modules>
-            <module>../plugins/redis32</module>
+            <module>../plugins/redis</module>
          </modules>
          <properties>
-            <plugins.redis-latest>redis32</plugins.redis-latest>
+            <plugins.redis-latest>redis</plugins.redis-latest>
             <plugins.redis>${plugins.redis-latest}</plugins.redis>
+         </properties>
+      </profile>
+      <profile>
+         <id>redis-enterprise</id>
+         <activation>
+            <property>
+               <name>!no-redis-enterprise</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/redis-enterprise</module>
+         </modules>
+         <properties>
+            <plugins.redis-enterprise-latest>redis-enterprise</plugins.redis-enterprise-latest>
+            <plugins.redis-enterprise>${plugins.redis-enterprise-latest}</plugins.redis-enterprise>
          </properties>
       </profile>
       <profile>

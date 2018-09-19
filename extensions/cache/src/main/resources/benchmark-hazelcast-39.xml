@@ -1,0 +1,71 @@
+<!-- This test shows example comparison between three products -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+    <clusters>
+        <cluster size="6">
+            <group name="server" size="3"/>
+            <group name="client" size="3"/>
+        </cluster>
+    </clusters>
+
+    <configurations>
+        <config name="Hazelcast 39 client-server">
+            <setup group="server" plugin="hazelcast39">
+                <hazelcast xmlns="urn:radargun:plugins:hazelcast39:3.0" file="dist-sync.xml"/>
+            </setup>
+
+            <setup group="client" plugin="hazelcast39">
+                <hazelcast-client xmlns="urn:radargun:plugins:hazelcast39:3.0">
+                    <!--Address of one server is enough to connect to the cluster, but it's recommended to specify all of them-->
+                    <servers></servers>
+                    <servers></servers>
+                    <servers></servers>
+                </hazelcast-client>
+            </setup>
+
+        </config>
+
+    </configurations>
+
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0">
+        <jvm-monitor-start/>
+        <service-start groups="server"/>
+        <service-start groups="client"/>
+
+        <cache:load groups="client" num-entries="4000000" entry-size="10000">
+            <cache:key-generator>
+                <cache:byte-array-key />
+            </cache:key-generator>
+            <cache:value-generator>
+                <cache:byte-array />
+            </cache:value-generator>
+        </cache:load>
+
+        <cache:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="64" duration="${warmup.duration:1m}" get-ratio="0" put-ratio="1">
+            <cache:key-selector>
+                <cache:concurrent-keys total-entries="4000000"/>
+            </cache:key-selector>
+        </cache:basic-operations-test>
+
+        <cache:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:15m}" num-threads-per-node="64"  get-ratio="0" put-ratio="1">
+            <cache:key-selector>
+                <cache:concurrent-keys total-entries="4000000"/>
+            </cache:key-selector>
+            <statistics>
+                <common/>
+            </statistics>
+        </cache:basic-operations-test>
+
+        <service-stop/>
+    </rg:scenario>
+    <cleanup check-threads="false"/>
+
+    <reports>
+        <reporter type="csv"/>
+        <reporter type="html"/>
+    </reports>
+
+</benchmark>

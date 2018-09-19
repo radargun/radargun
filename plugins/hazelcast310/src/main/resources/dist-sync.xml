@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.7.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.10.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -14,15 +14,15 @@
         <join>
             <multicast enabled="false"/>
             <tcp-ip enabled="true">
-                <member>10.0.0.178</member>
-                <member>10.0.0.114</member>
-                <member>10.0.0.126</member>
+                <!-- Add the member IP addresses here -->
+                <member></member>
+                <member></member>
+                <member></member>
             </tcp-ip>
         </join>
     </network>
 
-    <map name="default">
-
+    <map name="default*">
     </map>
 
 </hazelcast>
