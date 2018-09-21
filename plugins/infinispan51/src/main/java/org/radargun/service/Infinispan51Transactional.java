@@ -6,16 +6,16 @@ import org.infinispan.AdvancedCache;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Infinispan51Transactional extends InfinispanTransactional {
-   protected final Infinispan51EmbeddedService service;
+   protected final InfinispanTransactionalService service;
 
-   public Infinispan51Transactional(Infinispan51EmbeddedService service) {
+   public Infinispan51Transactional(InfinispanTransactionalService service) {
       super(service);
       this.service = service;
    }
 
    @Override
    public Configuration getConfiguration(String cacheName) {
-      if (service.batching && service.isCacheBatching(service.getCache(cacheName))) {
+      if (service.isBatching() && service.isCacheBatching(cacheName)) {
          return Configuration.TRANSACTIONAL;
       }
       return super.getConfiguration(cacheName);
@@ -23,7 +23,7 @@ public class Infinispan51Transactional extends InfinispanTransactional {
 
    @Override
    public Transaction getTransaction() {
-      if (service.batching) {
+      if (service.isBatching()) {
          return new Batch();
       } else {
          return super.getTransaction();

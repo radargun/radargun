@@ -14,17 +14,17 @@ public class InfinispanTransactional implements Transactional {
    protected static final Log log = LogFactory.getLog(InfinispanTransactional.class);
    protected static final boolean trace = log.isTraceEnabled();
 
-   protected final InfinispanEmbeddedService service;
+   protected final InfinispanTransactionalService service;
    protected final boolean enlistExtraXAResource;
 
-   public InfinispanTransactional(InfinispanEmbeddedService service) {
+   public InfinispanTransactional(InfinispanTransactionalService service) {
       this.service = service;
-      this.enlistExtraXAResource = service.enlistExtraXAResource;
+      this.enlistExtraXAResource = service.isEnlistExtraXAResource();
    }
 
    @Override
    public Configuration getConfiguration(String cacheName) {
-      return service.isCacheTransactional(service.getCache(cacheName)) ?
+      return service.isCacheTransactional(cacheName) ?
          Configuration.TRANSACTIONAL : Configuration.NON_TRANSACTIONAL;
    }
 
@@ -39,8 +39,16 @@ public class InfinispanTransactional implements Transactional {
       } else if (resource instanceof AdvancedCacheHolder) {
          return ((AdvancedCacheHolder) resource).getAdvancedCache();
       } else {
-         throw new IllegalArgumentException(String.valueOf(resource));
+         throw new IllegalArgumentException("Cannot find the resource: " + String.valueOf(resource));
       }
+   }
+
+   /**
+    * TransactionalCache was introduced in 9.3
+    * HotRod is a RemoteCache and not a AdvancedCache
+    */
+   protected <T> TransactionManager getTransactionManager(T resource) {
+      return getAdvancedCache(resource).getTransactionManager();
    }
 
    protected class Tx implements Transaction {
@@ -51,7 +59,7 @@ public class InfinispanTransactional implements Transactional {
          if (resource == null) {
             return null;
          }
-         TransactionManager tm = getAdvancedCache(resource).getTransactionManager();
+         TransactionManager tm = getTransactionManager(resource);
          if (this.tm != null && this.tm != tm) {
             throw new IllegalArgumentException("Different transaction managers for single transaction!");
          }

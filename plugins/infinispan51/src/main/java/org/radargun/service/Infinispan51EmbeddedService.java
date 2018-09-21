@@ -210,4 +210,14 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
          return false;
       }
    }
+
+   @Override
+   public boolean isBatching() {
+      return batching;
+   }
+
+   @Override
+   public boolean isCacheBatching(String cacheName) {
+      return isCacheBatching(getCache(cacheName));
+   }
 }
