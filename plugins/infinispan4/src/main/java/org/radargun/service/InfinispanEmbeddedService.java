@@ -33,7 +33,7 @@ import org.radargun.utils.Utils;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class InfinispanEmbeddedService {
+public class InfinispanEmbeddedService implements InfinispanTransactionalService {
    protected static final String SERVICE_DESCRIPTION = "Service hosting Infinispan in embedded (library) mode.";
 
    static {
@@ -297,5 +297,25 @@ public class InfinispanEmbeddedService {
 
    protected String getCHInfo(DistributionManager dm) {
       return "\nCH: " + dm.getConsistentHash();
+   }
+
+   @Override
+   public boolean isEnlistExtraXAResource() {
+      return enlistExtraXAResource;
+   }
+
+   @Override
+   public boolean isCacheTransactional(String cacheName) {
+      return isCacheTransactional(getCache(cacheName));
+   }
+
+   @Override
+   public boolean isBatching() {
+      return false;
+   }
+
+   @Override
+   public boolean isCacheBatching(String cacheName) {
+      return false;
    }
 }
