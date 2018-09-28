@@ -135,7 +135,7 @@
                 ],
                 "image": "${IMAGE}",
                 "command": [ "/bin/bash" ],
-                "args": [ "-c", "export DNS=`cat /etc/resolv.conf | grep nameserver | awk '{print $2}'` && docker-entrypoint.sh custom/infinispan-server-cloud.xml -Djboss.default.jgroups.stack=dnsping -Djgroups.dns_address=${DNS}"
+                "args": [ "-c", "export DNS=`cat /etc/resolv.conf | grep nameserver | awk '{print $2}'` && docker-entrypoint.sh -c custom/infinispan-server-cloud.xml -Djboss.default.jgroups.stack=dnsping -Djgroups.dns_address=${DNS}"
                 ],
                 "livenessProbe": {
                   "exec": {
