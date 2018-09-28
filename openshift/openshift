@@ -6,8 +6,8 @@ if [ "x$RADARGUN_HOME" = "x" ]; then
 fi;
 export RADARGUN_HOME
 
-OSE_MAIN_VERSION=v3.7.1
-OSE_SHA1_VERSION=ab0f056
+OSE_MAIN_VERSION=v3.9.0
+OSE_SHA1_VERSION=191fece
 TEST_PROJECT=${TEST_PROJECT:-"myprojectradargun"}
 LOGIN_COMMAND=""
 RADARGUN_IMAGE=radargun
@@ -112,6 +112,10 @@ function deploy_template {
            -p NUMBER_OF_SLAVES=${NUMBER_OF_SLAVES} \
            -p RADARGUN_MASTER=${RADARGUN_MASTER} \
            -p RADARGUN_CONFIG=${RADARGUN_CONFIG} \
+           -p OPENSHIFT_MASTER_URL=${OPENSHIFT_MASTER_URL} \
+           -p OPENSHIFT_TOKEN=${OPENSHIFT_TOKEN} \
+           -p TEMPLATE_FILE_NAME=${TEMPLATE_FILE_NAME} \
+           -p NAMESPACE=${TEST_PROJECT} \
            -p CUSTOM_JAVA_OPTS="${CUSTOM_JAVA_OPTS}" | oc create -f -
 }
 

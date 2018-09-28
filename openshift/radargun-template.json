@@ -110,6 +110,22 @@
                            {
                               "name": "CUSTOM_JAVA_OPTS",
                               "value": "-Xms412M -Xmx412M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -Xloggc:gc-master.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
+                           },
+                           {
+                              "name": "OPENSHIFT_MASTER_URL",
+                              "value": "${OPENSHIFT_MASTER_URL}"
+                           },
+                           {
+                              "name": "OPENSHIFT_TOKEN",
+                              "value": "${OPENSHIFT_TOKEN}"
+                           },
+                           {
+                              "name": "TEMPLATE_FILE_NAME",
+                              "value": "/opt/radargun-configs/${TEMPLATE_FILE_NAME}"
+                           },
+                           {
+                              "name": "NAMESPACE",
+                              "value": "${NAMESPACE}"
                            }
                         ],
                         "image": "radargun:latest",
@@ -226,6 +242,22 @@
                            {
                               "name": "CUSTOM_JAVA_OPTS",
                               "value": "${CUSTOM_JAVA_OPTS}"
+                           },
+                           {
+                              "name": "OPENSHIFT_MASTER_URL",
+                              "value": "${OPENSHIFT_MASTER_URL}"
+                           },
+                           {
+                              "name": "OPENSHIFT_TOKEN",
+                              "value": "${OPENSHIFT_TOKEN}"
+                           },
+                           {
+                              "name": "TEMPLATE_FILE_NAME",
+                              "value": "/opt/radargun-configs/${TEMPLATE_FILE_NAME}"
+                           },
+                           {
+                              "name": "NAMESPACE",
+                              "value": "${NAMESPACE}"
                            }
                         ],
                         "image": "radargun:latest",
@@ -335,6 +367,30 @@
          "name": "CUSTOM_JAVA_OPTS",
          "required": false,
          "value": ""
+      },
+      {
+         "description": "The template-file attribute from openshift plugin",
+         "displayName": "The template-file attribute from openshift plugin",
+         "name": "TEMPLATE_FILE_NAME",
+         "required": false
+      },
+      {
+         "description": "The master-url attribute from openshift plugin",
+         "displayName": "The master-url attribute from openshift plugin",
+         "name": "OPENSHIFT_MASTER_URL",
+         "required": false
+      },
+      {
+         "description": "The oauth-token attribute from openshift plugin",
+         "displayName": "The oauth-token attribute from openshift plugin",
+         "name": "OPENSHIFT_TOKEN",
+         "required": false
+      },
+      {
+         "description": "The namespace attribute from openshift plugin",
+         "displayName": "The namespace attribute from openshift plugin",
+         "name": "NAMESPACE",
+         "required": false
       }
    ]
 }
