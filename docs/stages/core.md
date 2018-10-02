@@ -112,6 +112,27 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > snapshot-directory (**optional**) - Directory where the snapshot should be written (for SAVE_SNAPSHOT).  
 
+### jgroups-probe-monitor-start
+Starts collecting jgroups statistics locally in each slave node.
+> address (**optional**) - Diagnostic address to send queries to. Default is 224.0.75.75.  
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> expected-response-count (**mandatory**) - Minimum number of responses to wait for. Default is -1 don't wait for responses.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> period (**optional**) - Period of statistics collection. The default is 60 seconds.  
+> port (**optional**) - Diagnostic port. Default is 7500.  
+> print-results-as-info (**optional**) - Print results of operation to log (INFO level). By default trace logging needs to be enabled.  
+> queries (**mandatory**) - List of queries to be performed.  
+> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+> timeout (**optional**) - Maximum time to wait for query responses. Default is 60 seconds. Valid only when used in conjunction with expectedResponseCount parameter.  
+
+### jgroups-probe-monitor-stop
+Stop collecting jgroups statistics locally in each slave node.
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+
 ### jmx-invocation
 Allows to invoke JMX-exposed methods and attributes.
 > continue-on-failure (**optional**) - Continue method invocations if an exception occurs. Default is false.  

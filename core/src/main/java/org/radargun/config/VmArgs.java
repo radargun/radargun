@@ -18,6 +18,8 @@ import org.radargun.utils.NumberConverter;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.SizeConverter;
 
+import static org.radargun.config.VmArgUtils.replace;
+
 /**
  * Holds VM arguments configuration. Options descriptions are here:
  * http://docs.oracle.com/javase/8/docs/technotes/tools/unix/java.html All options are here:
@@ -113,16 +115,6 @@ public class VmArgs implements Serializable {
       return vmArgs;
    }
 
-   private static void replace(List<String> args, String prefix, String value) {
-      for (Iterator<String> it = args.iterator(); it.hasNext();) {
-         String arg = it.next();
-         if (arg.startsWith(prefix)) {
-            it.remove();
-         }
-      }
-      args.add(prefix + value);
-   }
-
    private static void set(List<String> args, String option, boolean on) {
       Pattern pattern = Pattern.compile("-XX:." + option);
       for (Iterator<String> it = args.iterator(); it.hasNext();) {
@@ -134,19 +126,9 @@ public class VmArgs implements Serializable {
       args.add("-XX:" + (on ? '+' : '-') + option);
    }
 
-   private static void ensureArg(Collection<String> args, String arg) {
-      if (!args.contains(arg))
-         args.add(arg);
-   }
-
    @Retention(RetentionPolicy.RUNTIME)
    @Target(ElementType.FIELD)
    private @interface RequireDiagnostic {
-   }
-
-   public interface VmArg extends Serializable {
-      /* Override arguments */
-      void setArgs(List<String> args);
    }
 
    private class Memory implements VmArg {
@@ -187,31 +169,6 @@ public class VmArgs implements Serializable {
             replace(args, "-XX:NewRatio=", String.valueOf(newRatio));
          if (useLargePages != null)
             set(args, "UseLargePages", useLargePages);
-      }
-   }
-
-   private class FlightRecorder implements VmArg {
-      @Property(doc = "Start flight recording for the benchmark.", optional = false)
-      private boolean enabled = false;
-
-      @Property(doc = "File for the recording.")
-      private String filename;
-
-      @Property(doc = "Settings file with recording configuration.")
-      private String settings;
-
-      @Override
-      public void setArgs(List<String> args) {
-         if (!enabled)
-            return;
-         StringBuilder recordingParams = new StringBuilder("=compress=false,delay=10s,duration=24h");
-         if (filename != null)
-            recordingParams.append(",filename=").append(filename);
-         if (settings != null)
-            recordingParams.append(",settings=").append(settings);
-         ensureArg(args, "-XX:+UnlockCommercialFeatures");
-         ensureArg(args, "-XX:+FlightRecorder");
-         replace(args, "-XX:StartFlightRecording", recordingParams.toString());
       }
    }
 
