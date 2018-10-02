@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,8 +17,9 @@ import javax.management.remote.JMXServiceURL;
 
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
-
+import org.radargun.config.FlightRecorder;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyDelegate;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
@@ -42,6 +45,9 @@ public class JavaProcessService extends ProcessService {
 
    @Property(doc = "Connect to the process and retrieve JMX connection. Default is true.")
    protected boolean jmxConnectionEnabled = true;
+
+   @PropertyDelegate(prefix = "flight-recorder.")
+   private FlightRecorder flightRecorder = new FlightRecorder();
 
    @ProvidesTrait
    public JmxConnectionProvider createConnectionProvider() {
@@ -158,6 +164,21 @@ public class JavaProcessService extends ProcessService {
          }
          envs.put(JAVA_OPTS, javaOpts);
       }
+      // the default implementation is using setArgs. I would like to avoid doing this refactor
+      if (flightRecorder.isEnabled()) {
+         List<String> flightRecorderArgs = new ArrayList<>(1);
+         flightRecorder.setArgs(flightRecorderArgs);
+         StringBuilder flightRecorderArgBuilder = new StringBuilder();
+         flightRecorderArgs.forEach(arg -> flightRecorderArgBuilder.append(arg).append(" "));
+         appendJavaOpts(envs, flightRecorderArgBuilder);
+      }
       return envs;
+   }
+
+   private void appendJavaOpts(Map<String, String> envs, StringBuilder arguments) {
+      if (envs.get(JAVA_OPTS) != null) {
+         arguments.append(" ").append(envs.get(JAVA_OPTS));
+      }
+      envs.put(JAVA_OPTS, arguments.toString());
    }
 }
