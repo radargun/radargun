@@ -158,11 +158,14 @@ public class JavaProcessService extends ProcessService {
          }
          envs.put(JAVA_HOME, java);
       }
-      if (javaOpts != null) {
+      if (javaOpts != null && !javaOpts.trim().isEmpty()) {
          if (envs.containsKey(JAVA_OPTS)) {
             log.warn("Overwriting " + JAVA_OPTS + ": " + envs.get(JAVA_OPTS) + " with " + javaOpts);
          }
          envs.put(JAVA_OPTS, javaOpts);
+      // we should keep the environment variable for later reuse
+      } else if (System.getenv(JAVA_OPTS) != null) {
+         envs.put(JAVA_OPTS, System.getenv(JAVA_OPTS));
       }
       // the default implementation is using setArgs. I would like to avoid doing this refactor
       if (flightRecorder.isEnabled()) {
