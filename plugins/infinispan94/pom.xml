@@ -10,12 +10,26 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan-snapshot</artifactId>
-   <name>Infinispan nightly build plugin for RadarGun</name>
+   <artifactId>plugin-infinispan94</artifactId>
+   <name>Infinispan 9.4.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan-snapshot.infinispan.version}</version.infinispan>
+      <version.infinispan>${infinispan94.infinispan.version}</version.infinispan>
    </properties>
+
+   <profiles>
+      <profile>
+         <id>infinispan94-infinispan-version-default</id>
+         <activation>
+            <property>
+               <name>!infinispan94.infinispan.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>9.4.0.Final</version.infinispan>
+         </properties>
+      </profile>
+   </profiles>
 
    <dependencies>
       <dependency>
@@ -39,7 +53,7 @@
 
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-${plugins.infinispan-latest}</artifactId>
+         <artifactId>plugin-infinispan93</artifactId>
          <version>${project.version}</version>
       </dependency>
 
@@ -142,19 +156,5 @@
          </dependency>
       </dependencies>
    </dependencyManagement>
-
-   <profiles>
-      <profile>
-         <id>infinispan-snapshot-infinispan-version-default</id>
-         <activation>
-            <property>
-               <name>!infinispan-snapshot.infinispan.version</name>
-            </property>
-         </activation>
-         <properties>
-            <version.infinispan>9.4.1-SNAPSHOT</version.infinispan>
-         </properties>
-      </profile>
-   </profiles>
 
 </project>

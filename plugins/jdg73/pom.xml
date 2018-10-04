@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <parent>
@@ -10,14 +10,40 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan-snapshot</artifactId>
-   <name>Infinispan nightly build plugin for RadarGun</name>
+   <artifactId>plugin-jdg73</artifactId>
+   <name>JDG 7.3.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan-snapshot.infinispan.version}</version.infinispan>
+      <version.infinispan>${jdg73.infinispan.version}</version.infinispan>
    </properties>
 
+   <profiles>
+      <profile>
+         <id>jdg73-infinispan-version-default</id>
+         <activation>
+            <property>
+               <name>!jdg73.infinispan.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>9.4.0.DR1-redhat-00001</version.infinispan>
+         </properties>
+      </profile>
+   </profiles>
+
    <dependencies>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-jdg72</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan94</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
@@ -35,12 +61,6 @@
          <artifactId>radargun-mapreduce</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
-      </dependency>
-
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-${plugins.infinispan-latest}</artifactId>
-         <version>${project.version}</version>
       </dependency>
 
       <dependency>
@@ -123,7 +143,7 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-kryo</artifactId>
       </dependency>
-      
+
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-protostuff</artifactId>
@@ -132,7 +152,7 @@
    </dependencies>
 
    <dependencyManagement>
-      <dependencies>      
+      <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-parent</artifactId>
@@ -142,19 +162,5 @@
          </dependency>
       </dependencies>
    </dependencyManagement>
-
-   <profiles>
-      <profile>
-         <id>infinispan-snapshot-infinispan-version-default</id>
-         <activation>
-            <property>
-               <name>!infinispan-snapshot.infinispan.version</name>
-            </property>
-         </activation>
-         <properties>
-            <version.infinispan>9.4.1-SNAPSHOT</version.infinispan>
-         </properties>
-      </profile>
-   </profiles>
 
 </project>
