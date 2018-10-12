@@ -334,10 +334,11 @@
             <module>../plugins/hazelcast37</module>
             <module>../plugins/hazelcast38</module>
             <module>../plugins/hazelcast39</module>
+            <module>../plugins/hazelcast310</module>
          </modules>
          <properties>
-            <plugins.hazelcast-latest>hazelcast39</plugins.hazelcast-latest>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
+            <plugins.hazelcast-latest>hazelcast310</plugins.hazelcast-latest>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,hazelcast39,${plugins.hazelcast-latest}</plugins.hazelcast>
          </properties>
       </profile>
       <profile>
