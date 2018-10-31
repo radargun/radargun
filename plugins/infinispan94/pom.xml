@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.4.0.Final</version.infinispan>
+            <version.infinispan>9.4.1-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>
@@ -76,7 +76,7 @@
       <dependency>
          <groupId>org.jboss.narayana.jta</groupId>
          <artifactId>narayana-jta</artifactId>
-         <optional>true</optional>
+         <scope>compile</scope>
          <exclusions>
             <exclusion>
                <groupId>org.jboss.logging</groupId>
