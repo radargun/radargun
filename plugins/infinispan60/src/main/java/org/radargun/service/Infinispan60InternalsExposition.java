@@ -26,12 +26,15 @@ public class Infinispan60InternalsExposition implements InternalsExposition {
    protected static final Log log = LogFactory.getLog(Infinispan60InternalsExposition.class);
    protected final Infinispan60EmbeddedService service;
 
-   private static Field lazyInitializingExecutorServiceDelegate;
-   private static Field blockingTaskAwareExecutorServiceDelegate;
-   private static Field lazyInitializingBlockingTaskAwareExecutorServiceDelegate;
+   private final Field lazyInitializingExecutorServiceDelegate;
+   private final Field blockingTaskAwareExecutorServiceDelegate;
+   private final Field lazyInitializingBlockingTaskAwareExecutorServiceDelegate;
 
    public Infinispan60InternalsExposition(Infinispan60EmbeddedService service) {
       this.service = service;
+      this.lazyInitializingExecutorServiceDelegate = getLazyInitializingExecutorServiceDelegate();
+      this.blockingTaskAwareExecutorServiceDelegate = getBlockingTaskAwareExecutorServiceDelegate();
+      this.lazyInitializingBlockingTaskAwareExecutorServiceDelegate = getLazyInitializingBlockingTaskAwareExecutorServiceDelegate();
    }
 
    @Override
@@ -66,18 +69,28 @@ public class Infinispan60InternalsExposition implements InternalsExposition {
       values.put(executorName + " Total", threadPoolExecutor.getPoolSize());
    }
 
-   static {
+   protected Field getLazyInitializingExecutorServiceDelegate() {
+      return getExecutorServiceDelegate(LazyInitializingExecutorService.class, "delegate");
+   }
+
+   protected Field getBlockingTaskAwareExecutorServiceDelegate() {
+      return getExecutorServiceDelegate(BlockingTaskAwareExecutorServiceImpl.class, "executorService");
+   }
+
+   protected Field getLazyInitializingBlockingTaskAwareExecutorServiceDelegate() {
+      return getExecutorServiceDelegate(LazyInitializingBlockingTaskAwareExecutorService.class, "delegate");
+   }
+
+   protected Field getExecutorServiceDelegate(Class<?> clazz, String fieldName) {
+      Field field;
       try {
-         lazyInitializingExecutorServiceDelegate = LazyInitializingExecutorService.class.getDeclaredField("delegate");
-         lazyInitializingExecutorServiceDelegate.setAccessible(true);
-         blockingTaskAwareExecutorServiceDelegate = BlockingTaskAwareExecutorServiceImpl.class.getDeclaredField("executorService");
-         blockingTaskAwareExecutorServiceDelegate.setAccessible(true);
-         lazyInitializingBlockingTaskAwareExecutorServiceDelegate = LazyInitializingBlockingTaskAwareExecutorService.class.getDeclaredField("delegate");
-         lazyInitializingBlockingTaskAwareExecutorServiceDelegate.setAccessible(true);
+         field = clazz.getDeclaredField(fieldName);
+         field.setAccessible(true);
       } catch (NoSuchFieldException e) {
-         log.error("Failed to load field", e);
+         log.error("Failed to load field: " + fieldName, e);
          throw new RuntimeException(e);
       }
+      return field;
    }
 
    private ThreadPoolExecutor findTPE(Object executorService) {
