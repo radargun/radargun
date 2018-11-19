@@ -22,7 +22,7 @@ public class ServerConfigurationProvider extends AbstractConfigurationProvider {
 
    @Override
    public String getConfigFile() {
-      return service.file;
+      return service.getFile();
    }
 
    @Override

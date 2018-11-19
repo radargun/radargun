@@ -1,17 +1,31 @@
 package org.radargun.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.radargun.Directories;
 import org.radargun.Service;
+import org.radargun.ServiceHelper;
+import org.radargun.config.FileConverter;
 import org.radargun.config.Property;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.ArgsConverter;
 import org.radargun.utils.EnvsConverter;
@@ -23,11 +37,13 @@ import org.radargun.utils.TimeConverter;
 @Service(doc = "Generic process control")
 public class ProcessService {
 
+   protected final Log log = LogFactory.getLog(getClass());
+
    @Property(doc = "Command for starting the process")
    protected String command;
 
    @Property(doc = "Configuration file used as the last argument.")
-   protected String file;
+   private String file;
 
    @Property(doc = "Additional arguments. Empty by default.", converter = ArgsConverter.class)
    protected List<String> args = Collections.emptyList();
@@ -56,13 +72,14 @@ public class ProcessService {
       return lifecycle;
    }
 
-
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>(args.size() + 2);
       command.add(this.command);
       command.addAll(args);
       if (file != null) {
-         command.add(file);
+         command.add(evaluateFile((evaluatedFile) -> {
+            return evaluatedFile;
+         }));
       }
       return command;
    }
@@ -106,6 +123,55 @@ public class ProcessService {
       } else {
          System.err.println(line);
       }
+   }
+
+   /**
+    * When @getCommand was overwritten the file can be evaluated later
+    * @param fn function that receive the evaluated file and return the custom path for the file
+    * @return the file evaluate
+    */
+   public String evaluateFile(Function<String, String> fn) {
+      this.file = fn.apply(new FileConverter().convertToString(file));
+      return this.file;
+   }
+
+   public String evaluateFile(String home, String... confDir) {
+      String evaluatedFile = evaluateFile((f) -> f);
+      Path filesystemFile;
+      try {
+         URL resource = getClass().getResource("/" + evaluatedFile);
+         filesystemFile = FileSystems.getDefault().getPath(evaluatedFile);
+         Path target = FileSystems.getDefault().getPath(home, appendArray(confDir, "radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml"));
+         if (resource != null) {
+            try (InputStream is = resource.openStream()) {
+               log.info("Found " + evaluatedFile + " as a resource");
+               Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+         } else if (filesystemFile.toFile().exists()) {
+            log.info("Found " + evaluatedFile + " in plugin directory");
+            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
+         } else if (FileSystems.getDefault().getPath(home, appendArray(confDir, evaluatedFile)).toFile().exists()) {
+            log.info("Found " + evaluatedFile + " in " + Arrays.toString(confDir) + " directory");
+            filesystemFile = FileSystems.getDefault().getPath(home, appendArray(confDir, evaluatedFile));
+            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
+         } else {
+            throw new FileNotFoundException("File " + evaluatedFile + " not found neither as resource nor in filesystem.");
+         }
+      } catch (IOException e) {
+         //log.error("Failed to copy file", e);
+         throw new RuntimeException(e);
+      }
+      return filesystemFile.toString();
+   }
+
+   private static <T> T[] appendArray(T[] elements, T element) {
+      T[] newArray = Arrays.copyOf(elements, elements.length + 1);
+      newArray[elements.length] = element;
+      return newArray;
+   }
+
+   public String getFile() {
+      return this.file;
    }
 
    public interface OutputListener {
