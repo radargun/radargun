@@ -430,10 +430,11 @@
             <module>../plugins/infinispan92</module>
             <module>../plugins/infinispan93</module>
             <module>../plugins/infinispan94</module>
+            <module>../plugins/infinispan100</module>
          </modules>
          <properties>
-            <plugins.infinispan-latest>infinispan94</plugins.infinispan-latest>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,infinispan92,infinispan93,${plugins.infinispan-latest}</plugins.infinispan>
+            <plugins.infinispan-latest>infinispan100</plugins.infinispan-latest>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,infinispan91,infinispan92,infinispan93,infinispan94,${plugins.infinispan-latest}</plugins.infinispan>
          </properties>
       </profile>
       <profile>
