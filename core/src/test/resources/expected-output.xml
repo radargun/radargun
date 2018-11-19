@@ -1,0 +1,19 @@
+<html>
+<body>
+<h2>CD Collection</h2>
+<table>
+<tr>
+<th>Title</th><th>Artist</th>
+</tr>
+<tr>
+<td>Empire Burlesque</td><td>Bob Dylan</td>
+</tr>
+<tr>
+<td>Hide your heart</td><td>Bonnie Tyler</td>
+</tr>
+<tr>
+<td>Greatest Hits</td><td>Dolly Parton</td>
+</tr>
+</table>
+</body>
+</html>

@@ -30,7 +30,7 @@ public class TomcatConfigurationProvider implements ConfigurationProvider {
    public Map<String, byte[]> getOriginalConfigs() {
       Map<String, byte[]> configs = new HashMap<String, byte[]>();
       try {
-         Utils.loadConfigFile(service.file, configs);
+         Utils.loadConfigFile(service.getFile(), configs);
       } catch (Exception e) {
          log.error("Error while reading original configuration files", e);
       }

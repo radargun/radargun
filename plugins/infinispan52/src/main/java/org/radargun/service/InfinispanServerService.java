@@ -1,13 +1,9 @@
 package org.radargun.service;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
@@ -100,27 +97,9 @@ public class InfinispanServerService extends JavaProcessService {
             // the extraction erases the executable bits
             Utils.setPermissions(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh")).toString(), "rwxr-xr-x");
          }
-         URL resource = getClass().getResource("/" + file);
-         Path filesystemFile = FileSystems.getDefault().getPath(file);
-         Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
-         
-         if (resource != null) {
-            try (InputStream is = resource.openStream()) {
-               log.info("Found " + file + " as a resource");
-               Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-         } else if (filesystemFile.toFile().exists()) {
-            log.info("Found " + file + " in plugin directory");
-            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
-         } else if (FileSystems.getDefault().getPath(home, "standalone", "configuration", file).toFile().exists()) {
-            log.info("Found " + file + " in server configuration directory");
-            filesystemFile = FileSystems.getDefault().getPath(home, "standalone", "configuration", file);
-            // Set the file variable to the full path to the file to satisfy AbstractConfigurationProvider
-            file = filesystemFile.toString();
-            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
-         } else {
-            throw new FileNotFoundException("File " + file + " not found neither as resource not in filesystem.");
-         }
+
+         evaluateFile(home, "standalone", "configuration");
+
       } catch (IOException e) {
          log.error("Failed to prepare the server directory", e);
          throw new RuntimeException(e);

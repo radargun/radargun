@@ -2,19 +2,13 @@ package org.radargun.service;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -85,31 +79,8 @@ public class TomcatServerService extends JavaProcessService {
       log.info("Java home: " + java);
 
       lifecycle = new TomcatServerLifecycle(this);
-      try {
-         URL resource = getClass().getResource("/" + file);
-         Path filesystemFile = FileSystems.getDefault().getPath(file);
-         Path target = FileSystems.getDefault().getPath(catalinaBase, "conf", "radargun-tomcat-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
-         if (resource != null) {
-            try (InputStream is = resource.openStream()) {
-               log.info("Found " + file + " as a resource");
-               Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-         } else if (filesystemFile.toFile().exists()) {
-            log.info("Found " + file + " in plugin directory");
-            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
-         } else if (FileSystems.getDefault().getPath(catalinaBase, "conf", file).toFile().exists()) {
-            log.info("Found " + file + " in server conf/ directory");
-            filesystemFile = FileSystems.getDefault().getPath(catalinaBase, "conf", file);
-            // Set the file variable to the full path to the file to satisfy AbstractConfigurationProvider
-            file = filesystemFile.toString();
-            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
-         } else {
-            throw new FileNotFoundException("File " + file + " not found neither as resource nor in filesystem.");
-         }
-      } catch (IOException e) {
-         log.error("Failed to copy file", e);
-         throw new RuntimeException(e);
-      }
+
+      evaluateFile(catalinaHome, "conf");
    }
 
    @Override
