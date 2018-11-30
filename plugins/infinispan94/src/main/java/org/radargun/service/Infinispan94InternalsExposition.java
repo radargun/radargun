@@ -10,9 +10,9 @@ import org.infinispan.executors.LazyInitializingExecutorService;
  *
  * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
-public class Infinispan100InternalsExposition extends Infinispan60InternalsExposition {
+public class Infinispan94InternalsExposition extends Infinispan60InternalsExposition {
 
-   public Infinispan100InternalsExposition(Infinispan100EmbeddedService service) {
+   public Infinispan94InternalsExposition(Infinispan94EmbeddedService service) {
       super(service);
    }
 
