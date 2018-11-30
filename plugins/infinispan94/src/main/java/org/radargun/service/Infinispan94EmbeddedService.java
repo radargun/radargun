@@ -10,10 +10,10 @@ import org.radargun.traits.ProvidesTrait;
  * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class Infinispan100EmbeddedService extends Infinispan92EmbeddedService {
+public class Infinispan94EmbeddedService extends Infinispan92EmbeddedService {
 
    @ProvidesTrait
    public InternalsExposition createInternalsExposition() {
-      return new Infinispan100InternalsExposition(this);
+      return new Infinispan94InternalsExposition(this);
    }
 }
