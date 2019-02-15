@@ -237,10 +237,10 @@
                         <ac:if xmlns:ac="antlib:net.sf.antcontrib">
                            <isset property="package-latest"/>
                            <ac:then>
-                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.redis-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}" />
+                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.hazelcast-enterprise-latest},${plugins.redis-latest},${plugins.redis-enterprise-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}" />
                            </ac:then>
                            <ac:else>
-                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.redis},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.infinispan-snapshot},${plugins.jdg-early},${plugins.jdg},${plugins.jdg-snapshot},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}"/>
+                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.hazelcast-enterprise},${plugins.redis},${plugins.redis-enterprise},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.infinispan-snapshot},${plugins.jdg-early},${plugins.jdg},${plugins.jdg-snapshot},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker},${plugins.openshift},${plugins.spark},${plugins.etcd}"/>
                            </ac:else>
                         </ac:if>
                         <echo message="Plugin list: ${plugin.list}" />
@@ -257,7 +257,7 @@
                                     <copy-plugin plugin="@{plugin}"/>
                                  </ac:else>
                               </ac:if>
-                              <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true">
+                              <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true" fork="true">
                                  <classpath>
                                     <path refid="core_and_extensions"/>
                                     <fileset dir="${distribution.artifact}/plugins/@{plugin}/lib" includes="*.jar"/>
@@ -298,7 +298,7 @@
                               <copy todir="${distribution.artifact}/reporters/@{reporter}">
                                  <fileset dir="reporters/@{reporter}/target/distribution/@{reporter}-bin/@{reporter}/lib" excludes="${core_jar_list}"/>
                               </copy>
-                              <java classname="org.radargun.config.ReporterSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                              <java classname="org.radargun.config.ReporterSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
                                  <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                                  <arg value="${distribution.artifact}/schema" />
                                  <arg value="${distribution.artifact}/reporters/@{reporter}" />
@@ -322,11 +322,11 @@
                         <path id="core_and_extensions">
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
-                        <java classname="org.radargun.config.BenchmarkSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                        <java classname="org.radargun.config.BenchmarkSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
-                        <java classname="org.radargun.config.ScenarioSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                        <java classname="org.radargun.config.ScenarioSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
@@ -391,7 +391,7 @@
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
                         <java classname="org.radargun.config.PhaseDocumentationGenerator"
-                           failonerror="true" classpathref="core_and_extensions">
+                           failonerror="true" classpathref="core_and_extensions" fork="true">
                            <sysproperty key="log4j.configuration"
                               value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${basedir}/docs/stages/" />
@@ -417,7 +417,7 @@
           <plugin>
               <groupId>pl.project13.maven</groupId>
               <artifactId>git-commit-id-plugin</artifactId>
-              <version>2.2.1</version>
+              <version>2.2.6</version>
               <executions>
                   <execution>
                       <id>get-the-git-infos</id>

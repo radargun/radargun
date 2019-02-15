@@ -107,8 +107,7 @@ public class TimelineDocument extends HtmlDocument {
    }
 
    public Map<Timeline.Category, Integer> getValueCategoriesOfType(String categoryType) {
-      return valueCategories.entrySet().stream().filter(e -> e.getKey().getType().toString().equals(categoryType)).collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (v1,v2) ->
-      {
+      return valueCategories.entrySet().stream().filter(e -> e.getKey().getType().toString().equals(categoryType)).collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (v1,v2) -> {
          throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));
       }, TreeMap::new));
    }

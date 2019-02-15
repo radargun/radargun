@@ -92,8 +92,12 @@
       <plugins.ehcache-latest/>
       <plugins.hazelcast/>
       <plugins.hazelcast-latest/>
+      <plugins.hazelcast-enterprise/>
+      <plugins.hazelcast-enterprise-latest/>
       <plugins.redis/>
       <plugins.redis-latest/>
+      <plugins.redis-enterprise/>
+      <plugins.redis-enterprise-latest/>
       <plugins.jbosscache/>
       <plugins.jbosscache-latest/>
       <plugins.jgroups/>
@@ -334,10 +338,27 @@
             <module>../plugins/hazelcast37</module>
             <module>../plugins/hazelcast38</module>
             <module>../plugins/hazelcast39</module>
+            <module>../plugins/hazelcast310</module>
+            <module>../plugins/hazelcast311</module>
          </modules>
          <properties>
-            <plugins.hazelcast-latest>hazelcast39</plugins.hazelcast-latest>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
+            <plugins.hazelcast-latest>hazelcast311</plugins.hazelcast-latest>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,hazelcast39,hazelcast310,${plugins.hazelcast-latest}</plugins.hazelcast>
+         </properties>
+      </profile>
+      <profile>
+         <id>hazelcast-enterprise</id>
+         <activation>
+            <property>
+               <name>!no-hazelcast-enterprise</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/hazelcast-enterprise310</module>
+         </modules>
+         <properties>
+            <plugins.hazelcast-enterprise-latest>hazelcast-enterprise310</plugins.hazelcast-enterprise-latest>
+            <plugins.hazelcast-enterprise>hazelcast-enterprise310,${plugins.hazelcast-enterprise-latest}</plugins.hazelcast-enterprise>
          </properties>
       </profile>
       <profile>
@@ -348,11 +369,26 @@
             </property>
          </activation>
          <modules>
-            <module>../plugins/redis32</module>
+            <module>../plugins/redis</module>
          </modules>
          <properties>
-            <plugins.redis-latest>redis32</plugins.redis-latest>
+            <plugins.redis-latest>redis</plugins.redis-latest>
             <plugins.redis>${plugins.redis-latest}</plugins.redis>
+         </properties>
+      </profile>
+      <profile>
+         <id>redis-enterprise</id>
+         <activation>
+            <property>
+               <name>!no-redis-enterprise</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/redis-enterprise</module>
+         </modules>
+         <properties>
+            <plugins.redis-enterprise-latest>redis-enterprise</plugins.redis-enterprise-latest>
+            <plugins.redis-enterprise>${plugins.redis-enterprise-latest}</plugins.redis-enterprise>
          </properties>
       </profile>
       <profile>
@@ -648,6 +684,113 @@
             <plugins.etcd>etcd</plugins.etcd>
          </properties>
       </profile>
+
+      <!-- JDK -->
+      <profile>
+         <id>java8</id>
+         <activation>
+            <jdk>1.8</jdk>
+         </activation>
+         <dependencies>
+            <!-- This dependency is not loaded in plugin classloader, we have to include
+                 that directly on classpath. The reason is that it loads native shared
+                 libraries and you can't have that loaded in multiple classloaders. -->
+            <dependency>
+               <groupId>com.sun</groupId>
+               <artifactId>tools</artifactId>
+               <version>1.8.0</version>
+               <scope>system</scope>
+               <!-- TODO: this system path is OS-dependent - create Win and Mac profiles -->
+               <systemPath>${java.home}/../lib/tools.jar</systemPath>
+            </dependency>
+         </dependencies>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-enforcer-plugin</artifactId>
+                  <version>3.0.0-M2</version>
+                  <executions>
+                     <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                           <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                           <rules>
+                              <requireJavaVersion>
+                                 <version>[1.8,)</version>
+                              </requireJavaVersion>
+                              <requireMavenVersion>
+                                 <version>[3.5.4,)</version>
+                              </requireMavenVersion>
+                           </rules>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.8.0</version>
+                  <configuration>
+                     <source>8</source>
+                     <target>8</target>
+                     <encoding>UTF-8</encoding>
+                  </configuration>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+      <profile>
+         <id>java11</id>
+         <activation>
+            <jdk>11</jdk>
+         </activation>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-enforcer-plugin</artifactId>
+                  <version>3.0.0-M2</version>
+                  <executions>
+                     <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                           <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                           <rules>
+                              <requireJavaVersion>
+                                 <version>[11,)</version>
+                              </requireJavaVersion>
+                              <requireMavenVersion>
+                                 <version>[3.5.4,)</version>
+                              </requireMavenVersion>
+                           </rules>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.8.0</version>
+                  <configuration>
+                     <source>11</source>
+                     <target>11</target>
+                     <encoding>UTF-8</encoding>
+                     <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED</arg>
+                        <arg>--add-exports</arg>
+                        <arg>java.base/jdk.internal.reflect=ALL-UNNAMED</arg>
+                     </compilerArgs>
+                  </configuration>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
    </profiles>
 
    <build>
@@ -655,7 +798,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-release-plugin</artifactId>
-            <version>2.4.2</version>
+            <version>2.5.3</version>
             <configuration>
                <autoVersionSubmodules>true</autoVersionSubmodules>
             </configuration>
@@ -663,7 +806,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.19.1</version>
+            <version>3.0.0-M3</version>
             <configuration>
                 <parallel>tests</parallel>
                 <forkCount>1</forkCount>
@@ -672,26 +815,8 @@
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-eclipse-plugin</artifactId>
-            <version>2.7</version>
-            <configuration>
-               <downloadSources>true</downloadSources>
-               <buildOutputDirectory>${basedir}/eclipse-output</buildOutputDirectory>
-            </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-idea-plugin</artifactId>
-            <version>2.2</version>
-            <configuration>
-               <downloadSources>true</downloadSources>
-            </configuration>
-         </plugin>
-
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-checkstyle-plugin</artifactId>
-            <version>2.17</version>
+            <version>3.0.0</version>
             <configuration>
                <configLocation>main/resources/checkstyle.xml</configLocation>
             </configuration>
@@ -704,46 +829,10 @@
                </execution>
             </executions>
          </plugin>
-
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-enforcer-plugin</artifactId>
-            <version>1.4.1</version>
-            <executions>
-               <execution>
-                  <id>enforce-java</id>
-                  <goals>
-                     <goal>enforce</goal>
-                  </goals>
-                  <configuration>
-                     <rules>
-                        <requireJavaVersion>
-                           <version>[1.8,)</version>
-                        </requireJavaVersion>
-                        <requireMavenVersion>
-                           <version>[2.1.0,)</version>
-                        </requireMavenVersion>
-                     </rules>
-                  </configuration>
-               </execution>
-            </executions>
-         </plugin>
-         <!-- RadarGun 3.0 is baselined on Java 8 -->
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.3</version>
-            <configuration>
-               <source>1.8</source>
-               <target>1.8</target>
-               <encoding>UTF-8</encoding>
-            </configuration>
-         </plugin>
-
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-resources-plugin</artifactId>
-            <version>2.7</version>
+            <version>3.1.0</version>
             <configuration>
                <encoding>UTF-8</encoding>
             </configuration>
@@ -751,7 +840,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
-            <version>2.6</version>
+            <version>3.1.1</version>
             <configuration>
                <archive>
                   <manifest>
@@ -770,7 +859,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>2.6</version>
+            <version>3.1.1</version>
             <executions>
                <execution>
                   <id>assemble</id>

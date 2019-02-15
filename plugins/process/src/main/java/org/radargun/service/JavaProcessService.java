@@ -92,11 +92,14 @@ public class JavaProcessService extends ProcessService {
                }
                String connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);
                if (connectorAddress == null) {
-                  String agent = vm.getSystemProperties().getProperty("java.home") +
-                        File.separator + "lib" + File.separator +
-                        "management-agent.jar";
+                  File agentFile = new File(vm.getSystemProperties().getProperty("java.home") + File.separator + "lib" + File.separator,"management-agent.jar");
                   try {
-                     vm.loadAgent(agent);
+                     // jdk8
+                     if (agentFile.exists()) {
+                        vm.loadAgent(agentFile.getAbsolutePath());
+                     } else { // jdk9+
+                        vm.startLocalManagementAgent();
+                     }
                      connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);
                   } catch (Exception e) {
                      log.error("Cannot load management agent into target VM.");

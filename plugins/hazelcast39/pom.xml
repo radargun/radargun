@@ -13,7 +13,7 @@
    <name>Hazelcast 3.9.x plugin for RadarGun</name>
 
    <properties>
-      <version.hazelcast>3.9.2</version.hazelcast>
+      <version.hazelcast>3.9.4</version.hazelcast>
    </properties>
 
    <dependencies>
@@ -48,7 +48,7 @@
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-hazelcast37</artifactId>
+         <artifactId>plugin-hazelcast38</artifactId>
          <version>${project.version}</version>
       </dependency>
       <dependency>

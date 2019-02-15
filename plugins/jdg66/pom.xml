@@ -16,6 +16,7 @@
    <properties>
       <version.infinispan>${jdg66.infinispan.version}</version.infinispan>
       <version.infinispan.public>8.0.1.Final</version.infinispan.public>
+      <version.jbossts>4.16.3.Final</version.jbossts>
    </properties>
 
    <profiles>
@@ -70,7 +71,8 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-core</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
            <exclusions>
                <exclusion>
                    <groupId>log4j</groupId>
@@ -83,64 +85,60 @@
            </exclusions>
        </dependency>
 
-       <dependency>
-           <groupId>org.jboss.jbossts.jta</groupId>
-           <artifactId>narayana-jta</artifactId>
-           <optional>true</optional>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.jboss.logging</groupId>
-                   <artifactId>jboss-logging-spi</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
+      <dependency>
+         <groupId>org.jboss.jbossts</groupId>
+         <artifactId>jbossjta</artifactId>
+         <version>${version.jbossts}</version>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
 
-       <dependency>
-           <groupId>org.jboss.spec.javax.transaction</groupId>
-           <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-           <optional>true</optional>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.jboss.logging</groupId>
-                   <artifactId>jboss-logging-spi</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-client-hotrod</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-query</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-jdbc</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-client</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-remote-query-server</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-cachestore-leveldb</artifactId>
-           <optional>true</optional>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
 
        <dependency>
@@ -152,6 +150,8 @@
        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-jcache</artifactId>
+          <version>${version.infinispan}</version>
+          <optional>true</optional>
        </dependency>
        
        <dependency>
@@ -166,20 +166,8 @@
            <artifactId>radargun-mapreduce</artifactId>
            <version>${project.version}</version>
            <scope>provided</scope>
-       </dependency>     
-       
-   </dependencies>
+       </dependency>
 
-   <dependencyManagement>
-      <dependencies>
-         <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-parent</artifactId>
-            <version>${version.infinispan}</version>
-            <type>pom</type>
-            <scope>import</scope>
-         </dependency>
-      </dependencies>
-   </dependencyManagement>
+   </dependencies>
 
 </project>
