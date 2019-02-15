@@ -158,7 +158,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
    protected String getProcessId(Process process) {
       Class<?> clazz = process.getClass();
       try {
-         if (clazz.getName().equals("java.lang.UNIXProcess")) {
+         if (clazz.getName().equals("java.lang.UNIXProcess") || clazz.getName().equals("java.lang.ProcessImpl")) {
             Field pidField = clazz.getDeclaredField("pid");
             pidField.setAccessible(true);
             Object value = pidField.get(process);
@@ -168,14 +168,8 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
          } else {
             throw new IllegalArgumentException("Only unix is supported as OS.");
          }
-      } catch (SecurityException sx) {
-         sx.printStackTrace();
-      } catch (NoSuchFieldException e) {
-         e.printStackTrace();
-      } catch (IllegalArgumentException e) {
-         e.printStackTrace();
-      } catch (IllegalAccessException e) {
-         e.printStackTrace();
+      } catch (SecurityException | NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+         throw new IllegalArgumentException("Only unix is supported as OS.", e);
       }
       return null;
    }
