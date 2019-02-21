@@ -35,21 +35,6 @@ public abstract class OperationLogic {
     */
    public abstract void run(Operation operation) throws RequestException;
 
-   /**
-    * Handle started transaction - the logic should call {@link Stressor#wrap(Object)} on all resources
-    * used in the further invocation
-    */
-   public void transactionStarted() {
-      throw new UnsupportedOperationException("Transactions are not supported.");
-   }
-
-   /**
-    * Handle finished transaction - drop all wrapped resources
-    */
-   public void transactionEnded() {
-      throw new UnsupportedOperationException("Transactions are not supported.");
-   }
-
    public static class RequestException extends Exception {
       public RequestException(Throwable cause) {
          super(cause);

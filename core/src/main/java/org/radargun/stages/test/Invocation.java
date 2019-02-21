@@ -27,4 +27,6 @@ public interface Invocation<T> {
     */
    @Deprecated
    Operation txOperation();
+
+   Object getTxResource();
 }

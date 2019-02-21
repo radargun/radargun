@@ -32,5 +32,10 @@ public class Invocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return context;
+      }
    }
 }

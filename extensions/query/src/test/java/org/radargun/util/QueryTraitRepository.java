@@ -1,7 +1,5 @@
 package org.radargun.util;
 
-import org.radargun.traits.Query;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +41,7 @@ public class QueryTraitRepository extends CoreTraitRepository {
       public void reindex(String containerName) {
          // no op
       }
+
 
       public Map getCache() {
          return Collections.unmodifiableMap(cache);
@@ -185,11 +184,6 @@ public class QueryTraitRepository extends CoreTraitRepository {
       }
 
       private static class Context implements org.radargun.traits.Query.Context {
-
-         @Override
-         public void close() {
-            // no op
-         }
       }
    }
 

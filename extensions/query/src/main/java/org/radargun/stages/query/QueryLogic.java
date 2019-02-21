@@ -32,21 +32,6 @@ public class QueryLogic extends OperationLogic {
    }
 
    @Override
-   public void transactionStarted() {
-      if (context != null) {
-         stressor.wrap(context);
-      }
-   }
-
-   @Override
-   public void transactionEnded() {
-      if (context != null) {
-         context.close();
-         context = null;
-      }
-   }
-
-   @Override
    public void init(Stressor stressor) {
       super.init(stressor);
       stressor.setUseTransactions(useTransactions);

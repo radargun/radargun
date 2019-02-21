@@ -66,10 +66,6 @@ public class HazelcastQuery implements Query {
          this.map = null;
          this.txMap = map;
       }
-
-      @Override
-      public void close() {
-      }
    }
 
    public static class Result implements Query.Result {

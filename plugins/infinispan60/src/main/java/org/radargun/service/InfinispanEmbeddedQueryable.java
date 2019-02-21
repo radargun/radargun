@@ -47,9 +47,5 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
       public AdvancedCache getAdvancedCache() {
          return cache;
       }
-
-      @Override
-      public void close() {
-      }
    }
 }

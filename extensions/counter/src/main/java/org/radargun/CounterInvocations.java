@@ -35,7 +35,12 @@ public class CounterInvocations {
 
       @Override
       public Operation txOperation() {
-         return CounterOperations.INCREMENT_AND_GET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -63,7 +68,12 @@ public class CounterInvocations {
 
       @Override
       public Operation txOperation() {
-         return CounterOperations.DECREMENT_AND_GET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -93,7 +103,12 @@ public class CounterInvocations {
 
       @Override
       public Operation txOperation() {
-         return CounterOperations.ADD_AND_GET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -125,7 +140,12 @@ public class CounterInvocations {
 
       @Override
       public Operation txOperation() {
-         return CounterOperations.COMPARE_AND_SET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 }

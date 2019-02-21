@@ -43,7 +43,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.GET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -82,7 +87,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.PUT;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -119,7 +129,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.REMOVE;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -158,7 +173,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.REMOVE_BY_KEY_VALUE;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -195,7 +215,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.REMOVE_BY_PREDICATE;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -232,7 +257,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.CONTAINS_KEY;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -269,7 +299,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.CONTAINS_VALUE;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -308,7 +343,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.CONTAINS_ENTRY;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -343,7 +383,12 @@ public class MultimapInvocations {
 
       @Override
       public Operation txOperation() {
-         return MultimapCacheOperations.SIZE;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 }

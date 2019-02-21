@@ -90,37 +90,18 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
    }
 
    protected class Logic extends OperationLogic {
-      protected TemporalOperations.Cache nonTxTemporalCache, temporalCache;
-      protected BasicOperations.Cache nonTxBasicCache, basicCache;
+      protected TemporalOperations.Cache temporalCache;
+      protected BasicOperations.Cache basicCache;
       protected KeySelector keySelector;
 
       @Override
       public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
-         this.nonTxTemporalCache = temporalOperations.getCache(cacheName);
-         this.nonTxBasicCache = basicOperations.getCache(cacheName);
-         if (useTransactions(cacheName)) {
-            temporalCache = new Delegates.TemporalOperationsCache();
-            basicCache = new Delegates.BasicOperationsCache();
-         } else {
-            temporalCache = nonTxTemporalCache;
-            basicCache = nonTxBasicCache;
-         }
+         this.temporalCache = temporalOperations.getCache(cacheName);
+         this.basicCache = basicOperations.getCache(cacheName);
          stressor.setUseTransactions(useTransactions(cacheName));
          keySelector = getKeySelector(stressor);
-      }
-
-      @Override
-      public void transactionStarted() {
-         ((Delegates.BasicOperationsCache) basicCache).setDelegate(stressor.wrap(nonTxBasicCache));
-         ((Delegates.TemporalOperationsCache) temporalCache).setDelegate(stressor.wrap(nonTxTemporalCache));
-      }
-
-      @Override
-      public void transactionEnded() {
-         ((Delegates.BasicOperationsCache) basicCache).setDelegate(null);
-         ((Delegates.TemporalOperationsCache) temporalCache).setDelegate(null);
       }
 
       @Override

@@ -62,7 +62,6 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    }
 
    protected class Logic extends OperationLogic {
-      protected BasicOperations.Cache nonTxCache;
       protected BasicOperations.Cache cache;
       protected KeySelector keySelector;
 
@@ -70,24 +69,9 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
       public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
-         this.nonTxCache = basicOperations.getCache(cacheName);
-         if (useTransactions(cacheName)) {
-            cache = new Delegates.BasicOperationsCache<>();
-         } else {
-            cache = nonTxCache;
-         }
+         this.cache = basicOperations.getCache(cacheName);
          stressor.setUseTransactions(useTransactions(cacheName));
          keySelector = getKeySelector(stressor);
-      }
-
-      @Override
-      public void transactionStarted() {
-         ((Delegates.BasicOperationsCache) cache).setDelegate(stressor.wrap(nonTxCache));
-      }
-
-      @Override
-      public void transactionEnded() {
-         ((Delegates.BasicOperationsCache) cache).setDelegate(null);
       }
 
       @Override

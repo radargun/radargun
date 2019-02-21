@@ -139,8 +139,5 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    }
 
    protected static class RemoteQueryContext implements Query.Context {
-      @Override
-      public void close() {
-      }
    }
 }

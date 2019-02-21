@@ -36,9 +36,7 @@ public interface Query {
     * Context created in {@link Queryable#createContext(String)} and passed to {@link Query#execute(Context)}. Can be
     * transactionally wrapped in the meantime.
     */
-   interface Context extends AutoCloseable {
-      @Override
-      void close();
+   interface Context {
    }
 
    /**

@@ -255,7 +255,12 @@ public class IterateStage extends TestStage {
 
       @Override
       public Operation txOperation() {
-         return Iterable.GET_ITERATOR;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -278,7 +283,12 @@ public class IterateStage extends TestStage {
 
       @Override
       public Operation txOperation() {
-         return Iterable.HAS_NEXT;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 
@@ -301,7 +311,12 @@ public class IterateStage extends TestStage {
 
       @Override
       public Operation txOperation() {
-         return Iterable.NEXT;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 

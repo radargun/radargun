@@ -84,37 +84,18 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
 
    protected class Logic extends OperationLogic {
       protected MatchSelector matchSelector = new MatchSelector();
-      protected BasicOperations.Cache nonTxBasicCache, basicCache;
-      protected ConditionalOperations.Cache nonTxConditionalCache, conditionalCache;
+      protected BasicOperations.Cache basicCache;
+      protected ConditionalOperations.Cache conditionalCache;
       protected KeySelector keySelector;
 
       @Override
       public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
-         nonTxBasicCache = basicOperations.getCache(cacheName);
-         nonTxConditionalCache = conditionalOperations.getCache(cacheName);
-         if (useTransactions(cacheName)) {
-            basicCache = new Delegates.BasicOperationsCache();
-            conditionalCache = new Delegates.ConditionalOperationsCache();
-         } else {
-            basicCache = nonTxBasicCache;
-            conditionalCache = nonTxConditionalCache;
-         }
+         basicCache = basicOperations.getCache(cacheName);
+         conditionalCache = conditionalOperations.getCache(cacheName);
          stressor.setUseTransactions(useTransactions(cacheName));
          keySelector = getKeySelector(stressor);
-      }
-
-      @Override
-      public void transactionStarted() {
-         ((Delegates.BasicOperationsCache) basicCache).setDelegate(stressor.wrap(nonTxBasicCache));
-         ((Delegates.ConditionalOperationsCache) conditionalCache).setDelegate(stressor.wrap(nonTxConditionalCache));
-      }
-
-      @Override
-      public void transactionEnded() {
-         ((Delegates.BasicOperationsCache) basicCache).setDelegate(null);
-         ((Delegates.ConditionalOperationsCache) conditionalCache).setDelegate(null);
       }
 
       @Override

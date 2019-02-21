@@ -38,7 +38,12 @@ public class RESTOperationInvocations {
 
       @Override
       public Operation txOperation() {
-         return RESTOperations.GET;
+         throw new UnsupportedOperationException("There is no transactional operation");
+      }
+
+      @Override
+      public Object getTxResource() {
+         throw new UnsupportedOperationException("getTxResource is supposed to be used when we need transactional support");
       }
    }
 }

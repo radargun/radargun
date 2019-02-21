@@ -74,7 +74,6 @@ public class KeyExpirationTestStage extends CacheTestStage {
       private int minRemoveSize = 0;
       private HashMap<Integer, Load> loadForSize = new HashMap<>();
       private int nextKeyIndex;
-      private BasicOperations.Cache nonTxCache;
       private BasicOperations.Cache cache;
 
       @Override
@@ -101,23 +100,8 @@ public class KeyExpirationTestStage extends CacheTestStage {
          log.info("Expecting maximal load of " + new SizeConverter().convertToString(expectedMax));
 
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
-         nonTxCache = basicOperations.getCache(cacheName);
-         if (useTransactions(cacheName)) {
-            cache = new Delegates.BasicOperationsCache<>();
-         } else {
-            cache = nonTxCache;
-         }
+         cache = basicOperations.getCache(cacheName);
          stressor.setUseTransactions(useTransactions(cacheName));
-      }
-
-      @Override
-      public void transactionStarted() {
-         ((Delegates.BasicOperationsCache) cache).setDelegate(stressor.wrap(nonTxCache));
-      }
-
-      @Override
-      public void transactionEnded() {
-         ((Delegates.BasicOperationsCache) cache).setDelegate(null);
       }
 
       @Override

@@ -80,9 +80,7 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
    }
 
    protected class Logic extends OperationLogic {
-      private BulkOperations.Cache nonTxNativeCache;
       private BulkOperations.Cache nativeCache;
-      private BulkOperations.Cache nonTxAsyncCache;
       private BulkOperations.Cache asyncCache;
       private KeySelector keySelector;
 
@@ -90,29 +88,10 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
       public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
-         this.nonTxNativeCache = bulkOperations.getCache(cacheName, false);
-         this.nonTxAsyncCache = bulkOperations.getCache(cacheName, true);
-         if (useTransactions(cacheName)) {
-            nativeCache = new Delegates.BulkOperationsCache();
-            asyncCache = new Delegates.BulkOperationsCache();
-         } else {
-            nativeCache = nonTxNativeCache;
-            asyncCache = nonTxAsyncCache;
-         }
+         this.nativeCache = bulkOperations.getCache(cacheName, false);
+         this.asyncCache = bulkOperations.getCache(cacheName, true);
          stressor.setUseTransactions(useTransactions(cacheName));
          keySelector = getKeySelector(stressor);
-      }
-
-      @Override
-      public void transactionStarted() {
-         ((Delegates.BulkOperationsCache) nativeCache).setDelegate(stressor.wrap(nonTxNativeCache));
-         ((Delegates.BulkOperationsCache) asyncCache).setDelegate(stressor.wrap(nonTxAsyncCache));
-      }
-
-      @Override
-      public void transactionEnded() {
-         ((Delegates.BulkOperationsCache) nativeCache).setDelegate(null);
-         ((Delegates.BulkOperationsCache) asyncCache).setDelegate(null);
       }
 
       @Override

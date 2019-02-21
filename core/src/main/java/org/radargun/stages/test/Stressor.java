@@ -160,7 +160,7 @@ public class Stressor extends Thread {
       if (useTransactions && txRemainingOperations <= 0) {
          try {
             ongoingTx = stage.transactional.getTransaction();
-            logic.transactionStarted();
+            ongoingTx.wrap(invocation.getTxResource());
             if (recording()) {
                requests = stats.requestSet();
             }
@@ -262,7 +262,6 @@ public class Stressor extends Thread {
    }
 
    private void clearTransaction() {
-      logic.transactionEnded();
       ongoingTx = null;
    }
 

@@ -49,6 +49,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class Put<K, V> implements Invocation<Void> {
@@ -77,6 +82,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -108,6 +118,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return tx;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -142,6 +157,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class Remove<K, V> implements Invocation<Boolean> {
@@ -168,6 +188,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class ContainsKey<K> implements Invocation<Boolean> {
@@ -193,6 +218,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -221,6 +251,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -251,6 +286,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -284,6 +324,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class GetAndRemove<K, V> implements Invocation<V> {
@@ -309,6 +354,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -337,6 +387,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -367,6 +422,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -400,6 +460,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class RemoveConditionally<K, V> implements Invocation<Boolean> {
@@ -427,6 +492,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -458,6 +528,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class ReplaceAny<K, V> implements Invocation<Boolean> {
@@ -485,6 +560,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -514,6 +594,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class GetAll<K, V> implements Invocation<Map<K, V>> {
@@ -542,6 +627,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return async ? ASYNC_TX : NATIVE_TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -573,6 +663,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return async ? ASYNC_TX : NATIVE_TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class RemoveAll<K, V> implements Invocation<Void> {
@@ -602,6 +697,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return async ? ASYNC_TX : NATIVE_TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
@@ -643,6 +743,11 @@ public class CacheInvocations {
       public Operation txOperation() {
          return TX;
       }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
+      }
    }
 
    public static final class PutViaStream<K, V extends InputStream> implements Invocation<Void> {
@@ -680,6 +785,11 @@ public class CacheInvocations {
       @Override
       public Operation txOperation() {
          return TX;
+      }
+
+      @Override
+      public Object getTxResource() {
+         return cache;
       }
    }
 
