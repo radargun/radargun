@@ -19,7 +19,7 @@ public class FlightRecorder implements VmArg {
    public void setArgs(List<String> args) {
       if (!enabled)
          return;
-      StringBuilder recordingParams = new StringBuilder("=compress=false,delay=10s,duration=24h");
+      StringBuilder recordingParams = new StringBuilder("=delay=10s,duration=24h");
       if (filename != null)
          recordingParams.append(",filename=").append(filename);
       if (settings != null)
@@ -40,4 +40,5 @@ public class FlightRecorder implements VmArg {
    public String getSettings() {
       return settings;
    }
+
 }
