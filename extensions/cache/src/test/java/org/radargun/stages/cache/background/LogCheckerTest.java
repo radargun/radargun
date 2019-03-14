@@ -226,4 +226,5 @@ public class LogCheckerTest {
       ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "logLogicConfiguration", llc);
       return logChecker;
    }
+
 }
