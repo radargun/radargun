@@ -13,10 +13,15 @@
    <name>Hazelcast 3.6.x plugin for RadarGun</name>
 
    <properties>
-      <version.hazelcast>3.6.4</version.hazelcast>
+      <version.hazelcast>3.6.8</version.hazelcast>
    </properties>
 
    <dependencies>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-hazelcast2</artifactId>
+         <version>${project.version}</version>
+      </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
