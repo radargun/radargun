@@ -15,6 +15,9 @@ public class FlightRecorder implements VmArg {
    @Property(doc = "Settings file with recording configuration.")
    private String settings;
 
+   @Property(doc = "Flight Recorder Options")
+   private String flightRecorderOptions;
+
    @Override
    public void setArgs(List<String> args) {
       if (!enabled)
@@ -27,6 +30,8 @@ public class FlightRecorder implements VmArg {
       ensureArg(args, "-XX:+UnlockCommercialFeatures");
       ensureArg(args, "-XX:+FlightRecorder");
       replace(args, "-XX:StartFlightRecording", recordingParams.toString());
+      if (flightRecorderOptions != null)
+         args.add("-XX:FlightRecorderOptions=" + flightRecorderOptions);
    }
 
    public boolean isEnabled() {
