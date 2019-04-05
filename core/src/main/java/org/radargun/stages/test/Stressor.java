@@ -324,7 +324,7 @@ public class Stressor extends Thread {
       Request request = null;
       if (recording()) {
          if (uniformRateLimiterOpsPerNano > 0) {
-            request = stats.startRequest(uniformRateLimiterStart + (++uniformRateLimiterOpIndex) * uniformRateLimiterOpsPerNano);
+            request = stats.startRequest(uniformRateLimiterStart + (uniformRateLimiterOpIndex++) * uniformRateLimiterOpsPerNano);
             long intendedTime = request.getRequestStartTime();
             long now;
             while ((now = System.nanoTime()) < intendedTime)
