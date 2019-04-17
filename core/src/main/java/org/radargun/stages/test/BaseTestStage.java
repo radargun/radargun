@@ -28,6 +28,14 @@ public abstract class BaseTestStage extends AbstractDistStage {
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. You have to set either this or 'totalNumOperations'.")
    public long duration = 0;
 
+   /**
+    * The stage have a duration, for example: 8 minutes. When doing a scalability test I would like to start the node
+    * later to simulate a scale up test. Decrease duration could be something like: #{${slave.index}*2}m
+    * In this case, the second slave will start two minutes later
+    */
+   @Property(converter = TimeConverter.class, doc = "You have the possibility to decrease the stage duration in runtime. Default zero")
+   public long decreaseDuration = 0;
+
    @Property(doc = "The total number of operations to perform during the test. You have to set either this or 'duration'.")
    public long numOperations = 0;
 

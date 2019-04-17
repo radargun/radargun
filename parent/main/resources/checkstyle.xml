@@ -68,7 +68,6 @@
       <module name="AvoidNestedBlocks">
          <property name="allowInSwitchCase" value="true"/>
       </module>
-      <module name="EmptyBlock"/>
       <module name="EmptyCatchBlock"/>
       <module name="LeftCurly"/>
       <module name="RightCurly"/>

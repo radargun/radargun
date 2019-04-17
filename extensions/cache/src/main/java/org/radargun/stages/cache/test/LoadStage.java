@@ -6,9 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
-import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TransactionMode;
@@ -38,15 +36,15 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
 
    @Property(doc = "Generator of keys (transforms key ID into key object). Default is 'string'.",
       complexConverter = KeyGenerator.ComplexConverter.class)
-   protected KeyGenerator keyGenerator = new StringKeyGenerator();
+   protected KeyGenerator keyGenerator = StageFactory.createDefaultKeyGenerator();
 
    @Property(doc = "Generator of values. Default is byte-array.",
       complexConverter = ValueGenerator.ComplexConverter.class)
-   protected ValueGenerator valueGenerator = new ByteArrayValueGenerator();
+   protected ValueGenerator valueGenerator = StageFactory.createDefaultValueGenerator();
 
    @Property(doc = "Selects which caches will be loaded. Default is the default cache.",
       complexConverter = CacheSelector.ComplexConverter.class)
-   protected CacheSelector cacheSelector = new CacheSelector.Default();
+   protected CacheSelector cacheSelector = StageFactory.createDefaultCacheSelector();
 
    @Property(doc = "This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;

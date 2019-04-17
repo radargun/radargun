@@ -16,7 +16,7 @@ public class BasicOperationStats implements OperationStats {
    private static final double INVERSE_NORMAL_95 = 1.96;
    private static final double INVERSE_NORMAL_50 = 0.67448;
    private long requests;
-   private long responseTimeMax = Long.MIN_VALUE;
+   private long responseTimeMax;
    private long responseTimeSum;
    private double responseTimeMean; // first moment
    private double responseTimeM2; // second moment, var = M2 / (n - 1)

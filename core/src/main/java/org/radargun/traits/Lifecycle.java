@@ -21,4 +21,11 @@ public interface Lifecycle {
     * @return True if the service was started but not stopped.
     */
    boolean isRunning();
+
+   default void shouldWait(boolean wait) {
+   }
+
+   default boolean shouldWait() {
+      return false;
+   }
 }

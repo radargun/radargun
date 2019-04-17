@@ -269,8 +269,10 @@ Starts services on specified slaves
 > may-fail-on (**optional**) - Set of slaves where the start may fail but this will not cause an error. Default is none.  
 > reachable (**optional**) - Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> slave-index (**optional**) - Start only the given slave index  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > stagger-slave-startup (**optional**) - If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.  
+> stagger-slave-startup-mode (**optional**) - If set to ASYNC, the slaves will startup will be delayed. Default is SYNC.  
 > validate-cluster (**optional**) - Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.  
 
 ### service-stop

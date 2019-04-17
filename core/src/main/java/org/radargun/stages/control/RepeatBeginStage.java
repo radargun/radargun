@@ -60,7 +60,7 @@ public class RepeatBeginStage extends RepeatStage {
          newValue = value + inc;
       }
       state.put(counterName, newValue);
-      log.trace("Set " + counterName + " to " + newValue);
+      log.info("Set " + counterName + " to " + newValue);
       return newValue;
    }
 

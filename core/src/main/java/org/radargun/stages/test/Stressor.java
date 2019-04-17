@@ -1,5 +1,6 @@
 package org.radargun.stages.test;
 
+import java.time.Duration;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,6 +26,8 @@ import org.radargun.utils.TimeService;
  */
 public class Stressor extends Thread {
    private static Log log = LogFactory.getLog(Stressor.class);
+   private int logCount = 0;
+   private static final int logRatio = 50000;
 
    private final TestStage stage;
    private final int threadIndex;
@@ -34,7 +37,7 @@ public class Stressor extends Thread {
    private final OperationSelector operationSelector;
    private final Completion completion;
    private final boolean logTransactionExceptions;
-   private long thinkTime;
+   private Duration thinkTime;
 
    private boolean useTransactions;
    private int txRemainingOperations = 0;
@@ -112,8 +115,8 @@ public class Stressor extends Thread {
                Operation operation = operationSelector.next(random);
                try {
                   logic.run(operation);
-                  if (thinkTime > 0)
-                    sleep(thinkTime);
+                  if (thinkTime != null)
+                     sleep(thinkTime.toMillis());
                } catch (OperationLogic.RequestException e) {
                   // the exception was already logged in makeRequest
                } catch (InterruptedException e) {
@@ -129,12 +132,12 @@ public class Stressor extends Thread {
          completion.start();
          int i = 0;
          while (!stage.isTerminated()) {
-            Operation operation = operationSelector.next(random);
             if (!completion.moreToRun()) break;
+            Operation operation = operationSelector.next(random);
             try {
                logic.run(operation);
-               if (thinkTime > 0)
-                  sleep(thinkTime);
+               if (thinkTime != null)
+                  sleep(thinkTime.toMillis());
             } catch (OperationLogic.RequestException e) {
                // the exception was already logged in makeRequest
             } catch (InterruptedException e) {
@@ -150,6 +153,12 @@ public class Stressor extends Thread {
             endTransactionAndRegisterStats(null);
          }
       }
+   }
+
+   private void runInternalLogic(Operation operation) throws OperationLogic.RequestException {
+      logic.run(operation);
+      if (thinkTime != null)
+         LockSupport.parkNanos(thinkTime.toNanos());
    }
 
    public <T> T wrap(T resource) {
@@ -184,6 +193,10 @@ public class Stressor extends Thread {
       Operation operation = null;
       try {
          result = invocation.invoke();
+         logCount = logCount + 1;
+         if (logCount == 1 || logCount % logRatio == 0) {
+            log.info("Doing request: " + logCount);
+         }
          operation = invocation.operation();
          if (useTransactions) {
             succeeded(request, invocation.txOperation());

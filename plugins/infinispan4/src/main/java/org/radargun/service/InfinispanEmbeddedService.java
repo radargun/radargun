@@ -64,6 +64,9 @@ public class InfinispanEmbeddedService {
    @Property(doc = "Keys per thread - for EvenConsistentHash.")
    private int keysPerThread = -1;
 
+   @Property(doc = "When running a scalability tests, I would like to avoid waiting for rehash. Default true")
+   private boolean waitForRehash = true;
+
    public InfinispanEmbeddedService() {
       lifecycle = createLifecycle();
       clustered = createClustered();
@@ -192,10 +195,12 @@ public class InfinispanEmbeddedService {
    }
 
    protected void waitForRehash() throws InterruptedException {
-      for (String cacheName : cacheManager.getCacheNames()) {
-         Cache cache = cacheManager.getCache(cacheName);
-         blockForRehashing(cache);
-         injectEvenConsistentHash(cache);
+      if (waitForRehash) {
+         for (String cacheName : cacheManager.getCacheNames()) {
+            Cache cache = cacheManager.getCache(cacheName);
+            blockForRehashing(cache);
+            injectEvenConsistentHash(cache);
+         }
       }
    }
 

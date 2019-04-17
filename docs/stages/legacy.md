@@ -9,10 +9,11 @@ Legacy stages
 ### basic-operations-test
 Test using BasicOperations
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > contains-ratio (**optional**) - Ratio of CONTAINS requests. Default is 0.  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -21,7 +22,7 @@ Test using BasicOperations
 > get-ratio (**optional**) - Ratio of GET requests. Default is 4.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > key-selector (**mandatory**) - Selects which key IDs are used in the test.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
 > merge-thread-stats (**optional**) - Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.  
@@ -37,20 +38,21 @@ Test using BasicOperations
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 
 ### bulk-operations-test
 Executes operations from BulkOperations trait.
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > bulk-size (**optional**) - Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper supports bulk operations. Default is 10.  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -58,7 +60,7 @@ Executes operations from BulkOperations trait.
 > get-all-native-ratio (**optional**) - Ratio of GET_ALL_NATIVE requests. Default is 4.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > key-selector (**mandatory**) - Selects which key IDs are used in the test.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
 > merge-thread-stats (**optional**) - Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.  
@@ -76,26 +78,27 @@ Executes operations from BulkOperations trait.
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 
 ### conditional-operations-test
 Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio- this operation is executed anytime the selected key does not have value.
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-and-replace-ratio (**optional**) - Ratio of GET_AND_REPLACE requests. Default is 1.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > key-selector (**mandatory**) - Selects which key IDs are used in the test.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
 > match-percentage (**optional**) - Percentage of requests in which the condition should be satisfied. Default is 50%.  
@@ -113,19 +116,20 @@ Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 
 ### key-expiration-test
 During execution, keys expire (entries are removed from the cache) and new keys are used.
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-lifespan (**optional**) - With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
@@ -134,7 +138,7 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > get-ratio (**optional**) - Ratio of GET requests. Default is 4.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
 > merge-thread-stats (**optional**) - Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.  
 > num-bytes-per-thread (**optional**) - Maximum number of bytes in entries' values stored in the cache by one stressor thread at one moment.  
@@ -150,27 +154,28 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 
 ### streaming-operations-test
 Streaming operations test stage
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > buffer-size (**optional**) - Streaming operations buffer size in bytes, default is 100  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 4.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > key-selector (**mandatory**) - Selects which key IDs are used in the test.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
 > merge-thread-stats (**optional**) - Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.  
@@ -185,19 +190,20 @@ Streaming operations test stage
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 
 ### temporal-operations-test
 Test using TemporalOperations
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
-> cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
+> cache-selector (**optional**) - Selects which caches will be used in the test. Default is CacheSelector.Default  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
+> decrease-duration (**optional**) - You have the possibility to decrease the stage duration in runtime. Default zero  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -206,7 +212,7 @@ Test using TemporalOperations
 > get-ratio (**optional**) - Ratio of GET requests. Default is 4.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
-> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.  
+> key-generator (**optional**) - Generator of keys used in the test (transforms key ID into key object). Default is StringKeyGenerator.  
 > key-selector (**mandatory**) - Selects which key IDs are used in the test.  
 > lifespan (**optional**) - Lifespan to be used for all temporal operations. Default is 1000 ms.  
 > log-transaction-exceptions (**optional**) - Whether an error from transaction commit/rollback should be logged as error. Default is true.  
@@ -226,10 +232,10 @@ Test using TemporalOperations
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
-> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is 0.  
+> think-time (**optional**) - Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.  
 > timeout (**optional**) - Max duration of the test. Default is infinite.  
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
-> value-generator (**optional**) - Generator of values used in the test. By default the generator is retrieved from slave state.  
+> value-generator (**optional**) - Generator of values used in the test. Default is ByteArrayValueGenerator.  
 

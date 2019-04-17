@@ -1,5 +1,6 @@
 package org.radargun.stages.test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.DurationConverter;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -61,8 +63,8 @@ public abstract class TestStage extends BaseTestStage {
    @Property(doc = "Delay to let all threads start executing operations. Default is 0.", converter = TimeConverter.class)
    public long rampUp = 0;
 
-   @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.", deprecatedName = "delayBetweenRequests")
-   protected long thinkTime = 0;
+   @Property(converter = DurationConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is a null Duration which means no think time between requests.", deprecatedName = "delayBetweenRequests")
+   protected Duration thinkTime = null;
 
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    public boolean logTransactionExceptions = true;
@@ -96,12 +98,24 @@ public abstract class TestStage extends BaseTestStage {
       if (totalThreads > 0 && numThreadsPerNode > 0)
          throw new IllegalStateException("You have to set only one ot total-threads, num-threads-per-node");
       if (totalThreads < 0 || numThreadsPerNode < 0) throw new IllegalStateException("Number of threads can't be < 0");
-      if (cycleTime > 0 && thinkTime > 0) throw new IllegalStateException("We cannot mix cycleTime and thinkTime");
+      if (cycleTime > 0 && thinkTime != null) throw new IllegalStateException("We cannot mix cycleTime and thinkTime");
       if (reportLatencyAsServiceTime && cycleTime == 0) throw new IllegalStateException("Report Latency as Service Time can be enabled when cycleTime > 0");
    }
 
    public DistStageAck executeOnSlave() {
-      if (!isServiceRunning()) {
+      if (!isServiceRunning() && lifecycle.shouldWait()) {
+         while (!isServiceRunning()) {
+            try {
+               // avoid burning the cpu - maybe this could be a configuration in the future
+               Thread.sleep(1000);
+               if (log.isTraceEnabled()) {
+                  log.info("Still waiting the Lifecycle start.");
+               }
+            } catch (InterruptedException e) {
+               throw new IllegalStateException(e);
+            }
+         }
+      } else if (!isServiceRunning()) {
          log.info("Not running test on this slave as service is not running.");
          return successfulResponse();
       }
@@ -238,7 +252,7 @@ public abstract class TestStage extends BaseTestStage {
          }
          return new CountStressorCompletion(countPerNode);
       } else {
-         return new TimeStressorCompletion(duration);
+         return new TimeStressorCompletion(duration - decreaseDuration);
       }
    }
 

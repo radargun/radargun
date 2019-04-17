@@ -29,6 +29,7 @@ public class InfinispanLifecycle implements Lifecycle {
    protected ReentrantLock stateLock = new ReentrantLock();
    protected Thread startingThread;
 
+   private boolean wait;
 
    public InfinispanLifecycle(InfinispanEmbeddedService service) {
       this.service = service;
@@ -168,5 +169,15 @@ public class InfinispanLifecycle implements Lifecycle {
             stateLock.unlock();
          }
       }
+   }
+
+   @Override
+   public void shouldWait(boolean wait) {
+      this.wait = wait;
+   }
+
+   @Override
+   public boolean shouldWait() {
+      return wait;
    }
 }

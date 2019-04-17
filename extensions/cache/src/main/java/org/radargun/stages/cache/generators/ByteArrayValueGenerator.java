@@ -4,6 +4,8 @@ import java.util.Random;
 
 import org.radargun.config.DefinitionElement;
 
+import static org.radargun.stages.cache.generators.ByteArrayGenerator.generateArray;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -22,11 +24,5 @@ public class ByteArrayValueGenerator implements ValueGenerator {
    @Override
    public boolean checkValue(Object value, Object key, int expectedSize) {
       return value instanceof byte[] && (expectedSize <= 0 || ((byte[]) value).length == expectedSize);
-   }
-
-   public static byte[] generateArray(int size, Random random) {
-      byte[] array = new byte[size];
-      random.nextBytes(array);
-      return array;
    }
 }

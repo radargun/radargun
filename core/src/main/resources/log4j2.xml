@@ -19,6 +19,22 @@
       </Console>
    </Appenders>
    <Loggers>
+      <Logger name="org.infinispan" level="INFO" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+      <Logger name="org.infinispan.CLUSTER" level="DEBUG" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+      <Logger name="org.radargun" level="INFO" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+      <Logger name="org.jgroups" level="INFO" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+      <Logger name="org.jgroups.protocols.PING" level="TRACE" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+
       <Logger name="org.apache" level="WARN" additivity="false">
          <AppenderRef ref="CONSOLE"/>
       </Logger>
@@ -35,7 +51,7 @@
          <AppenderRef ref="CONSOLE"/>
       </Logger>
 
-      <Root level="INFO">
+      <Root level="TRACE">
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE" />
       </Root>

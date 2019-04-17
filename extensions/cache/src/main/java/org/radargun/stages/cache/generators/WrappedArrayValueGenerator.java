@@ -13,7 +13,7 @@ import org.radargun.config.DefinitionElement;
 public class WrappedArrayValueGenerator implements ValueGenerator {
    @Override
    public Object generateValue(Object key, int size, Random r) {
-      return new ByteArrayWrapper(ByteArrayValueGenerator.generateArray(size, r));
+      return new ByteArrayWrapper(ByteArrayGenerator.generateArray(size, r));
    }
 
    @Override

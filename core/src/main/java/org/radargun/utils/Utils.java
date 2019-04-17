@@ -17,6 +17,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -389,43 +390,56 @@ public class Utils {
       return instance;
    }
 
-   public static long string2Millis(String duration) {
-      long durationMillis = 0;
+   public static Duration string2Nanos(String duration) {
+      long durationNanos = 0;
       duration = duration.toUpperCase().trim();
       int days = duration.indexOf('D');
       int hours = duration.indexOf('H');
       int minutes = duration.indexOf('M');
       int seconds = duration.indexOf('S');
       int millis = duration.indexOf('L');
+      int nanos = duration.indexOf('N');
       int lastIndex = 0;
       try {
          if (days > 0) {
-            durationMillis += TimeUnit.DAYS.toMillis(Long.parseLong(duration.substring(lastIndex, days).trim()));
+            durationNanos += TimeUnit.DAYS.toNanos(Long.parseLong(duration.substring(lastIndex, days).trim()));
             lastIndex = days + 1;
          }
          if (hours > 0) {
-            durationMillis += TimeUnit.HOURS.toMillis(Long.parseLong(duration.substring(lastIndex, hours).trim()));
+            durationNanos += TimeUnit.HOURS.toNanos(Long.parseLong(duration.substring(lastIndex, hours).trim()));
             lastIndex = hours + 1;
          }
          if (minutes > 0) {
-            durationMillis += TimeUnit.MINUTES.toMillis(Long.parseLong(duration.substring(lastIndex, minutes).trim()));
+            durationNanos += TimeUnit.MINUTES.toNanos(Long.parseLong(duration.substring(lastIndex, minutes).trim()));
             lastIndex = minutes + 1;
          }
          if (seconds > 0) {
-            durationMillis += TimeUnit.SECONDS.toMillis(Long.parseLong(duration.substring(lastIndex, seconds).trim()));
+            durationNanos += TimeUnit.SECONDS.toNanos(Long.parseLong(duration.substring(lastIndex, seconds).trim()));
             lastIndex = seconds + 1;
          }
          if (millis > 0) {
-            durationMillis += TimeUnit.MILLISECONDS.toMillis(Long.parseLong(duration.substring(lastIndex, millis).trim()));
+            durationNanos += TimeUnit.MILLISECONDS.toNanos(Long.parseLong(duration.substring(lastIndex, millis).trim()));
             lastIndex = millis + 1;
          }
+         if (nanos > 0) {
+            durationNanos += TimeUnit.NANOSECONDS.toNanos(Long.parseLong(duration.substring(lastIndex, nanos).trim()));
+            lastIndex = nanos + 1;
+         }
          if (lastIndex < duration.length()) {
-            durationMillis += Long.parseLong(duration.substring(lastIndex));
+            durationNanos += Long.parseLong(duration.substring(lastIndex));
          }
       } catch (NumberFormatException nfe) {
          throw new IllegalArgumentException("Cannot parse string: '" + duration + "'", nfe);
       }
-      return durationMillis;
+      return Duration.ofNanos(durationNanos);
+   }
+
+   public static long string2Millis(String duration) {
+      int nanos = duration.indexOf('N');
+      if (nanos > 0) {
+         throw new IllegalArgumentException("TimeConverter doesn't support nanos. Use DurationConverter instead");
+      }
+      return string2Nanos(duration).toMillis();
    }
 
    @Deprecated

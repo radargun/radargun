@@ -6,9 +6,10 @@ import org.radargun.config.Converter;
 
 /**
  * Converts string with time suffix into milliseconds
- *
+ * Deprecated: Use {@link DurationConverter} instead
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Deprecated
 public class TimeConverter implements Converter<Long> {
    @Override
    public Long convert(String string, Type ignored) {

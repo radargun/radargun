@@ -15,9 +15,12 @@ public class FlightRecorder implements VmArg {
    @Property(doc = "Settings file with recording configuration.")
    private String settings;
 
+   @Property(doc = "Maximum age of buffer data")
+   private String maxage;
+
    @Property(doc = "Flight Recorder Options")
    private String flightRecorderOptions;
-   
+
    private boolean isOracle = !System.getProperty("java.runtime.name").contains("OpenJDK");
 
    @Override
@@ -29,6 +32,8 @@ public class FlightRecorder implements VmArg {
          recordingParams.append(",filename=").append(filename);
       if (settings != null)
          recordingParams.append(",settings=").append(settings);
+      if (maxage != null)
+         recordingParams.append(",maxage=").append(maxage);
       if (isOracle) {
          ensureArg(args, "-XX:+UnlockCommercialFeatures");
       }

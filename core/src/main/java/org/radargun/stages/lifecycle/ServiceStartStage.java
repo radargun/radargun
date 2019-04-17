@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
@@ -28,6 +33,18 @@ public class ServiceStartStage extends AbstractServiceStartStage {
 
    @Property(doc = "If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.")
    private boolean staggerSlaveStartup = true;
+
+   /**
+    * SYNC: It is the default behavior ( as it was before the scalability tests were introduced ).
+    * We add a delay between each node during the startup. The test only will start once we have all nodes up
+    * and running.
+    *
+    * ASYNC: It is a new behavior. It allows the node start without having to wait for all nodes be up and running.
+    * It allows the following: A test with 4 minutes and a delay of 1 minute between each node. This will simulate
+    * a scalability test.
+    */
+   @Property(doc = "If set to ASYNC, the slaves will startup will be delayed. Default is SYNC.")
+   private StaggerSlaveStartupModeEnum staggerSlaveStartupMode = StaggerSlaveStartupModeEnum.SYNC;
 
    @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first slave's start is initiated. Default is 5s.")
    private long delayAfterFirstSlaveStarts = 5000;
@@ -53,67 +70,84 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @InjectTrait
    private ConfigurationProvider configurationProvider;
 
+   @Property(doc = "Start only the given slave index")
+   private int slaveIndex = -1;
+
    public DistStageAck executeOnSlave() {
+
+      DistStageAck response;
+
       if (!shouldExecute()) {
          log.trace("Start request not targeted for this slave, ignoring.");
-         return successfulResponse();
+         response = successfulResponse();
       } else if (lifecycle == null) {
          log.warn("Service " + slaveState.getServiceName() + " does not support lifecycle management.");
-         return successfulResponse();
+         response = successfulResponse();
       } else if (lifecycle.isRunning()) {
          log.info("Service " + slaveState.getServiceName() + " is already running.");
-         return successfulResponse();
-      }
-
-      int index = 0;
-      for (Integer slave : getExecutingSlaves()) {
-         if (slave.equals(slaveState.getSlaveIndex())) break;
-         index++;
-      }
-      staggerStartup(index);
-
-      log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
-         + ". This slave's index is: " + slaveState.getSlaveIndex());
-
-      // If no value of expectNumSlaves is supplied, then use the slave's group size as the default
-      if (expectNumSlaves == null) {
-         Set<Integer> group = slaveState.getCluster().getSlaves(slaveState.getGroupName());
-         group.retainAll(getExecutingSlaves());
-         expectNumSlaves = group.size();
-      }
-
-      try {
-         LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
-      } catch (RuntimeException e) {
-         return errorResponse("Issues while instantiating/starting service", e);
-      }
-      log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
-      if (configurationProvider != null && dumpConfig) {
-         return new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
+         response = successfulResponse();
       } else {
-         return new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-      }
-   }
-
-   private void staggerStartup(int thisNodeIndex) {
-      if (!staggerSlaveStartup) {
-         if (log.isTraceEnabled()) {
-            log.trace("Not using slave startup staggering");
+         int index = 0;
+         if (slaveIndex >= 0) {
+            index = slaveState.getSlaveIndex() == slaveIndex ? slaveIndex : -1;
+         } else {
+            for (Integer slave : getExecutingSlaves()) {
+               if (slave.equals(slaveState.getSlaveIndex())) break;
+               index++;
+            }
          }
-         return;
+
+         // skip startup ?
+         if (index >= 0) {
+
+            if (log.isTraceEnabled()) {
+               log.trace((staggerSlaveStartup ? "Using" : "Not using") + " slave startup staggering");
+            }
+            long toSleep = 0;
+            if (staggerSlaveStartup) {
+               if (index == 0) {
+                  log.info("Startup staggering, this is the slave with index 0, not sleeping");
+               } else {
+                  toSleep = delayAfterFirstSlaveStarts + index * delayBetweenStartingSlaves;
+               }
+            }
+
+            log.info(" Startup staggering, this is the slave with index " + index + ". Sleeping for " + toSleep + " millis using " + staggerSlaveStartupMode + " mode");
+
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+            if (StaggerSlaveStartupModeEnum.SYNC.equals(staggerSlaveStartupMode)) {
+
+               ScheduledFuture task = scheduler.schedule(new StaggerSlaveStartupTask(), toSleep, TimeUnit.MILLISECONDS);
+               try {
+                  task.get();
+                  if (configurationProvider != null && dumpConfig && index >= 0) {
+                     response = new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
+                  } else {
+                     response = new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+                  }
+               } catch (InterruptedException | ExecutionException e) {
+                  response = errorResponse("Issues while instantiating/starting service", e);
+               }
+               log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
+
+            } else if (StaggerSlaveStartupModeEnum.ASYNC.equals(staggerSlaveStartupMode)) {
+
+               lifecycle.shouldWait(true);
+               scheduler.schedule(new StaggerSlaveStartupTask(), toSleep, TimeUnit.MILLISECONDS);
+               response = new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+               log.info("Cache service " + slaveState.getServiceName() + " will start  on slave " + slaveState.getSlaveIndex() + " in " + toSleep + " millis");
+
+            } else {
+               throw new IllegalStateException("Mode " + staggerSlaveStartupMode + " not supported");
+            }
+         } else {
+
+            log.info("Skipped cache service startup " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
+            response = new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+         }
       }
-      if (thisNodeIndex == 0) {
-         log.info("Startup staggering, this is the slave with index 0, not sleeping");
-         return;
-      }
-      long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
-      log.info(" Startup staggering, this is the slave with index "
-         + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
-      try {
-         Thread.sleep(toSleep);
-      } catch (InterruptedException e) {
-         throw new IllegalStateException("Should never happen");
-      }
+
+      return response;
    }
 
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
@@ -149,6 +183,29 @@ public class ServiceStartStage extends AbstractServiceStartStage {
 
       public Map<String, byte[]> getOriginalConfigs() {
          return originalConfigs;
+      }
+   }
+
+   private class StaggerSlaveStartupTask implements Runnable {
+
+      @Override
+      public void run() {
+
+         log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
+            + ". This slave's index is: " + slaveState.getSlaveIndex());
+
+         // If no value of expectNumSlaves is supplied, then use the slave's group size as the default
+         if (expectNumSlaves == null) {
+            Set<Integer> group = slaveState.getCluster().getSlaves(slaveState.getGroupName());
+            group.retainAll(getExecutingSlaves());
+            expectNumSlaves = group.size();
+         }
+
+         try {
+            LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
+         } catch (RuntimeException e) {
+            throw e;
+         }
       }
    }
 }
