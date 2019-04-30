@@ -85,6 +85,8 @@
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <plugins.chm/>
+      <plugins.couchbase/>
+      <plugins.couchbase-latest/>
       <plugins.docker/>
       <plugins.openshift/>
       <plugins.jcache/>
@@ -303,6 +305,21 @@
          </modules>
          <properties>
             <plugins.chm>chm</plugins.chm>
+         </properties>
+      </profile>
+      <profile>
+         <id>couchbase</id>
+         <activation>
+            <property>
+               <name>!no-couchbase</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/couchbase</module>
+         </modules>
+         <properties>
+            <plugins.couchbase-latest>couchbase</plugins.couchbase-latest>
+            <plugins.couchbase>${plugins.couchbase-latest}</plugins.couchbase>
          </properties>
       </profile>
       <profile>
