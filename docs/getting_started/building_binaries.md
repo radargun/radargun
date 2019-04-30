@@ -34,6 +34,7 @@ This operation might take a few minutes, as it will download the dependencies ne
     lib
     plugins(*)
         chm
+        couchbase
         docker
         ehcache25
         hazelcast2/36/37
@@ -95,6 +96,7 @@ All properties have to be provided separatelly preceeded by "-D" -> property "sk
 
 * **Enabled by default**:
     * **chm**			(parameter `-Dno-chm` to disable)
+    * **couchbase**		(parameter `-Dno-couchbase` to disable)
     * **ehcache**		(parameter `-Dno-ehcache` to disable)
     * **hazelcast**		(parameter `-Dno-hazelcast` to disable)
     * **jbosscache**		(parameter `-Dno-jbosscache` to disable)
