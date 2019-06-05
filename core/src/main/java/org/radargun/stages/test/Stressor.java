@@ -49,6 +49,8 @@ public class Stressor extends Thread {
    long uniformRateLimiterOpIndex = 0;
    long uniformRateLimiterStart = Long.MIN_VALUE;
 
+   final boolean reportLatencyAsServiceTime;
+
    public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, CountDownLatch threadCountDown) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
@@ -62,6 +64,7 @@ public class Stressor extends Thread {
       this.threadCountDown = threadCountDown;
       this.thinkTime = stage.thinkTime;
       this.uniformRateLimiterOpsPerNano = TimeUnit.MILLISECONDS.toNanos(stage.cycleTime);
+      this.reportLatencyAsServiceTime = stage.reportLatencyAsServiceTime;
    }
 
    private boolean recording() {
@@ -324,11 +327,11 @@ public class Stressor extends Thread {
       Request request = null;
       if (recording()) {
          if (uniformRateLimiterOpsPerNano > 0) {
-            request = stats.startRequest(uniformRateLimiterStart + (uniformRateLimiterOpIndex++) * uniformRateLimiterOpsPerNano);
-            long intendedTime = request.getRequestStartTime();
+            long intendedTime = uniformRateLimiterStart + (uniformRateLimiterOpIndex++) * uniformRateLimiterOpsPerNano;
             long now;
             while ((now = System.nanoTime()) < intendedTime)
                LockSupport.parkNanos(intendedTime - now);
+            request = stats.startRequest(reportLatencyAsServiceTime ? System.nanoTime() : intendedTime);
          } else {
             request = stats.startRequest();
          }

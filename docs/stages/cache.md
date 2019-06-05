@@ -122,7 +122,7 @@ Test using BasicOperations
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > contains-ratio (**optional**) - Ratio of CONTAINS requests. Default is 0.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -141,6 +141,7 @@ Test using BasicOperations
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > remove-ratio (**optional**) - Ratio of REMOVE requests. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -159,7 +160,7 @@ Executes operations from BulkOperations trait.
 > bulk-size (**optional**) - Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper supports bulk operations. Default is 10.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -179,6 +180,7 @@ Executes operations from BulkOperations trait.
 > remove-all-async-ratio (**optional**) - Ratio of REMOVE_ALL_ASYNC requests. Default is 0.  
 > remove-all-native-ratio (**optional**) - Ratio of REMOVE_ALL_NATIVE requests. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -265,7 +267,7 @@ Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -284,6 +286,7 @@ Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
 > replace-any-ratio (**optional**) - Ratio of REPLACE_ANY requests. Default is 1.  
 > replace-ratio (**optional**) - Ratio of REPLACE requests. Default is 1.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -329,7 +332,7 @@ Iterates through all entries.
 > container-name (**optional**) - Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.  
 > converter-class (**optional**) - Full class name of the converter. Default is no converter (Map.Entry<K, V> is returned).  
 > converter-param (**optional**) - Parameter for the converter (used to resolve its properties). No defaults.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > fail-on-failed-iteration (**optional**) - Fail the stage if some of the stressors has failed. Default is true.  
@@ -346,6 +349,7 @@ Iterates through all entries.
 > num-threads-per-node (**optional**) - The number of threads executing on each node. You have to set either this or 'total-threads'. No default.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -362,7 +366,7 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-lifespan (**optional**) - With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
@@ -381,6 +385,7 @@ During execution, keys expire (entries are removed from the cache) and new keys 
 > put-ratio (**optional**) - Ratio of PUT requests. Default is 1.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -513,7 +518,7 @@ Streaming operations test stage
 > buffer-size (**optional**) - Streaming operations buffer size in bytes, default is 100  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -529,6 +534,7 @@ Streaming operations test stage
 > put-ratio (**optional**) - Ratio of PUT requests. Default is 1.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -546,7 +552,7 @@ Test using TemporalOperations
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > cache-selector (**optional**) - Selects which caches will be used in the test. By default the selector is retrieved from slave state.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -569,6 +575,7 @@ Test using TemporalOperations
 > put-with-lifespan-ratio (**optional**) - Ratio of PUT_WITH_LIFESPAN requests. Default is 1.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  

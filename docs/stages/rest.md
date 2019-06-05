@@ -11,7 +11,7 @@ Stage for starting REST operations in the background
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -23,6 +23,7 @@ Stage for starting REST operations in the background
 > num-threads-per-node (**optional**) - The number of threads executing on each node. You have to set either this or 'total-threads'. No default.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -39,7 +40,7 @@ Stage for stopping REST operations running in the background
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -51,6 +52,7 @@ Stage for stopping REST operations running in the background
 > num-threads-per-node (**optional**) - The number of threads executing on each node. You have to set either this or 'total-threads'. No default.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
@@ -68,7 +70,7 @@ Test using RESTOperations with specific URL
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > context-path (**optional**) - The context path for this REST stage. Defaults to empty string.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > get-ratio (**optional**) - Ratio of GET requests. Default is 1 (100%).  
@@ -80,6 +82,7 @@ Test using RESTOperations with specific URL
 > num-threads-per-node (**optional**) - The number of threads executing on each node. You have to set either this or 'total-threads'. No default.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  

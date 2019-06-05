@@ -14,7 +14,7 @@ Test using MiltimapCacheOperations
 > contains-entry-ratio (**optional**) - Ratio of CONTAINS_ENTRY requests. Default is 0.  
 > contains-key-ratio (**optional**) - Ratio of CONTAINS_KEY requests. Default is 0.  
 > contains-value-ratio (**optional**) - Ratio of CONTAINS_VALUE requests. Default is 0.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
@@ -35,6 +35,7 @@ Test using MiltimapCacheOperations
 > remove-by-predicate-ratio (**optional**) - Ratio of REMOVE_BY_PREDICATE requests. Default is 0.  
 > remove-ratio (**optional**) - Ratio of REMOVE requests. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > size-ratio (**optional**) - Ratio of SIZE requests. Default is 0.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
