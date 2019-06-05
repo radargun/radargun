@@ -67,8 +67,11 @@ public abstract class TestStage extends BaseTestStage {
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    public boolean logTransactionExceptions = true;
 
-   @Property(converter = TimeConverter.class, doc = "Intended time between each request. Default is 0.")
+   @Property(converter = TimeConverter.class, doc = "Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO")
    protected long cycleTime = 0;
+
+   @Property(doc = "Enable this property in order to show the difference between latency and service.")
+   protected boolean reportLatencyAsServiceTime;
 
    @InjectTrait
    protected Transactional transactional;
@@ -94,6 +97,7 @@ public abstract class TestStage extends BaseTestStage {
          throw new IllegalStateException("You have to set only one ot total-threads, num-threads-per-node");
       if (totalThreads < 0 || numThreadsPerNode < 0) throw new IllegalStateException("Number of threads can't be < 0");
       if (cycleTime > 0 && thinkTime > 0) throw new IllegalStateException("We cannot mix cycleTime and thinkTime");
+      if (reportLatencyAsServiceTime && cycleTime == 0) throw new IllegalStateException("Report Latency as Service Time can be enabled when cycleTime > 0");
    }
 
    public DistStageAck executeOnSlave() {

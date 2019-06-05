@@ -35,7 +35,7 @@ Stage which executes a query.
 > class (**mandatory**) - Full class name of the object that should be queried. Mandatory.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > conditions (**mandatory**) - Conditions used in the query  
-> cycle-time (**optional**) - Intended time between each request. Default is 0.  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > exposed-attributes (**optional**) - Full names of the attribute queried from InternalsExposition. Expecting values parse-able as long values. Default are none.  
@@ -56,6 +56,7 @@ Stage which executes a query.
 > projection-aggregated (**optional**) - Projection, possibly with aggregations.  
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
+> report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
