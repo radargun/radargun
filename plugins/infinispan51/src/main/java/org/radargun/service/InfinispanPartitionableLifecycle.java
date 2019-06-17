@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.infinispan.remoting.transport.Transport;
-import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
@@ -33,7 +32,7 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
       }
    }
 
-   private void setPartitionInChannel(JChannel channel, int slaveIndex, Set<Integer> members) {
+   protected void setPartitionInChannel(JChannel channel, int slaveIndex, Set<Integer> members) {
       log.trace("Setting partition in channel " + channel);
       SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(getPartitionProtocolClass());
       if (partition == null) {
@@ -63,24 +62,17 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
    }
 
    public Transport createTransport() {
-      return new HookedJGroupsTransport();
+      return new Infinispan51HookedJGroupsTransport(this);
    }
 
-   private class HookedJGroupsTransport extends JGroupsTransport {
-      /**
-       * This is called after the channel is initialized but before it is connected
-       */
-      @Override
-      protected void startJGroupsChannelIfNeeded() {
-         log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + initiallyReachable);
-         if (mySlaveIndex >= 0 && initiallyReachable != null) {
-            List<JChannel> channels = getChannels((JChannel) this.channel);
-            log.trace("Found " + channels.size() + " channels");
-            for (JChannel channel : channels) {
-               setPartitionInChannel(channel, mySlaveIndex, initiallyReachable);
-            }
+   public void handleStartJGroupsChannelIfNeeded(JChannel channel) {
+      log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + initiallyReachable);
+      if (mySlaveIndex >= 0 && initiallyReachable != null) {
+         List<JChannel> channels = getChannels(channel);
+         log.trace("Found " + channels.size() + " channels");
+         for (JChannel c : channels) {
+            setPartitionInChannel(c, mySlaveIndex, initiallyReachable);
          }
-         super.startJGroupsChannelIfNeeded();
       }
    }
 }

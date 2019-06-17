@@ -800,6 +800,7 @@
             <version>3.0.0</version>
             <configuration>
                <configLocation>main/resources/checkstyle.xml</configLocation>
+               <suppressionsLocation>main/resources/checkstyle-suppressions.xml</suppressionsLocation>
             </configuration>
             <executions>
                <execution>
