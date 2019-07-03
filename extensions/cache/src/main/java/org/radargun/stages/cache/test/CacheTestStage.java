@@ -4,6 +4,7 @@ import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
+import org.radargun.stages.cache.generator.DefaultStageConfiguration;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
@@ -42,31 +43,28 @@ public abstract class CacheTestStage extends TestStage {
       if (keyGenerator == null) {
          keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
          if (keyGenerator == null) {
-            throw new IllegalStateException("Key generator was not specified and no key generator was used before.");
+            keyGenerator = DefaultStageConfiguration.createDefaultKeyGenerator();
          }
-      } else {
-         slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       }
+      slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       log.info("Using key generator " + keyGenerator.getClass().getName() + PropertyHelper.toString(keyGenerator));
 
       if (valueGenerator == null) {
          valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
          if (valueGenerator == null) {
-            throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
+            valueGenerator = DefaultStageConfiguration.createDefaultValueGenerator();
          }
-      } else {
-         slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       }
+      slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       log.info("Using value generator " + valueGenerator.getClass().getName() + PropertyHelper.toString(valueGenerator));
 
       if (cacheSelector == null) {
          cacheSelector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
          if (cacheSelector == null) {
-            throw new IllegalStateException("No cache selector defined.");
+            cacheSelector = DefaultStageConfiguration.createDefaultCacheSelector();
          }
-      } else {
-         slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
       }
+      slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
       log.info("Using cache selector " + cacheSelector);
    }
 }
