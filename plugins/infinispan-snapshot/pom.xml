@@ -123,6 +123,15 @@
          <artifactId>infinispan-marshaller-protostuff</artifactId>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-rocksdb</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-persistence-soft-index</artifactId>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>
