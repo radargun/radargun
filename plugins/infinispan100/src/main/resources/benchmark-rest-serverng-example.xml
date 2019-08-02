@@ -1,0 +1,77 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+    <clusters>
+        <cluster size="2">
+            <group name="server" size="1" />
+            <group name="client" size="1" />
+        </cluster>
+    </clusters>
+    <configurations>
+
+        <config name="dist">
+            <setup group="server" plugin="${env.PLUGINNAME}">
+                <server xmlns="urn:radargun:plugins:${env.PLUGINNAME}:3.0" cache-manager-name="clustered" start-timeout="120000">
+
+                    <home>/home_local/regression/servers/server${slave.index}</home>
+                    <server-zip>/home/hudson/static_build_env/jdg/regression/server.zip</server-zip>
+                    <default-server-port>11222</default-server-port>
+                </server>
+            </setup>
+            <setup group="client" plugin="resteasy-http">
+                <rest-client xmlns="urn:radargun:plugins:resteasy-http:3.0" cache-name="default">
+                    <servers>127.0.0.1:11222</servers>
+                </rest-client>
+            </setup>
+        </config>
+
+    </configurations>
+    <init/>
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns:l="urn:radargun:stages:legacy:3.0">
+
+        <define var="num.entries" value="#{ ( 8 * 8000000000 ) / ( ${env.BENCHMARK_ENTRY_SIZE:10000} * 2 ) }" />
+        <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:10000}" />
+
+        <service-start groups="server"/>
+        <service-start groups="client"/>
+        <jvm-monitor-start />
+        <cluster-split-verify groups="server" />
+
+        <cache:load groups="client" num-entries="${num.entries}" entry-size="${entry.size}" num-threads="1"/>
+        <l:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="1" duration="1m" entry-size="${entry.size}">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="${num.entries}" />
+            </l:key-selector>
+        </l:basic-operations-test>
+
+        <l:basic-operations-test groups="client" test-name="writes10" duration="1m" num-threads-per-node="1" entry-size="${entry.size}" get-ratio="0" put-ratio="1">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="${num.entries}" />
+            </l:key-selector>
+            <statistics>
+                <common/>
+            </statistics>
+        </l:basic-operations-test>
+
+        <l:basic-operations-test groups="client" test-name="writes100" duration="1m" num-threads-per-node="1" entry-size="${entry.size}" get-ratio="0" put-ratio="1">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="${num.entries}" />
+            </l:key-selector>
+            <statistics>
+                <common/>
+            </statistics>
+        </l:basic-operations-test>
+
+        <cluster-split-verify groups="server" verify="true" />
+        <jvm-monitor-stop />
+        <service-stop />
+    </rg:scenario>
+    <cleanup check-memory="false" check-memory-released="false" check-threads="false"/>
+
+    <reports>
+        <reporter type="html" />
+    </reports>
+
+</benchmark>

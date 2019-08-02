@@ -11,9 +11,6 @@ import org.radargun.utils.TimeService;
 public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServerService> {
    private boolean serverStarted;
    private boolean serverStopped;
-   private static final Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
-   private static final Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
-   private static final Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
 
    private volatile boolean gracefulStop = true;
 
@@ -21,37 +18,49 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
       super(service);
    }
 
+   protected Pattern getStartOK() {
+      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+   }
+
+   protected Pattern getStartError() {
+      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+   }
+
+   protected Pattern getStoped() {
+      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+   }
+
    @Override
    public void start() {
-      service.registerAction(START_OK, new ProcessService.OutputListener() {
+      service.registerAction(getStartOK(), new ProcessService.OutputListener() {
          @Override
          public void run(Matcher m) {
             setServerStarted();
-            service.unregisterAction(START_OK);
-            service.unregisterAction(START_ERROR);
+            service.unregisterAction(getStartOK());
+            service.unregisterAction(getStartError());
             fireAfterStart();
 
          }
       });
-      service.registerAction(START_ERROR, new ProcessService.OutputListener() {
+      service.registerAction(getStartError(), new ProcessService.OutputListener() {
          @Override
          public void run(Matcher m) {
             log.warn("Server started with errors");
             setServerStarted();
-            service.unregisterAction(START_OK);
-            service.unregisterAction(START_ERROR);
+            service.unregisterAction(getStartOK());
+            service.unregisterAction(getStartError());
             fireAfterStart();
          }
       });
-      service.registerAction(STOPPED, new ProcessService.OutputListener() {
+      service.registerAction(getStoped(), new ProcessService.OutputListener() {
          @Override
          public void run(Matcher m) {
             log.error("Server stopped before it started!");
             setServerStarted();
             setServerStopped();
-            service.unregisterAction(START_OK);
-            service.unregisterAction(START_ERROR);
-            service.unregisterAction(STOPPED);
+            service.unregisterAction(getStartOK());
+            service.unregisterAction(getStartError());
+            service.unregisterAction(getStoped());
             fireAfterStop(gracefulStop);
 
          }
@@ -149,4 +158,5 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
       serverStopped = true;
       notifyAll();
    }
+
 }

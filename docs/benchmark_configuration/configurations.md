@@ -113,6 +113,13 @@ Arguments will hame following effect:
 * *args* - VM arguments that will be given to server
   * jboss.node.name - specifies a server node name
   * jboss.socket.binding.port-offset - specifies offset for server port binding, making sure servers do not compete for same ports on localhost
+* *default-server-port* - Infinispan single port which will be used for Hotrod, Rest and other operations. Non-WildFly server will be used if this parameter is supplied
+* *jgroups-config* - If set, it will replace the default <jgroups> configuration
+* *cache-container-config* - If set, it will replace the default <cache-container> configuration
+* *interfaces-config* - If set, it will replace the default <interfaces> configuration
+* *socket-bindings-config* - If set, it will replace the default <socket-bindings> config
+* *endpoints-config* - If set, it will replace the default <endpoints> config
+* *security-config* - If set, it will replace the default <security> config
 
 **Client** group will run `infinispan90` plugin in HotRod mode - a java client library over specialized protocol.  
 Arguments will have following effect:
