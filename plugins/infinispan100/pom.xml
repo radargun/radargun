@@ -160,6 +160,11 @@
          <scope>provided</scope>
       </dependency>
 
+      <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>

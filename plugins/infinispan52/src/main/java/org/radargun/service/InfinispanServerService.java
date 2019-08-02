@@ -22,6 +22,7 @@ import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.Clustered;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
@@ -70,7 +71,7 @@ public class InfinispanServerService extends JavaProcessService {
    protected int executorPoolSize = 2;
 
    protected ScheduledExecutorService executor;
-   protected InfinispanServerClustered clustered;
+   protected Clustered clustered;
 
    protected volatile MBeanServerConnection connection;
 
@@ -147,7 +148,7 @@ public class InfinispanServerService extends JavaProcessService {
    }
 
    @ProvidesTrait
-   public InfinispanServerClustered getClustered() {
+   public Clustered getClustered() {
       return clustered;
    }
 
@@ -178,5 +179,17 @@ public class InfinispanServerService extends JavaProcessService {
 
    protected void schedule(Runnable task, long period) {
       executor.scheduleAtFixedRate(task, 0, period, TimeUnit.MILLISECONDS);
+   }
+
+   protected String getRadargunInstalationFolder() {
+      return home;
+   }
+
+   protected String getServerZip() {
+      return serverZip;
+   }
+
+   protected boolean getWindows() {
+      return windows;
    }
 }

@@ -1,0 +1,18 @@
+<config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups-4.0.xsd">
+
+    <TCP bind_port="7600" />
+    <MPING mcast_addr="${jboss.default.multicast.address:234.99.54.14}" mcast_port="45700" />
+    <MERGE3 />
+    <FD_SOCK start_port="57600" />
+    <FD_ALL />
+    <VERIFY_SUSPECT />
+    <pbcast.NAKACK2 use_mcast_xmit="false"/>
+    <UNICAST3 />
+    <pbcast.STABLE />
+    <pbcast.GMS />
+    <MFC_NB />
+    <FRAG3 />
+
+</config>
