@@ -230,6 +230,28 @@ public class PropertyHelper {
    }
 
    /**
+    * Get @Property annotation and check if systemProperty was set. If systemProperty is set, get the property from
+    * System environment and set on the Service field
+    *
+    * @param target        The modified object.
+    * @param properties    Properties from $target
+    */
+   private static void setEnvVariable(Object target, Map<String, Path> properties) {
+      properties.forEach((key, value) -> {
+         Path path = properties.get(key);
+         Property targetAnnotation = path.getTargetAnnotation();
+         if (targetAnnotation != null && !targetAnnotation.envVariable().isEmpty()) {
+            String env = System.getenv(targetAnnotation.envVariable());
+            try {
+               path.set(target, env);
+            } catch (IllegalAccessException e) {
+               e.printStackTrace();
+            }
+         }
+      });
+   }
+
+   /**
     * Set properties on the target object using values from the propertyMap.
     *
     * @param target The modified object.
@@ -240,6 +262,7 @@ public class PropertyHelper {
    public static void setPropertiesFromDefinitions(Object target, Map<String, Definition> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
       Map<String, Path> properties = getProperties(target.getClass(), useDashedName, true, true);
+      setEnvVariable(target, properties);
 
       for (Map.Entry<String, Definition> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();

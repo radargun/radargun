@@ -26,6 +26,8 @@ public @interface Property {
 
    String doc();
 
+   String envVariable() default "";
+
    /* This property cannot be configured from XML but will be printed out */
    boolean readonly() default false;
 }

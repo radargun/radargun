@@ -21,7 +21,9 @@ import static org.radargun.service.ServerLogPattern.*;
 @Service(doc = InfinispanServerService.SERVICE_DESCRIPTION)
 public class Infinispan100ServerService extends Infinispan80ServerService {
 
-   @Property(doc = "Default server port for Hotrod, Rest and other operations. If this property is set a non-WildFly based server will be used.")
+   @Property(
+         doc = "Default server port for Hotrod, Rest and other operations. If this property is set a non-WildFly based server will be used",
+         envVariable ="DEFAULT_SERVER_PORT")
    private String defaultServerPort;
 
    @Property(doc="jgruoups config. If set, it will replace the default <jgroups> config")
