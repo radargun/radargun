@@ -21,8 +21,8 @@ import static org.radargun.service.ServerLogPattern.*;
 @Service(doc = InfinispanServerService.SERVICE_DESCRIPTION)
 public class Infinispan100ServerService extends Infinispan80ServerService {
 
-   @Property(doc = "Default server port for Hotrod, Rest and other operations. If this property is set a non-WildFly based server will be used.")
-   private String defaultServerPort;
+   @Property(doc = "Default server port for Hotrod, Rest and other operations. Default 11222")
+   private Integer defaultServerPort = 11222;
 
    @Property(doc="jgruoups config. If set, it will replace the default <jgroups> config")
    private String jgroupsConfig;
@@ -46,11 +46,6 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
 
    @Override
    public void init() {
-      if (isEapServer()) {
-         //call wildfly server environment
-         super.init();
-         return;
-      }
 
       executor = new ScheduledThreadPoolExecutor(executorPoolSize);
       clustered = new Infinispan100ServerClustered(this, defaultServerPort);
@@ -58,25 +53,16 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
 
          @Override
          protected Pattern getStartOK() {
-            if(isEapServer()) {
-               return super.getStartOK();
-            }
             return START_OK.getPattern();
          }
 
          @Override
          protected Pattern getStartError() {
-            if(isEapServer()) {
-               return super.getStartError();
-            }
             return START_ERROR.getPattern();
          }
 
          @Override
          protected Pattern getStoped() {
-            if(isEapServer()) {
-               return super.getStoped();
-            }
             return STOPPED.getPattern();
          }
       };
@@ -111,14 +97,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
 
    @Override
    protected String getStartScriptPrefix() {
-      if(isEapServer()) {
-         return super.getStartScriptPrefix();
-      }
       return "server.";
-   }
-
-   protected boolean isEapServer() {
-      return defaultServerPort == null || defaultServerPort.trim().isEmpty();
    }
 
    @ProvidesTrait
@@ -126,7 +105,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
       return clustered;
    }
 
-   private Path createSererConfiguration() {
+   private Path createServerConfiguration() {
 
       ServerConfigurationUtils configurationBuilder = new ServerConfigurationUtils(getRadargunInstalationFolder())
             .jgroupsConfig(jgroupsConfig)
@@ -144,12 +123,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
 
    @Override
    protected List<String> getCommand() {
-      if(isEapServer()) {
-         return super.getCommand();
-      }
-
-      Path sererConfiguration = createSererConfiguration();
-
+      Path sererConfiguration = createServerConfiguration();
       ArrayList<String> command = new ArrayList<String>();
       command.add(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
       command.add("-c");

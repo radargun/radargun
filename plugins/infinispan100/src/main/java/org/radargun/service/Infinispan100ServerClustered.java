@@ -20,7 +20,7 @@ public class Infinispan100ServerClustered implements Clustered {
    protected String lastMembers;
    protected CacheManagerInfo cacheManagerInfo;
 
-   public Infinispan100ServerClustered(Infinispan100ServerService service, String defaultPort) {
+   public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort) {
       this.service = service;
       this.restAPI = new InfinispanRestAPI(defaultPort);
       service.schedule(new Runnable() {
