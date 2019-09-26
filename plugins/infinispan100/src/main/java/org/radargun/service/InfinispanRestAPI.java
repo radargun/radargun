@@ -26,12 +26,12 @@ public class InfinispanRestAPI {
    private ObjectMapper mapper;
    private HttpClient httpClient;
    private HttpResponse<String> response;
-   private String defaultPort;
+   private Integer defaultPort;
    private static final String CACHE_MANAGER_RESOURCE = "v2/cache-managers/clustered";
    private String serverIp;
    private final Log log = LogFactory.getLog(getClass());
 
-   public InfinispanRestAPI(String defaultPort) {
+   public InfinispanRestAPI(Integer defaultPort) {
       mapper = new ObjectMapper();
       mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
