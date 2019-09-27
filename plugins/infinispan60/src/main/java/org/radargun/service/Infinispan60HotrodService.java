@@ -21,6 +21,7 @@ import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.network.RadarGunInetAddress;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.traits.Queryable;
 
@@ -71,6 +72,27 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.connectionPool().maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
+      parseServerAddresses().forEach((address) -> builder.addServer().host(address.getHost()).port(address.getPort()));
+      createQueryConfiguration(builder);
+      return builder;
+   }
+
+   protected ConfigurationBuilder createQueryConfiguration(ConfigurationBuilder builder) {
+      if (enableQuery) {
+         queryable = createQueryable();
+         ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller();
+         builder.marshaller(marshaller);
+         SerializationContext context = marshaller.getSerializationContext();
+         queryable.registerProtofilesLocal(context);
+         // remote registration has to be delayed until we have running servers
+         // register marshallers
+         registerMarshallers(context);
+      }
+      return builder;
+   }
+
+   protected List<RadarGunInetAddress> parseServerAddresses() {
+      List<RadarGunInetAddress> addresses = new ArrayList<>();
       for (String server : servers.split(";")) {
          Matcher matcher = ADDRESS_PATTERN.matcher(server);
          if (!matcher.matches()) {
@@ -85,20 +107,10 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
             ? ConfigurationProperties.DEFAULT_HOTROD_PORT
             : Integer.parseInt(portString);
 
+         addresses.add(new RadarGunInetAddress(host, port));
          serverHostnames.add(host);
-         builder.addServer().host(host).port(port);
       }
-      if (enableQuery) {
-         queryable = createQueryable();
-         ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller();
-         builder.marshaller(marshaller);
-         SerializationContext context = marshaller.getSerializationContext();
-         queryable.registerProtofilesLocal(context);
-         // remote registration has to be delayed until we have running servers
-         // register marshallers
-         registerMarshallers(context);
-      }
-      return builder;
+      return addresses;
    }
 
    protected InfinispanHotrodQueryable createQueryable() {
