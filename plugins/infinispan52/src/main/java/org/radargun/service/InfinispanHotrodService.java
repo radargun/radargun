@@ -71,7 +71,10 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
       return managerNoReturn != null && managerNoReturn.isStarted();
    }
 
-   protected TcpTransportFactory getTransportFactory(RemoteCacheManager manager) {
+   /*
+    * ISPN10 removed TcpTransportFactory and a class not found exception will throws.
+    */
+   protected Object getTransportFactory(RemoteCacheManager manager) {
       try {
          if (transportFactoryField == null) {
             Field tf = manager.getClass().getDeclaredField("transportFactory");
@@ -97,8 +100,8 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
    @Override
    public Map<String, Number> getValues() {
       Map<String, Number> values = new HashMap<>();
-      TcpTransportFactory nrFactory = getTransportFactory(managerNoReturn);
-      TcpTransportFactory frFactory = getTransportFactory(managerForceReturn);
+      TcpTransportFactory nrFactory = (TcpTransportFactory) getTransportFactory(managerNoReturn);
+      TcpTransportFactory frFactory = (TcpTransportFactory) getTransportFactory(managerForceReturn);
       if (nrFactory != null) {
          GenericKeyedObjectPool<SocketAddress, TcpTransport> nrConnectionPool = nrFactory.getConnectionPool();
          values.put("NR ConnectionPool Active", nrConnectionPool.getNumActive());
