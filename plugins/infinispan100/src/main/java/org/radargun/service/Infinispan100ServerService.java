@@ -128,8 +128,6 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
       command.add(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
       command.add("-c");
       command.add(sererConfiguration.toString());
-      command.add("-b");
-      command.add("0.0.0.0");
       command.addAll(args);
       return command;
    }
