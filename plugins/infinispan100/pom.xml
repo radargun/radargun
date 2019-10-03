@@ -165,6 +165,12 @@
          <artifactId>commons-io</artifactId>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-server-runtime</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>
