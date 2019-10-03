@@ -57,11 +57,8 @@ public class InfinispanRestAPI {
             String json = doGet(url);
             cacheManagerInfo = mapper.readValue(json, CacheManagerInfo.class);
          } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            log.error(String.format("Cannot access: %s -> %s", url, e.getMessage()));
          }
-      }
-      if (cacheManagerInfo == null) {
-         throw new NullPointerException("cacheManagerInfo cannot be null");
       }
       return cacheManagerInfo;
    }

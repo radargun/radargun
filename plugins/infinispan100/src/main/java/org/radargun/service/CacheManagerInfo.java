@@ -11,7 +11,7 @@ public class CacheManagerInfo {
 
    private String coordinatorAddress, cacheManagerStatus, createdCacheCount, runningCacheCount;
    private String version, name, nodeAddress, physicalAddresses, clusterName, logicalAddressString;
-   private boolean isCoordinator;
+   private boolean coordinator;
    private Set<BasicCacheInfo> definedCaches;
    private List<String> clusterMembers, clusterMembersPhysicalAddresses;
    private int clusterSize;
@@ -22,7 +22,7 @@ public class CacheManagerInfo {
    }
 
    public boolean isCoordinator() {
-      return isCoordinator;
+      return coordinator;
    }
 
    public String getCacheManagerStatus() {
@@ -126,7 +126,7 @@ public class CacheManagerInfo {
    }
 
    public void setCoordinator(boolean coordinator) {
-      isCoordinator = coordinator;
+      this.coordinator = coordinator;
    }
 
    public void setDefinedCaches(Set<BasicCacheInfo> definedCaches) {
