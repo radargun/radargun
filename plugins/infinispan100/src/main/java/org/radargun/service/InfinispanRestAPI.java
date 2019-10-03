@@ -4,14 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.Inet4Address;
 import java.net.URL;
-import java.net.UnknownHostException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
+import org.infinispan.server.network.NetworkAddress;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
@@ -23,34 +22,46 @@ import org.radargun.logging.LogFactory;
  */
 public class InfinispanRestAPI {
 
+   protected final Log log = LogFactory.getLog(getClass());
+
    private ObjectMapper mapper;
    private Integer defaultPort;
    private static final String CACHE_MANAGER_RESOURCE = "v2/cache-managers/clustered";
    private String serverIp;
-   private final Log log = LogFactory.getLog(getClass());
 
    public InfinispanRestAPI(Integer defaultPort) {
-      mapper = new ObjectMapper();
-      mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-      mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+      this.mapper = new ObjectMapper();
+      this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+      this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
       this.defaultPort = defaultPort;
-      try {
-         serverIp = Inet4Address.getLocalHost().getHostAddress();
-      } catch (UnknownHostException e) {
-         log.error("Wasn't possible to get HostAddress to execute Rest Operations", e);
-         throw new RuntimeException(e);
-      }
+      this.serverIp = lookupServerIp();
+   }
+
+   private String lookupServerIp() {
+      // the following are predefined values in the INFINISPAN10 XML Files
+      String interfaceName = System.getProperty("radargun.infinispan.interfaceName", "public");
+      String bindAddress = System.getProperty("infinispan.bind.address", "127.0.0.1");
+
+      // given a config, search the network address
+      NetworkAddress networkServerAddress = NetworkAddress.fromString(interfaceName, bindAddress);
+      return networkServerAddress.getAddress().getHostAddress();
    }
 
    public CacheManagerInfo getCacheManager() {
-      String url = String.format("http://%s:%s/rest/%s", serverIp, this.defaultPort, CACHE_MANAGER_RESOURCE);
-
+      // network is not reliable
+      int count = 0;
       CacheManagerInfo cacheManagerInfo = null;
-      try {
-         String json = doGet(url);
-         cacheManagerInfo = mapper.readValue(json, CacheManagerInfo.class);
-      } catch (IOException e) {
-         e.printStackTrace();
+      while (cacheManagerInfo == null && count++ < 5) {
+         String url = String.format("http://%s:%s/rest/%s", serverIp, this.defaultPort, CACHE_MANAGER_RESOURCE);
+         try {
+            String json = doGet(url);
+            cacheManagerInfo = mapper.readValue(json, CacheManagerInfo.class);
+         } catch (IOException e) {
+            log.error(e.getMessage(), e);
+         }
+      }
+      if (cacheManagerInfo == null) {
+         throw new NullPointerException("cacheManagerInfo cannot be null");
       }
       return cacheManagerInfo;
    }
