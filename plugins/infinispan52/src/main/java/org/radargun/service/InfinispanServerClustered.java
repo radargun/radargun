@@ -70,14 +70,10 @@ public class InfinispanServerClustered implements Clustered {
          return Collections.emptyList();
       }
       try {
-         MBeanServerConnection connection = service.connection;
-         if (connection == null)
-            return null;
-
-         ObjectName cacheManagerName = getCacheManagerObjectName(service.jmxDomain, service.cacheManagerName);
-         if (cacheManagerName != null) {
-            String membersString = (String) connection.getAttribute(cacheManagerName, getClusterMembersAttribute());
-            String nodeAddress = (String) connection.getAttribute(cacheManagerName, getNodeAddressAttribute());
+         InfinispanCacheManagerInfo infinispanCacheManagerInfo = getInfinispanServerClustered();
+         if (infinispanCacheManagerInfo != null) {
+            String membersString = infinispanCacheManagerInfo.getMembersString();
+            String nodeAddress = infinispanCacheManagerInfo.getNodeAddress();
             synchronized (this) {
                if (lastMembers != null && lastMembers.equals(membersString)) {
                   return membershipHistory.get(membershipHistory.size() - 1).members;
@@ -101,8 +97,26 @@ public class InfinispanServerClustered implements Clustered {
             return Collections.emptyList();
          }
       } catch (Exception e) {
-         log.error("Failed to retrieve data from JMX", e);
+         log.error("Failed to retrieve data", e);
          return null;
+      }
+   }
+
+   protected InfinispanCacheManagerInfo getInfinispanServerClustered() {
+      InfinispanCacheManagerInfo infinispanServerClustered = null;
+      try {
+         MBeanServerConnection connection = service.connection;
+         if (connection != null) {
+            ObjectName cacheManagerName = getCacheManagerObjectName(service.jmxDomain, service.cacheManagerName);
+            if (cacheManagerName != null) {
+               String membersString = (String) connection.getAttribute(cacheManagerName, getClusterMembersAttribute());
+               String nodeAddress = (String) connection.getAttribute(cacheManagerName, getNodeAddressAttribute());
+               infinispanServerClustered = new InfinispanCacheManagerInfo(membersString, nodeAddress);
+            }
+         }
+         return infinispanServerClustered;
+      } catch (IOException | JMException e) {
+         throw new IllegalStateException(e);
       }
    }
 
