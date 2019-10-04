@@ -44,7 +44,11 @@ public class InfinispanRestAPI {
 
       // given a config, search the network address
       NetworkAddress networkServerAddress = NetworkAddress.fromString(interfaceName, bindAddress);
-      return networkServerAddress.getAddress().getHostAddress();
+      String host = networkServerAddress.getAddress().getHostAddress();
+
+      log.info(String.format("interface: %s, bindAddress: %s, host: %s", interfaceName, bindAddress, host));
+
+      return host;
    }
 
    public CacheManagerInfo getCacheManager() {
@@ -63,26 +67,37 @@ public class InfinispanRestAPI {
       return cacheManagerInfo;
    }
 
-   private String doGet(String url) throws IOException {
-      BufferedReader in = null;
+   public static String doGet(String url) throws IOException {
+      return doGet(url, 200);
+   }
+
+   public static String doGet(String url, int expectedHttpStatusResponse) throws IOException {
+
       StringBuilder content = new StringBuilder();
-      try {
-         HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-         con.setRequestMethod("GET");
-         con.setConnectTimeout(5000);
-         con.setReadTimeout(5000);
-         int status = con.getResponseCode();
-         if (status != 200) {
-            content.append("ERROR: ").append(status).append("\n");
-         }
-         in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-         String inputLine;
-         while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-         }
-      } finally {
-         if (in != null) {
-            in.close();
+      int httpResponseStatus = -1;
+      int count = 0;
+
+      while (httpResponseStatus != expectedHttpStatusResponse && count++ < 5) {
+         BufferedReader in = null;
+         content = new StringBuilder();
+         try {
+            HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
+            int status = con.getResponseCode();
+            if (status != 200) {
+               content.append("ERROR: ").append(status).append("\n");
+            }
+            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+               content.append(inputLine);
+            }
+         } finally {
+            if (in != null) {
+               in.close();
+            }
          }
       }
       return content.toString();
