@@ -52,17 +52,13 @@ public class InfinispanRestAPI {
    }
 
    public CacheManagerInfo getCacheManager() {
-      // network is not reliable
-      int count = 0;
+      String url = String.format("http://%s:%s/rest/%s", serverIp, this.defaultPort, CACHE_MANAGER_RESOURCE);
       CacheManagerInfo cacheManagerInfo = null;
-      while (cacheManagerInfo == null && count++ < 5) {
-         String url = String.format("http://%s:%s/rest/%s", serverIp, this.defaultPort, CACHE_MANAGER_RESOURCE);
-         try {
-            String json = doGet(url);
-            cacheManagerInfo = mapper.readValue(json, CacheManagerInfo.class);
-         } catch (IOException e) {
-            log.error(String.format("Cannot access: %s -> %s", url, e.getMessage()));
-         }
+      try {
+         String json = doGet(url);
+         cacheManagerInfo = mapper.readValue(json, CacheManagerInfo.class);
+      } catch (IOException e) {
+         log.error(String.format("Cannot access: %s -> %s", url, e.getMessage()));
       }
       return cacheManagerInfo;
    }
@@ -77,6 +73,7 @@ public class InfinispanRestAPI {
       int httpResponseStatus = -1;
       int count = 0;
 
+      // network is not reliable
       while (httpResponseStatus != expectedHttpStatusResponse && count++ < 5) {
          BufferedReader in = null;
          content = new StringBuilder();
