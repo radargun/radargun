@@ -14,7 +14,7 @@ Test using MiltimapCacheOperations
 > contains-entry-ratio (**optional**) - Ratio of CONTAINS_ENTRY requests. Default is 0.  
 > contains-key-ratio (**optional**) - Ratio of CONTAINS_KEY requests. Default is 0.  
 > contains-value-ratio (**optional**) - Ratio of CONTAINS_VALUE requests. Default is 0.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > entry-size (**optional**) - Size of the value in bytes. Default is 1000.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  

@@ -20,7 +20,7 @@ Tests a clustered/distributed counter
 > amend-test (**optional**) - By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.  
 > commit-transactions (**optional**) - Specifies whether the transactions should be committed (true) or rolled back (false). Default is true  
 > counter-name (**mandatory**) - Counter name.  
-> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to don't suffer from Coordinated Omission  
+> cycle-time (**optional**) - Intended time between each request. Default is 0. Change it to greater than 0 in order to have a compensate for CO  
 > delta (**optional**) - Delta to add for addAndGet operation. Default is 1.  
 > duration (**optional**) - Benchmark duration. You have to set either this or 'totalNumOperations'.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
