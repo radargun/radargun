@@ -6,7 +6,7 @@ package org.radargun.service;
 public class Infinispan100ServerClustered extends InfinispanServerClustered {
 
    private InfinispanRestAPI restAPI;
-   protected CacheManagerInfo cacheManagerInfo;
+   private boolean coordinator;
 
    public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort) {
       super(service);
@@ -15,17 +15,27 @@ public class Infinispan100ServerClustered extends InfinispanServerClustered {
 
    @Override
    public boolean isCoordinator() {
-      return cacheManagerInfo != null && cacheManagerInfo.isCoordinator();
+      return coordinator;
    }
 
+   @Override
    protected InfinispanCacheManagerInfo getInfinispanServerClustered() {
-      InfinispanCacheManagerInfo infinispanCacheManagerInfo = null;
-      this.cacheManagerInfo = restAPI.getCacheManager();
-      if (this.cacheManagerInfo != null && this.cacheManagerInfo.getName() != null) {
-         String membersString = cacheManagerInfo.getClusterMembers().toString();
-         String nodeAddress = cacheManagerInfo.getNodeAddress();
-         infinispanCacheManagerInfo = new InfinispanCacheManagerInfo(membersString, nodeAddress);
+      InfinispanCacheManagerInfo infinispanCacheManagerInfo;
+      // if the server is busy, the client will throw an exception and we will return an empty object
+      // let's the cluster business logic deal with that
+      try {
+         CacheManagerInfo cacheManagerInfo = restAPI.getCacheManager();
+         infinispanCacheManagerInfo = createBasedOn(cacheManagerInfo);
+         this.coordinator = cacheManagerInfo.isCoordinator();
+      } catch (InfinispanRestAPI.RestException e) {
+         infinispanCacheManagerInfo = new InfinispanCacheManagerInfo();
       }
       return infinispanCacheManagerInfo;
+   }
+
+   private InfinispanCacheManagerInfo createBasedOn(CacheManagerInfo cacheManagerInfo) {
+      String membersString = cacheManagerInfo.getClusterMembers().toString();
+      String nodeAddress = cacheManagerInfo.getNodeAddress();
+      return new InfinispanCacheManagerInfo(membersString, nodeAddress);
    }
 }

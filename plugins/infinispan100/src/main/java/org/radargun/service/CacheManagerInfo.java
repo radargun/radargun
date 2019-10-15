@@ -145,6 +145,14 @@ public class CacheManagerInfo {
       this.clusterSize = clusterSize;
    }
 
+   @Override
+   public String toString() {
+      return "CacheManagerInfo{" +
+            "clusterMembers=" + clusterMembers +
+            ", clusterSize=" + clusterSize +
+            '}';
+   }
+
    static class BasicCacheInfo {
       String name;
       boolean started;

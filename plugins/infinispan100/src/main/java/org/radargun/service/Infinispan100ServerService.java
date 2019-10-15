@@ -48,7 +48,6 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    public void init() {
 
       executor = new ScheduledThreadPoolExecutor(executorPoolSize);
-      clustered = new Infinispan100ServerClustered(this, defaultServerPort);
       lifecycle = new InfinispanServerLifecycle(this) {
 
          @Override
@@ -66,6 +65,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
             return STOPPED.getPattern();
          }
       };
+      clustered = new Infinispan100ServerClustered(this, defaultServerPort);
 
       try {
 

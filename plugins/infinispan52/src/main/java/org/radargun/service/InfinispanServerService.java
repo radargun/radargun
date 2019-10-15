@@ -178,7 +178,13 @@ public class InfinispanServerService extends JavaProcessService {
    }
 
    protected void schedule(Runnable task, long period) {
-      executor.scheduleAtFixedRate(task, 0, period, TimeUnit.MILLISECONDS);
+      executor.scheduleAtFixedRate(() -> {
+         try {
+            task.run();
+         } catch (Exception e) {
+            log.error("Error while executing Infinispan Server Task", e);
+         }
+      }, 0, period, TimeUnit.MILLISECONDS);
    }
 
    protected String getRadargunInstalationFolder() {
