@@ -39,17 +39,16 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
             service.unregisterAction(getStartOK());
             service.unregisterAction(getStartError());
             fireAfterStart();
-
          }
       });
       service.registerAction(getStartError(), new ProcessService.OutputListener() {
          @Override
          public void run(Matcher m) {
             log.warn("Server started with errors");
-            setServerStarted();
+            setServerStopped();
             service.unregisterAction(getStartOK());
             service.unregisterAction(getStartError());
-            fireAfterStart();
+            kill();
          }
       });
       service.registerAction(getStoped(), new ProcessService.OutputListener() {
@@ -62,7 +61,6 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
             service.unregisterAction(getStartError());
             service.unregisterAction(getStoped());
             fireAfterStop(gracefulStop);
-
          }
       });
       if (isRunning()) {

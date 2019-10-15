@@ -2,6 +2,8 @@ package org.radargun.service;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +24,9 @@ import org.radargun.logging.LogFactory;
  */
 public class InfinispanRestAPI {
 
+   // ms
+   private static final int DEFAULT_TIMEOUT = 1_000;
+
    protected final Log log = LogFactory.getLog(getClass());
 
    private final ObjectMapper mapper;
@@ -34,6 +39,7 @@ public class InfinispanRestAPI {
       this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
       this.cacheManagerName = System.getProperty("radargun.infinispan.cacheManagerName", "clustered");
       this.restClientOkHttp = new RestClientOkHttp(new RestClientConfigurationBuilder()
+            .socketTimeout(DEFAULT_TIMEOUT).connectionTimeout(DEFAULT_TIMEOUT)
             .addServer().host(lookupServerHost()).port(serverPort).build());
    }
 
@@ -51,16 +57,24 @@ public class InfinispanRestAPI {
       return host;
    }
 
-   public CacheManagerInfo getCacheManager() {
-      CacheManagerInfo cacheManagerInfo = null;
+   CacheManagerInfo getCacheManager() throws RestException {
+      CacheManagerInfo cacheManagerInfo;
       try {
          RestResponse response = restClientOkHttp.cacheManager(this.cacheManagerName).info().toCompletableFuture()
-               .get();
+               .get(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
          cacheManagerInfo = mapper.readValue(response.getBodyAsStream(), CacheManagerInfo.class);
-      } catch (IOException | InterruptedException | ExecutionException e) {
+         log.info(cacheManagerInfo.toString());
+      } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
          log.error("Cannot access the cache manager: " + e.getMessage());
+         throw new RestException(e);
       }
       return cacheManagerInfo;
+   }
+
+   static class RestException extends Exception {
+      public RestException(Exception e) {
+         super(e);
+      }
    }
 
 }

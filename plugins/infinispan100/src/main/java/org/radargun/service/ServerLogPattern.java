@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public enum ServerLogPattern {
 
    START_OK(".*\\[org\\.infinispan\\.SERVER\\].*started in.*"),
-   START_ERROR(".*\\[org\\.infinispan\\.SERVER\\].*Infinispan Server stopping.*"),
+   START_ERROR(".*\\[org\\.infinispan\\.SERVER\\].*Server failed to start.*"),
    STOPPED(".*\\[org\\.infinispan\\.SERVER\\].*stopped.*");
 
    String pattern;
