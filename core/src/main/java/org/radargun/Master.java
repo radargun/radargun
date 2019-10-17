@@ -136,8 +136,7 @@ public class Master {
          log.info("Executed all benchmarks in " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - benchmarkStart) + ", reporting...");
          for (Reporter reporter : reporters) {
             try {
-               log.info("Running reporter " + reporter);
-               reporter.run(masterConfig, Collections.unmodifiableList(reports));
+               reporter.run(masterConfig, Collections.unmodifiableList(reports), returnCode);
             } catch (Exception e) {
                log.error("Error in reporter " + reporter, e);
                returnCode = 127;

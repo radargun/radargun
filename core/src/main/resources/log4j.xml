@@ -71,6 +71,10 @@
       <priority value="WARN"/>
    </category>
 
+   <category name="org.radargun.reporting.AbstractReporter">
+      <priority value="INFO"/>
+   </category>
+
    <category name="net.sf.ehcache">
       <priority value="WARN"/>
    </category>

@@ -9,5 +9,6 @@ import org.radargun.config.MasterConfig;
  * It is expected that the implementation of this class will use @Property annotations to fill in the properties.
  */
 public interface Reporter {
-   void run(MasterConfig masterConfig, Collection<Report> reports);
+
+   void run(MasterConfig masterConfig, Collection<Report> reports, int masterReturnCode);
 }

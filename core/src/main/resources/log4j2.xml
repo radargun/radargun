@@ -27,6 +27,10 @@
          <AppenderRef ref="CONSOLE"/>
       </Logger>
 
+      <Logger name="org.radargun.reporting.AbstractReporter" level="INFO" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+
       <Logger name="com.arjuna.ats.arjuna" level="WARN" additivity="false">
          <AppenderRef ref="CONSOLE"/>
       </Logger>

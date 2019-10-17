@@ -25,8 +25,8 @@ import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.AbstractReporter;
 import org.radargun.reporting.Report;
-import org.radargun.reporting.Reporter;
 import org.radargun.reporting.Timeline;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DataThroughput;
@@ -41,7 +41,7 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class CsvReporter implements Reporter {
+public class CsvReporter extends AbstractReporter {
 
    protected static final Log log = LogFactory.getLog(CsvReporter.class);
    protected static final String SLAVE_INDEX = "SlaveIndex";

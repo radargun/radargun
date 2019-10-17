@@ -29,8 +29,8 @@ import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.AbstractReporter;
 import org.radargun.reporting.Report;
-import org.radargun.reporting.Reporter;
 import org.radargun.reporting.Timeline;
 import org.radargun.reporting.commons.TestAggregations;
 
@@ -40,7 +40,7 @@ import org.radargun.reporting.commons.TestAggregations;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class HtmlReporter implements Reporter {
+public class HtmlReporter extends AbstractReporter {
    private static final Log log = LogFactory.getLog(HtmlReporter.class);
    /**
     * Shared executor used for long-running tasks when the report is generated.

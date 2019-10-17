@@ -20,8 +20,8 @@ import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.AbstractReporter;
 import org.radargun.reporting.Report;
-import org.radargun.reporting.Reporter;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.StatsUtils;
 import org.radargun.stats.representation.RepresentationType;
@@ -42,7 +42,7 @@ import org.radargun.utils.Utils;
  *
  * @author Matej Cimbora
  */
-public class PerfrepoReporter implements Reporter {
+public class PerfrepoReporter extends AbstractReporter {
 
    private static final Log log = LogFactory.getLog(PerfrepoReporter.class);
 
