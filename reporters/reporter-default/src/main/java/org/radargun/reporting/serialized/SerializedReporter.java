@@ -21,6 +21,7 @@ import org.radargun.config.Property;
 import org.radargun.config.ReporterConfiguration;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.AbstractReporter;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
@@ -30,7 +31,7 @@ import org.radargun.reporting.ReporterHelper;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class SerializedReporter implements Reporter {
+public class SerializedReporter extends AbstractReporter {
    private static final Log log = LogFactory.getLog(SerializedReporter.class);
 
    @Property(doc = "Directory where the results should be stored. Default is results/serialized.")
@@ -99,7 +100,7 @@ public class SerializedReporter implements Reporter {
             try {
                reporter = ReporterHelper.createReporter(rc.type, rcr.getProperties());
                if (reporter instanceof SerializedReporter) continue;
-               reporter.run(config, reports);
+               reporter.run(config, reports, 0);
             } catch (Exception e) {
                System.err.println("Failed to run reporter " + rc.type);
                e.printStackTrace();
