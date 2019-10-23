@@ -1,6 +1,7 @@
 package org.radargun.reporting;
 
 import java.util.Collection;
+
 import org.radargun.config.MasterConfig;
 
 /**
@@ -10,5 +11,5 @@ import org.radargun.config.MasterConfig;
  */
 public interface Reporter {
 
-   void run(MasterConfig masterConfig, Collection<Report> reports, int masterReturnCode);
+   boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode);
 }
