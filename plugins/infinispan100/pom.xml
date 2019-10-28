@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>10.0.0-SNAPSHOT</version.infinispan>
+            <version.infinispan>10.1.0-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>
