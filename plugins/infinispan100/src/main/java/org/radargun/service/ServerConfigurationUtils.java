@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -30,10 +31,8 @@ public class ServerConfigurationUtils {
       try {
          Path inputPath = Paths.get(getClass().getResource("/infinispan.xml").toURI());
          this.data = Files.lines(inputPath).collect(Collectors.joining("\n"));
-      } catch (IOException e) {
+      } catch (IOException | URISyntaxException e) {
          log.error("Can't read infinispan.xml file from resources folder", e);
-      } catch (URISyntaxException e) {
-         log.error("Failed to get infinispan.xml from resources folder", e);
       }
    }
 
@@ -43,8 +42,15 @@ public class ServerConfigurationUtils {
     * @return ServerConfigurationUtils
     */
    public ServerConfigurationUtils jgroupsConfig(String jgroupsConfig) {
-      if(jgroupsConfig != null)
-         data = data.replace(JGROUPS_DEFAULT.getValue(), jgroupsConfig);
+      if(jgroupsConfig != null) {
+         String textToBeInserted = "<xi:include href=\""+jgroupsConfig+"\"/>";
+         data = Arrays.asList(data.split("\n")).stream().map(line -> {
+            if(line.contains("server-configuration/cache-container")) {
+               line +=  System.lineSeparator() + textToBeInserted;
+            }
+            return line;
+         }).collect(Collectors.joining("\n"));
+      }
       return this;
    }
 
