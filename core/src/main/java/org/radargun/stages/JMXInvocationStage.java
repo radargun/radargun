@@ -53,6 +53,9 @@ public class JMXInvocationStage extends AbstractDistStage {
    @Property(doc = "Continue method invocations if an exception occurs. Default is false.")
    private boolean continueOnFailure = false;
 
+   @Property(doc = "Should the execution result be only shown in logs. Default is false.")
+   private boolean showOnly = false;
+
    @Property(doc = "Expected result value. If specified, results of method invocations are compared with this value.",
       complexConverter = PrimitiveValue.ObjectConverter.class)
    private PrimitiveValue expectedSlaveResult;
@@ -150,7 +153,7 @@ public class JMXInvocationStage extends AbstractDistStage {
       if (stageResult.isError()) {
          return stageResult;
       }
-      if (expectedTotalResult != null) {
+      if (expectedTotalResult != null || showOnly) {
          if (acks == null || acks.isEmpty()) {
             log.error("Expected total result has been specified, but no results have been returned from slaves.");
             return StageResult.FAIL;
@@ -197,13 +200,19 @@ public class JMXInvocationStage extends AbstractDistStage {
             log.error("Total result is empty.");
             return StageResult.FAIL;
          }
-         if (totalResult.equals(expectedTotalResult.getElementValue())) {
-            log.trace("Total value is the one expected " + expectedTotalResult.getElementValue());
+         if (showOnly) {
+            log.info(String.format("The value returned by operation %s is %s.",
+                    targetName, totalResult.toString()));
             return StageResult.SUCCESS;
          } else {
-            log.error(String.format("Total value %s is not the one expected %s.",
-               totalResult.toString(), expectedTotalResult.getElementValue().toString()));
-            return StageResult.FAIL;
+            if (totalResult.equals(expectedTotalResult.getElementValue())) {
+               log.trace("Total value is the one expected " + expectedTotalResult.getElementValue());
+               return StageResult.SUCCESS;
+            } else {
+               log.error(String.format("Total value %s is not the one expected %s.",
+                       totalResult.toString(), expectedTotalResult.getElementValue().toString()));
+               return StageResult.FAIL;
+            }
          }
       } else {
          return StageResult.SUCCESS;
