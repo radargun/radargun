@@ -23,11 +23,11 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
    }
 
    protected Pattern getStartError() {
-      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
    }
 
-   protected Pattern getStoped() {
-      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+   protected Pattern getStopped() {
+      return Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
    }
 
    @Override
@@ -51,7 +51,7 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
             kill();
          }
       });
-      service.registerAction(getStoped(), new ProcessService.OutputListener() {
+      service.registerAction(getStopped(), new ProcessService.OutputListener() {
          @Override
          public void run(Matcher m) {
             log.error("Server stopped before it started!");
@@ -59,7 +59,7 @@ public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServer
             setServerStopped();
             service.unregisterAction(getStartOK());
             service.unregisterAction(getStartError());
-            service.unregisterAction(getStoped());
+            service.unregisterAction(getStopped());
             fireAfterStop(gracefulStop);
          }
       });

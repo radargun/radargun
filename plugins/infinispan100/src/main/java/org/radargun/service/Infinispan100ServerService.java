@@ -61,7 +61,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
          }
 
          @Override
-         protected Pattern getStoped() {
+         protected Pattern getStopped() {
             return STOPPED.getPattern();
          }
       };
