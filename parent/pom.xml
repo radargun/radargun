@@ -528,10 +528,11 @@
             <module>../plugins/jdg71</module>
             <module>../plugins/jdg72</module>
             <module>../plugins/jdg73</module>
+            <module>../plugins/jdg80</module>
          </modules>
          <properties>
-            <plugins.jdg-latest>jdg73</plugins.jdg-latest>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,jdg72,${plugins.jdg-latest}</plugins.jdg>
+            <plugins.jdg-latest>jdg80</plugins.jdg-latest>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,jdg72,jdg73,${plugins.jdg-latest}</plugins.jdg>
          </properties>
       </profile>
       <profile>
