@@ -10,23 +10,23 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-jdg73</artifactId>
-   <name>JDG 7.3.x plugin for RadarGun</name>
+   <artifactId>plugin-jdg80</artifactId>
+   <name>JDG 8.0.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${jdg73.infinispan.version}</version.infinispan>
+      <version.infinispan>${jdg80.infinispan.version}</version.infinispan>
    </properties>
 
    <profiles>
       <profile>
-         <id>jdg73-infinispan-version-default</id>
+         <id>jdg80-infinispan-version-default</id>
          <activation>
             <property>
-               <name>!jdg73.infinispan.version</name>
+               <name>!jdg80.infinispan.version</name>
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.4.0.DR1-redhat-00001</version.infinispan>
+            <version.infinispan>10.1.0.ER1-redhat-00002</version.infinispan>
          </properties>
       </profile>
    </profiles>
@@ -35,12 +35,7 @@
 
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-jdg72</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan94</artifactId>
+         <artifactId>plugin-infinispan100</artifactId>
          <version>${project.version}</version>
       </dependency>
 
@@ -120,13 +115,6 @@
          <artifactId>infinispan-remote-query-server</artifactId>
          <optional>true</optional>
       </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-cachestore-leveldb</artifactId>
-         <optional>true</optional>
-      </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-persistence-soft-index</artifactId>
