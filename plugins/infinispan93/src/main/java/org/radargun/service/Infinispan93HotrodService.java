@@ -21,6 +21,12 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
    @Property(doc ="The TransactionMode tells how the RemoteCache is going to interact with the TransactionManager. Default NONE")
    protected String transactionMode = TransactionMode.NONE.name();
 
+   @Property(doc = "Connection timeout for hotrod client. Default is 60000")
+   protected int connectionTimeout = 60000;
+
+   @Property(doc = "Max number of retries. Default is unlimited.")
+   protected int maxRetries = 10;
+
    @ProvidesTrait
    public Transactional createTransactional() {
       return new Infinispan93HotRodTransactional(this);
@@ -43,6 +49,8 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
       if (transactionMode != null) {
          config.transaction().transactionMode(TransactionMode.valueOf(transactionMode));
       }
+
+      config.maxRetries(maxRetries).socketTimeout(connectionTimeout).connectionTimeout(connectionTimeout);
       return config;
    }
 
