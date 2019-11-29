@@ -42,6 +42,9 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    @Property(doc="security config. If set, it will replace the default <security> config")
    private String securityConfig;
 
+   @Property(doc="A full path to a logging configuration file. If set, the server will use the provided logging configuration file. If not set, the default server logging configuration is used.")
+   private String loggingConfig;
+
    protected Clustered clustered;
 
    @Override
@@ -128,6 +131,10 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
       command.add(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
       command.add("-c");
       command.add(sererConfiguration.toString());
+      if (loggingConfig != null) {
+         command.add("-l");
+         command.add(loggingConfig);
+      }
       command.addAll(args);
       return command;
    }
