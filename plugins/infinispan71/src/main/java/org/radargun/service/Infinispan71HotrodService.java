@@ -15,6 +15,7 @@ public class Infinispan71HotrodService extends Infinispan70HotrodService {
    @PropertyDelegate(prefix = "nearCaching.")
    protected NearCaching nearCachingConfig = new NearCaching();
 
+   @Override
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder cb = super.getDefaultHotRodConfig();
       cb.nearCache().mode(nearCachingConfig.mode).maxEntries(nearCachingConfig.maxEntries);

@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.ConnectionPoolConfigurationBuilder;
 import org.infinispan.client.hotrod.impl.ConfigurationProperties;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
@@ -71,10 +72,14 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
 
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.connectionPool().maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
+      configureConnectionPool(builder.connectionPool());
       parseServerAddresses().forEach((address) -> builder.addServer().host(address.getHost()).port(address.getPort()));
       createQueryConfiguration(builder);
       return builder;
+   }
+
+   protected void configureConnectionPool(ConnectionPoolConfigurationBuilder poolConfigurationBuilder) {
+      poolConfigurationBuilder.maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
    }
 
    protected ConfigurationBuilder createQueryConfiguration(ConfigurationBuilder builder) {

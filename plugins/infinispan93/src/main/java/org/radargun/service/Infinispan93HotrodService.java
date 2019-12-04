@@ -26,6 +26,7 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
       return new Infinispan93HotRodTransactional(this);
    }
 
+   @Override
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder config = super.getDefaultHotRodConfig();
       if (transactionManagerLookup != null) {
