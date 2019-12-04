@@ -3,7 +3,7 @@ package org.radargun.service;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.ConnectionPoolConfigurationBuilder;
 import org.radargun.Service;
 
 @Service(doc = Infinispan60HotrodService.SERVICE_DESCRIPTION)
@@ -19,11 +19,11 @@ public class Infinispan100HotrodService extends Infinispan93HotrodService {
       return values;
    }
 
-   protected ConfigurationBuilder getDefaultHotRodConfig() {
-      ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.connectionPool().maxActive(maxConnectionsServer);
-      parseServerAddresses().forEach((address) -> builder.addServer().host(address.getHost()).port(address.getPort()));
-      createQueryConfiguration(builder);
-      return builder;
+   /*
+    * We are not calling super here because ConnectionPoolConfigurationBuilder.maxTotal(int) was removed in ISPN10
+    */
+   @Override
+   protected void configureConnectionPool(ConnectionPoolConfigurationBuilder poolConfigurationBuilder) {
+      poolConfigurationBuilder.maxActive(maxConnectionsServer);
    }
 }
