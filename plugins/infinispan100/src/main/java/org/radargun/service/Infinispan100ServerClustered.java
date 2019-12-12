@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.io.IOException;
+
 /**
  * @author Gustavo Lira &lt;glira@redhat.com&gt;
  */
@@ -8,7 +10,7 @@ public class Infinispan100ServerClustered extends InfinispanServerClustered {
    private InfinispanRestAPI restAPI;
    private boolean coordinator;
 
-   public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort) {
+   public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort) throws IOException {
       super(service);
       this.restAPI = new InfinispanRestAPI(defaultPort);
    }

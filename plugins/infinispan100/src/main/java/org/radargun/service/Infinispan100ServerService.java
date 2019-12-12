@@ -68,9 +68,10 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
             return STOPPED.getPattern();
          }
       };
-      clustered = new Infinispan100ServerClustered(this, defaultServerPort);
 
       try {
+
+         clustered = new Infinispan100ServerClustered(this, defaultServerPort);
 
          Utils.unzip(getServerZip(), getRadargunInstalationFolder());
 
