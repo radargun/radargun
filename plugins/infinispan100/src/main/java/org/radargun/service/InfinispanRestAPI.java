@@ -33,7 +33,7 @@ public class InfinispanRestAPI {
    private final RestClientOkHttp restClientOkHttp;
    private final String cacheManagerName;
 
-   public InfinispanRestAPI(Integer serverPort) {
+   public InfinispanRestAPI(Integer serverPort) throws IOException {
       this.mapper = new ObjectMapper();
       this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
@@ -43,7 +43,7 @@ public class InfinispanRestAPI {
             .addServer().host(lookupServerHost()).port(serverPort).build());
    }
 
-   private String lookupServerHost() {
+   private String lookupServerHost() throws IOException {
       // the following are predefined values in the INFINISPAN10 XML Files
       String interfaceName = System.getProperty("radargun.infinispan.interfaceName", "public");
       String bindAddress = System.getProperty("infinispan.bind.address", "127.0.0.1");
