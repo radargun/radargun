@@ -10,23 +10,23 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan100</artifactId>
-   <name>Infinispan 10.0.x plugin for RadarGun</name>
+   <artifactId>plugin-infinispan101</artifactId>
+   <name>Infinispan 10.1.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan100.infinispan.version}</version.infinispan>
+      <version.infinispan>${infinispan101.infinispan.version}</version.infinispan>
    </properties>
 
    <profiles>
       <profile>
-         <id>infinispan100-infinispan-version-default</id>
+         <id>infinispan101-infinispan-version-default</id>
          <activation>
             <property>
-               <name>!infinispan100.infinispan.version</name>
+               <name>!infinispan101.infinispan.version</name>
             </property>
          </activation>
          <properties>
-            <version.infinispan>10.0.0.Final</version.infinispan>
+            <version.infinispan>10.1.1-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>
@@ -53,7 +53,7 @@
 
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan94</artifactId>
+         <artifactId>plugin-infinispan100</artifactId>
          <version>${project.version}</version>
       </dependency>
 
