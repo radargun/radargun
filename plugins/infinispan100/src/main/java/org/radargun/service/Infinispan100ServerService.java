@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.radargun.Service;
@@ -15,8 +14,6 @@ import org.radargun.config.Property;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.Utils;
-
-import static org.radargun.service.ServerLogPattern.*;
 
 @Service(doc = InfinispanServerService.SERVICE_DESCRIPTION)
 public class Infinispan100ServerService extends Infinispan80ServerService {
@@ -51,23 +48,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    public void init() {
 
       executor = new ScheduledThreadPoolExecutor(executorPoolSize);
-      lifecycle = new InfinispanServerLifecycle(this) {
-
-         @Override
-         protected Pattern getStartOK() {
-            return START_OK.getPattern();
-         }
-
-         @Override
-         protected Pattern getStartError() {
-            return START_ERROR.getPattern();
-         }
-
-         @Override
-         protected Pattern getStopped() {
-            return STOPPED.getPattern();
-         }
-      };
+      lifecycle = new Infinispan100ServerLifecycle(this);
 
       try {
 
