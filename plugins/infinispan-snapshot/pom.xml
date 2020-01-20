@@ -156,7 +156,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>10.1.1-SNAPSHOT</version.infinispan>
+            <version.infinispan>10.1.2-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>
