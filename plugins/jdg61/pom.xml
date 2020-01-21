@@ -14,7 +14,7 @@
    <name>JDG 6.1.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>5.2.4.Final-redhat-1</version.infinispan>
+      <version.infinispan>10.1.1.Final</version.infinispan>
       <version.jbossts>4.16.6.Final-redhat-1</version.jbossts>
    </properties>
 
