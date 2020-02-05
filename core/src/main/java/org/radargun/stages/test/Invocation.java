@@ -23,8 +23,6 @@ public interface Invocation<T> {
    /**
     * Operation variant if this was executed within transaction.
     * @return
-    * @deprecated only applicable for {@link LegacyStressor}
     */
-   @Deprecated
    Operation txOperation();
 }

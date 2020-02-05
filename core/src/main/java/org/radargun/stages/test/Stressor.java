@@ -68,7 +68,7 @@ public class Stressor extends Thread {
    }
 
    private boolean recording() {
-      return this.started && !stage.isFinished();
+      return this.started;
    }
 
    @Override
@@ -144,6 +144,7 @@ public class Stressor extends Thread {
             i++;
             completion.logProgress(i);
          }
+         this.started = false;
       } finally {
          if (txRemainingOperations > 0) {
             endTransactionAndRegisterStats(null);
@@ -180,9 +181,15 @@ public class Stressor extends Thread {
       T result = null;
       Exception exception = null;
       Request request = nextRequest();
+      Operation operation = null;
       try {
          result = invocation.invoke();
-         succeeded(request, invocation.operation());
+         operation = invocation.operation();
+         if (useTransactions) {
+            succeeded(request, invocation.txOperation());
+         } else {
+            succeeded(request, operation);
+         }
          // make sure that the return value cannot be optimized away
          // however, we can't be 100% sure about reordering without
          // volatile writes/reads here
@@ -201,7 +208,7 @@ public class Stressor extends Thread {
       }
 
       if (useTransactions && txRemainingOperations <= 0) {
-         endTransactionAndRegisterStats(stage.isSingleTxType() ? invocation.txOperation() : null);
+         endTransactionAndRegisterStats(operation);
       }
       if (exception != null) {
          throw new OperationLogic.RequestException(exception);
@@ -229,7 +236,19 @@ public class Stressor extends Thread {
       }
    }
 
-   private void endTransactionAndRegisterStats(Operation singleTxOperation) {
+   /*
+    * We would like to compare the non-TX and TX operation in the same chart
+    * For example:
+    * BasicOperations.Get = cache.get
+    * Transactional.Duration = tx.begin, cache.get, tx.commit
+    *
+    * I would like to compare (tx.begin, cache.get, tx.commit) VS (cache.get).
+    *
+    * This is the reason why we are reporting the noTxOperation as `requests.finished(noTxOperation)`
+    *
+    * For the tx cache the values in BasicOperations.Get must be the same as Transactional.Duration
+    */
+   private void endTransactionAndRegisterStats(Operation noTxOperation) {
       Request commitRequest = recording() ? stats.startRequest() : null;
       try {
          if (stage.commitTransactions) {
@@ -248,8 +267,8 @@ public class Stressor extends Thread {
             if (recording()) {
                requests.add(commitRequest);
                requests.finished(commitRequest.isSuccessful(), Transactional.DURATION);
-               if (singleTxOperation != null) {
-                  requests.finished(commitRequest.isSuccessful(), singleTxOperation);
+               if (noTxOperation != null) {
+                  requests.finished(commitRequest.isSuccessful(), noTxOperation);
                }
             } else {
                requests.discard();
