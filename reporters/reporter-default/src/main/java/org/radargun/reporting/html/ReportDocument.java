@@ -170,21 +170,27 @@ public abstract class ReportDocument extends HtmlDocument {
                   case MEAN_AND_DEV: {
                      MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(target, MeanAndDev.class);
                      if (meanAndDev == null) return false;
-                     chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
-                        subCategoryValue);
+                     if (!Double.isNaN(meanAndDev.mean) && !Double.isNaN(meanAndDev.dev)) {
+                        chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
+                           subCategoryValue);
+                     }
                      break;
                   }
                   case OPERATION_THROUGHPUT_NET: {
                      OperationThroughput throughput = aggregation.totalStats.getRepresentation(target, OperationThroughput.class);
                      if (throughput == null) return false;
-                     chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
+                     if (throughput.net > 0) {
+                        chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
+                     }
                      break;
                   }
                   case DATA_THROUGHPUT: {
                      DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(target, DataThroughput.class);
                      if (dataThroughput == null) return false;
-                     chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
-                        / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
+                     if (dataThroughput.meanThroughput > 0) {
+                        chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
+                           / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
+                     }
                      break;
                   }
                   case MEAN_AND_DEV_SERIES: {
@@ -192,8 +198,10 @@ public abstract class ReportDocument extends HtmlDocument {
                      if (series == null) return false;
                      int sample = 0;
                      for (MeanAndDev meanAndDev : series.samples) {
-                        chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), seriesCategoryName, sample++,
-                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        if (meanAndDev.mean > 0) {
+                           chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), seriesCategoryName, sample++,
+                              String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        }
                      }
                      break;
                   }
@@ -202,8 +210,10 @@ public abstract class ReportDocument extends HtmlDocument {
                      if (series == null) return false;
                      int sample = 0;
                      for (DefaultOutcome defaultOutcome : series.samples) {
-                        chart.addValue(defaultOutcome.requests, 0, seriesCategoryName, sample++,
-                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        if (defaultOutcome.requests > 0) {
+                           chart.addValue(defaultOutcome.requests, 0, seriesCategoryName, sample++,
+                              String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        }
                      }
                      break;
                   }
@@ -212,8 +222,10 @@ public abstract class ReportDocument extends HtmlDocument {
                      if (series == null) return false;
                      int sample = 0;
                      for (OperationThroughput defaultOutcome : series.samples) {
-                        chart.addValue(defaultOutcome.gross, 0, seriesCategoryName, sample++,
-                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        if (defaultOutcome.gross > 0) {
+                           chart.addValue(defaultOutcome.gross, 0, seriesCategoryName, sample++,
+                              String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        }
                      }
                      break;
                   }
@@ -222,8 +234,10 @@ public abstract class ReportDocument extends HtmlDocument {
                      if (series == null) return false;
                      int sample = 0;
                      for (OperationThroughput defaultOutcome : series.samples) {
-                        chart.addValue(defaultOutcome.net, 0, seriesCategoryName, sample++,
-                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        if (defaultOutcome.net > 0) {
+                           chart.addValue(defaultOutcome.net, 0, seriesCategoryName, sample++,
+                              String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                        }
                      }
                      break;
                   }
