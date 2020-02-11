@@ -844,7 +844,7 @@
       <!-- basic JBoss repository -->
       <repository>
          <id>jboss-public-repository-group</id>
-         <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
+         <url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
       </repository>
       <repository>
          <id>jcenter</id>
@@ -855,15 +855,15 @@
    <pluginRepositories>
       <pluginRepository>
          <id>Main Maven Repo</id>
-         <url>http://repo1.maven.org/maven2/</url>
+         <url>https://repo1.maven.org/maven2/</url>
       </pluginRepository>
       <pluginRepository>
          <id>snapshots.repository.codehaus.org</id>
-         <url>http://snapshots.repository.codehaus.org</url>
+         <url>https://snapshots.repository.codehaus.org</url>
       </pluginRepository>
       <pluginRepository>
          <id>jboss-public-repository-group</id>
-         <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
+         <url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
       </pluginRepository>
    </pluginRepositories>
 
