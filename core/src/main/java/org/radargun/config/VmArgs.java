@@ -255,14 +255,24 @@ public class VmArgs implements Serializable {
 
       @Override
       public void setArgs(List<String> args) {
-         if (printGc != null)
-            set(args, "PrintGC", printGc);
-         if (printGcDetails != null)
-            set(args, "PrintGCDetails", printGcDetails);
-         if (printGcTimestamps != null)
-            set(args, "PrintGCTimeStamps", printGcTimestamps);
-         if (logFile != null)
-            replace(args, "-Xloggc:", logFile);
+         if (System.getProperty("java.specification.version").equals("8")) {
+            if (printGc != null)
+               set(args, "PrintGC", printGc);
+            if (printGcDetails != null)
+               set(args, "PrintGCDetails", printGcDetails);
+            if (printGcTimestamps != null)
+               set(args, "PrintGCTimeStamps", printGcTimestamps);
+            if (logFile != null)
+               replace(args, "-Xloggc:", logFile);
+         } else {
+            if (logFile != null) {
+               if (printGc != null || printGcDetails != null || printGcTimestamps != null) {
+                  replace(args, "-Xlog:gc*:", logFile);
+               } else {
+                  replace(args, "-Xlog:", logFile);
+               }
+            }
+         }
          if (useParallelGC != null)
             set(args, "UseParallelGC", useParallelGC);
          if (useParallelOldGC != null)
