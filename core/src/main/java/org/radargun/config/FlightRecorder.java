@@ -17,6 +17,8 @@ public class FlightRecorder implements VmArg {
 
    @Property(doc = "Flight Recorder Options")
    private String flightRecorderOptions;
+   
+   private boolean isOracle = !System.getProperty("java.runtime.name").contains("OpenJDK");
 
    @Override
    public void setArgs(List<String> args) {
@@ -27,7 +29,9 @@ public class FlightRecorder implements VmArg {
          recordingParams.append(",filename=").append(filename);
       if (settings != null)
          recordingParams.append(",settings=").append(settings);
-      ensureArg(args, "-XX:+UnlockCommercialFeatures");
+      if (isOracle) {
+         ensureArg(args, "-XX:+UnlockCommercialFeatures");
+      }
       ensureArg(args, "-XX:+FlightRecorder");
       replace(args, "-XX:StartFlightRecording", recordingParams.toString());
       if (flightRecorderOptions != null)

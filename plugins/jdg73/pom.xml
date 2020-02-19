@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.4.0.DR1-redhat-00001</version.infinispan>
+            <version.infinispan>9.4.18.Final-redhat-00001</version.infinispan>
          </properties>
       </profile>
    </profiles>
