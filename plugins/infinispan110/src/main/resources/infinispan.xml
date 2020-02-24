@@ -1,0 +1,18 @@
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xi="http://www.w3.org/2001/XInclude"
+        xsi:schemaLocation="urn:infinispan:config:11.0 http://www.infinispan.org/schemas/infinispan-config-11.0.xsd
+                            urn:infinispan:server:11.0 http://www.infinispan.org/schemas/infinispan-server-11.0.xsd"
+        xmlns="urn:infinispan:config:11.0"
+        xmlns:server="urn:infinispan:server:11.0">
+
+    <xi:include href="server-configuration/jgroups/default.xml"/>
+    <xi:include href="server-configuration/cache-container/default.xml"/>
+
+    <server xmlns="urn:infinispan:server:10.1">
+        <xi:include href="server-configuration/interfaces/default.xml"/>
+        <xi:include href="server-configuration/socket-bindings/default.xml"/>
+        <xi:include href="server-configuration/security/default.xml"/>
+        <xi:include href="server-configuration/endpoints/default.xml"/>
+    </server>
+</infinispan>

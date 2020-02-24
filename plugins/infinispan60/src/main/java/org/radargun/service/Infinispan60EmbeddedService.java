@@ -122,6 +122,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       jgroupsDumper = null;
    }
 
+   @Override
    protected ConfigDumpHelper createConfigDumpHelper() {
       return new ConfigDumpHelper60();
    }

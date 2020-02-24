@@ -52,11 +52,15 @@ public class ConfigDumpHelper60 extends ConfigDumpHelper {
    public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String jmxDomain, String managerName) {
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-         ObjectName objCacheManager = new ObjectName(String.format("%s:type=CacheManager,name=\"%s\",component=CacheManager", jmxDomain, managerName));
+         ObjectName objCacheManager = getCacheManagerObjectName(jmxDomain, managerName);
          return (Properties) mbeanServer.getAttribute(objCacheManager, "globalConfigurationAsProperties");
       } catch (Exception e) {
          log.error("Error while dumping global config as properties", e);
          return null;
       }
+   }
+
+   protected ObjectName getCacheManagerObjectName(String jmxDomain, String cacheManagerName) throws MalformedObjectNameException {
+      return new ObjectName(String.format("%s:type=CacheManager,name=\"%s\",component=CacheManager", jmxDomain, cacheManagerName));
    }
 }

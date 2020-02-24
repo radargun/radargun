@@ -24,7 +24,7 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
       try {
          ConfigDumpHelper configDumpHelper = service.createConfigDumpHelper();
          GlobalConfiguration global = service.cacheManager.getCacheManagerConfiguration();
-         String jmxDomain = global.globalJmxStatistics().domain();
+         String jmxDomain = getJmxDomain(global);
          Properties globalProperties = configDumpHelper.dumpGlobal(global, jmxDomain, service.cacheManager.getName());
          if (!globalProperties.isEmpty()) {
             configurationMap.put("global", globalProperties);
@@ -46,6 +46,10 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
          log.error("Error while creating normalized configuration files", e);
       }
       return configurationMap;
+   }
+
+   protected String getJmxDomain(GlobalConfiguration global) {
+      return global.globalJmxStatistics().domain();
    }
 
    @Override
