@@ -13,7 +13,7 @@ public class Infinispan110EmbeddedService extends Infinispan100EmbeddedService {
 
    @Override
    protected String getJmxDomain() {
-      return cacheManager.getCacheManagerConfiguration().jmx().domain();
+      return JmxHelper110.getJmxDomain(cacheManager.getCacheManagerConfiguration());
    }
 
    @Override
