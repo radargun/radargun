@@ -35,7 +35,11 @@
          <AppenderRef ref="CONSOLE"/>
       </Logger>
 
-      <Root level="INFO">
+      <Logger name="org.infinispan" level="DEBUG" additivity="false">
+         <AppenderRef ref="CONSOLE"/>
+      </Logger>
+
+      <Root level="DEBUG">
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE" />
       </Root>
