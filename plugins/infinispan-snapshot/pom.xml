@@ -117,7 +117,7 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-kryo</artifactId>
       </dependency>
-      
+
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-protostuff</artifactId>
@@ -136,13 +136,19 @@
    </dependencies>
 
    <dependencyManagement>
-      <dependencies>      
+      <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-parent</artifactId>
             <version>${version.infinispan}</version>
             <type>pom</type>
             <scope>import</scope>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.glassfish.jaxb</groupId>
+                  <artifactId>jaxb-core</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
       </dependencies>
    </dependencyManagement>
