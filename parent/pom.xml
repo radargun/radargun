@@ -102,7 +102,6 @@
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <version.glassfish.jaxb>2.2.11.jbossorg-1</version.glassfish.jaxb>
       <plugins.chm/>
       <plugins.couchbase/>
       <plugins.couchbase-latest/>
@@ -847,11 +846,6 @@
          <artifactId>powermock-module-testng</artifactId>
          <version>1.6.2</version>
          <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.glassfish.jaxb</groupId>
-         <artifactId>jaxb-core</artifactId>
-         <version>${version.glassfish.jaxb}</version>
       </dependency>
    </dependencies>
 
