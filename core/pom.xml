@@ -60,12 +60,12 @@
       <dependency>
          <groupId>org.glassfish.jaxb</groupId>
          <artifactId>jaxb-core</artifactId>
-         <version>2.3.0.1</version>
+         <version>${version.glassfish.jaxb}</version>
       </dependency>
       <dependency>
          <groupId>org.glassfish.jaxb</groupId>
          <artifactId>jaxb-runtime</artifactId>
-         <version>2.3.0.1</version>
+         <version>${version.glassfish.jaxb}</version>
       </dependency>
       <dependency>
          <groupId>javax.activation</groupId>
