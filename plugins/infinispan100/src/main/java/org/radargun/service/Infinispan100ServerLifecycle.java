@@ -9,7 +9,7 @@ public class Infinispan100ServerLifecycle extends InfinispanServerLifecycle {
    }
 
    protected Pattern getStartOK() {
-      // [SERVER] ISPN080000: Infinispan Server started
+      // ISPN080001: Infinispan Server started
       return Pattern.compile(".*ISPN080001.*");
    }
 
@@ -19,7 +19,7 @@ public class Infinispan100ServerLifecycle extends InfinispanServerLifecycle {
    }
 
    protected Pattern getStopped() {
-      // [SERVER] ISPN080002: Infinispan Server stopped
+      // ISPN080003: Infinispan Server stopped
       return Pattern.compile(".*ISPN080003.*");
    }
 }
