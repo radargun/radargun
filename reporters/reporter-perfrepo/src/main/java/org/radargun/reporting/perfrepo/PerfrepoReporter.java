@@ -196,10 +196,11 @@ public class PerfrepoReporter extends AbstractReporter {
       TestExecution testExecution = testExecutionBuilder.build();
       try {
          Long executionId = perfRepoClient.createTestExecution(testExecution);
-         if (executionId != null) {
-            // add attachments
-            uploadAttachments(report, perfRepoClient, executionId);
+         if (executionId == null) {
+            throw new IllegalStateException("Cannot create test execution. Check Tests metrics in PerfRepo.");
          }
+         // add attachments
+         uploadAttachments(report, perfRepoClient, executionId);
       } catch (Exception e) {
          throw new Exception("Error while creating test execution for test " + test.name, e);
       }
