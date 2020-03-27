@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 @Test
 public class AbstractReporterTest {
 
-   public void skipOnStageFailure() {
+   public void skipOnStageFailure() throws Exception {
       // default behavior, always generate
       assertTrue(createDummyAbstractReporter(false).run(null, null, 0));
       assertTrue(createDummyAbstractReporter(false).run(null, null, 1));
