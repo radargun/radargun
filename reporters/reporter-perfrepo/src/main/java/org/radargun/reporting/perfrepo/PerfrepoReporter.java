@@ -95,7 +95,7 @@ public class PerfrepoReporter extends AbstractReporter {
    }
 
    @Override
-   public void run(MasterConfig masterConfig, Collection<Report> reports) {
+   public void run(MasterConfig masterConfig, Collection<Report> reports) throws Exception {
       this.masterConfig = masterConfig;
       if (perfRepoAuth == null) {
          log.error("perfRepoAuth parameter has to be set");
@@ -112,7 +112,7 @@ public class PerfrepoReporter extends AbstractReporter {
       }
    }
 
-   private void reportTests(Report report) {
+   private void reportTests(Report report) throws Exception {
       String perfRepoAddress = perfRepoHost + ":" + perfRepoPort;
       PerfRepoClient perfRepoClient = new PerfRepoClient(perfRepoAddress, "", perfRepoAuth);
 
@@ -189,7 +189,7 @@ public class PerfrepoReporter extends AbstractReporter {
       return statistics;
    }
 
-   private void addConfigsAndUpload(TestExecutionBuilder testExecutionBuilder, Report report, Report.Test test, PerfRepoClient perfRepoClient) {
+   private void addConfigsAndUpload(TestExecutionBuilder testExecutionBuilder, Report report, Report.Test test, PerfRepoClient perfRepoClient) throws Exception {
       // set normalized configs
       addNormalizedConfigs(report, testExecutionBuilder);
       // create new test execution
@@ -201,7 +201,7 @@ public class PerfrepoReporter extends AbstractReporter {
             uploadAttachments(report, perfRepoClient, executionId);
          }
       } catch (Exception e) {
-         log.error("Error while creating test execution for test " + test.name, e);
+         throw new Exception("Error while creating test execution for test " + test.name, e);
       }
    }
 

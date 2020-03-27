@@ -27,7 +27,7 @@ public abstract class AbstractReporter implements Reporter {
    }
 
    @Override
-   public boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode) {
+   public boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode) throws Exception {
       String className = this.getClass().getSimpleName();
       boolean generateReport = skipOnStageFailures ? returnCode == 0 : true;
       if (generateReport) {
@@ -40,5 +40,5 @@ public abstract class AbstractReporter implements Reporter {
       }
    }
 
-   public abstract void run(MasterConfig masterConfig, Collection<Report> reports);
+   public abstract void run(MasterConfig masterConfig, Collection<Report> reports) throws Exception;
 }

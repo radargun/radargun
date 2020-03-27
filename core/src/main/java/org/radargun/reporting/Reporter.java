@@ -11,5 +11,5 @@ import org.radargun.config.MasterConfig;
  */
 public interface Reporter {
 
-   boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode);
+   boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode) throws Exception;
 }
