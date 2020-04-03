@@ -12,6 +12,12 @@
    <name>Parent pom for radargun plugins</name>
    <packaging>pom</packaging>
 
+   <properties>
+      <version.jboss.narayana>5.9.8.Final</version.jboss.narayana>
+      <version.jboss.logging>3.3.0.Final</version.jboss.logging>
+      <version.commons-io>2.6</version.commons-io>
+   </properties>
+
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
@@ -29,7 +35,34 @@
       <dependency>
          <groupId>org.jboss.logging</groupId>
          <artifactId>jboss-logging</artifactId>
-         <version>3.3.0.Final</version>
+         <version>${version.jboss.logging}</version>
       </dependency>
+
+      <!-- needed to avoid receive NoClassDefFoundError: com/arjuna/ats/arjuna/common/arjPropertyManager
+           during build -->
+      <dependency>
+         <groupId>org.jboss.narayana.jta</groupId>
+         <artifactId>narayana-jta</artifactId>
+         <version>${version.jboss.narayana}</version>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
    </dependencies>
+
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${version.commons-io}</version>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+
 </project>

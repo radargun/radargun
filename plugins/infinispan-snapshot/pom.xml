@@ -43,18 +43,6 @@
          <version>${project.version}</version>
       </dependency>
 
-      <!--
-      TODO
-      dependencyManagement for org.infinispan:infinispan-parent which overwrite the core/pom.xml jaxb-core dependency
-      Infinisnpan jaxb-core version 2.3.1 doesn't exists
-      Once fixed in infinispan/master, remove this workaround
-      -->
-      <dependency>
-         <groupId>org.glassfish.jaxb</groupId>
-         <artifactId>jaxb-core</artifactId>
-         <version>${version.glassfish.jaxb}</version>
-      </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
@@ -67,18 +55,6 @@
             <exclusion>
                <groupId>org.jboss.logging</groupId>
                <artifactId>jboss-logging</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-
-      <dependency>
-         <groupId>org.jboss.narayana.jta</groupId>
-         <artifactId>narayana-jta</artifactId>
-         <scope>compile</scope>
-         <exclusions>
-            <exclusion>
-               <groupId>org.jboss.logging</groupId>
-               <artifactId>jboss-logging-spi</artifactId>
             </exclusion>
          </exclusions>
       </dependency>
@@ -144,23 +120,16 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-persistence-soft-index</artifactId>
       </dependency>
-
    </dependencies>
 
    <dependencyManagement>
       <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-parent</artifactId>
+            <artifactId>infinispan-bom</artifactId>
             <version>${version.infinispan}</version>
             <type>pom</type>
             <scope>import</scope>
-            <exclusions>
-               <exclusion>
-                  <groupId>org.glassfish.jaxb</groupId>
-                  <artifactId>jaxb-core</artifactId>
-               </exclusion>
-            </exclusions>
          </dependency>
       </dependencies>
    </dependencyManagement>
