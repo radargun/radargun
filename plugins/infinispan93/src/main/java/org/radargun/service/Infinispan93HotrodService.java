@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -65,10 +64,8 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
          try (Reader r = new FileReader(propertiesPath)) {
             p.load(r);
             config.withProperties(p);
-         } catch (FileNotFoundException e) {
-            e.printStackTrace();
          } catch (IOException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Something went wrong with provided properties file:" + propertiesPath, e);
          }
       }
       return config;

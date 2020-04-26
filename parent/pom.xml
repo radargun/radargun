@@ -132,6 +132,7 @@
       <plugins.spark />
       <plugins.spymemcached />
       <plugins.tomcat/>
+      <plugins.eap/>
       <plugins.etcd/>
       <reporter.default />
       <reporter.perfrepo />
@@ -643,6 +644,20 @@
          </modules>
          <properties>
             <plugins.tomcat>tomcat8</plugins.tomcat>
+         </properties>
+      </profile>
+      <profile>
+         <id>eap</id>
+         <activation>
+            <property>
+               <name>!no-eap</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/eap73</module>
+         </modules>
+         <properties>
+            <plugins.eap>eap73</plugins.eap>
          </properties>
       </profile>
       <profile>
