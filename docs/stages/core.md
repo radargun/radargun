@@ -87,6 +87,11 @@ Use for setting certain value
 > value (**mandatory**) - Value of the variable.  
 > var (**mandatory**) - Name of the variable that should be set.  
 
+### echo
+Allows to system out messages for more readable logs.
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> message (**mandatory**) - Message to be printed.  
+
 ### j-groups-probe
 Allows to invoke JGroups probe queries. For details on probe usage see org.jgroups.tests.Probe.
 > address (**optional**) - Diagnostic address to send queries to. Default is 224.0.75.75.  
@@ -145,6 +150,7 @@ Allows to invoke JMX-exposed methods and attributes.
 > operation-type (**optional**) - Type of action to be performed. Invocation of specified method (INVOKE_METHOD) is performed by default. Optionally, query for a specified attribute (via method-parameters) can be performed (GET_ATTRIBUTE_VALUE) or setting a specified attribute (via method-parameters) can be performed(SET_ATTRIBUTE_VALUE).  
 > query (**mandatory**) - Method will be invoked on all ObjectInstances matching given query.  
 > roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> show-only (**optional**) - Should the execution result be only shown in logs. Default is false.  
 > slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
 > target-name (**mandatory**) - Name of the method to be invoked / attribute to be queried for.  
 
