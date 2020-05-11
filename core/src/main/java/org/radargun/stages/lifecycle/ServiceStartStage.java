@@ -70,7 +70,31 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          if (slave.equals(slaveState.getSlaveIndex())) break;
          index++;
       }
-      staggerStartup(index);
+      return staggerStartup(index);
+   }
+
+   protected DistStageAck staggerStartup(int thisNodeIndex) {
+      boolean sleep = true;
+      if (!staggerSlaveStartup) {
+         if (log.isTraceEnabled()) {
+            log.trace("Not using slave startup staggering");
+         }
+         sleep = false;
+      }
+      if (thisNodeIndex == 0) {
+         log.info("Startup staggering, this is the slave with index 0, not sleeping");
+         sleep = false;
+      }
+      if (sleep) {
+         long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
+         log.info(" Startup staggering, this is the slave with index "
+            + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
+         try {
+            Thread.sleep(toSleep);
+         } catch (InterruptedException e) {
+            throw new IllegalStateException("Should never happen");
+         }
+      }
 
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
          + ". This slave's index is: " + slaveState.getSlaveIndex());
@@ -92,27 +116,6 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          return new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
       } else {
          return new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-      }
-   }
-
-   private void staggerStartup(int thisNodeIndex) {
-      if (!staggerSlaveStartup) {
-         if (log.isTraceEnabled()) {
-            log.trace("Not using slave startup staggering");
-         }
-         return;
-      }
-      if (thisNodeIndex == 0) {
-         log.info("Startup staggering, this is the slave with index 0, not sleeping");
-         return;
-      }
-      long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
-      log.info(" Startup staggering, this is the slave with index "
-         + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
-      try {
-         Thread.sleep(toSleep);
-      } catch (InterruptedException e) {
-         throw new IllegalStateException("Should never happen");
       }
    }
 
