@@ -4,13 +4,27 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.xml.bind.JAXB;
+
 import org.perfrepo.client.PerfRepoClient;
 import org.perfrepo.model.TestExecution;
+import org.perfrepo.model.TestExecutionParameter;
 import org.perfrepo.model.builder.TestExecutionBuilder;
 import org.radargun.config.Configuration;
 import org.radargun.config.DefinitionElement;
@@ -43,6 +57,9 @@ import org.radargun.utils.Utils;
  * @author Matej Cimbora
  */
 public class PerfrepoReporter extends AbstractReporter {
+
+   // See the property value in TestExecutionParameter
+   private static final int MAX_VALUE_LENGTH = 2047;
 
    private static final Log log = LogFactory.getLog(PerfrepoReporter.class);
 
@@ -194,16 +211,32 @@ public class PerfrepoReporter extends AbstractReporter {
       addNormalizedConfigs(report, testExecutionBuilder);
       // create new test execution
       TestExecution testExecution = testExecutionBuilder.build();
+      if (testExecution.getParameters() != null) {
+         for (TestExecutionParameter parameter : testExecution.getParameters()) {
+            String value = parameter.getValue();
+            if (value != null && value.length() > MAX_VALUE_LENGTH) {
+               parameter.setValue(value.substring(0, MAX_VALUE_LENGTH - 3) + "...");
+            }
+         }
+      }
       try {
          Long executionId = perfRepoClient.createTestExecution(testExecution);
          if (executionId == null) {
-            throw new IllegalStateException("Cannot create test execution. Check Tests metrics in PerfRepo.");
+            logAndThrowTestExecutionFailure(testExecution);
          }
          // add attachments
          uploadAttachments(report, perfRepoClient, executionId);
       } catch (Exception e) {
          throw new Exception("Error while creating test execution for test " + test.name, e);
       }
+   }
+
+   private void logAndThrowTestExecutionFailure(TestExecution testExecution) {
+      StringWriter sw = new StringWriter();
+      JAXB.marshal(testExecution, sw);
+      String xmlString = sw.toString();
+      String message = String.format("Cannot create test execution:\n%s\nCheck Tests metrics in PerfRepo.", xmlString);
+      throw new IllegalStateException(message);
    }
 
    private TestExecutionBuilder createTestExecutionBuilder(Report report, Report.Test test) {
