@@ -9,7 +9,6 @@ import org.radargun.traits.CacheInformation;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 public class Infinispan90CacheInfo extends Infinispan70CacheInfo {
-   private final Log log = LogFactory.getLog(Infinispan90CacheInfo.class);
 
    public Infinispan90CacheInfo(InfinispanEmbeddedService service) {
       super(service);
@@ -27,7 +26,7 @@ public class Infinispan90CacheInfo extends Infinispan70CacheInfo {
 
       @Override
       public long getTotalSize() {
-         return cache.keySet().stream().count();
+         return cache.size();
       }
 
    }
