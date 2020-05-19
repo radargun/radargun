@@ -1,8 +1,6 @@
 package org.radargun.service;
 
 import org.infinispan.AdvancedCache;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheInformation;
 
 /**
