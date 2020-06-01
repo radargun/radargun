@@ -43,13 +43,7 @@ public class ServerConfigurationUtils {
     */
    public ServerConfigurationUtils jgroupsConfig(String jgroupsConfig) {
       if(jgroupsConfig != null) {
-         String textToBeInserted = "<xi:include href=\""+jgroupsConfig+"\"/>";
-         data = Arrays.asList(data.split("\n")).stream().map(line -> {
-            if(line.contains("server-configuration/cache-container")) {
-               line +=  System.lineSeparator() + textToBeInserted;
-            }
-            return line;
-         }).collect(Collectors.joining("\n"));
+         data = data.replace(JGROUPS_DEFAULT.getValue(), jgroupsConfig);
       }
       return this;
    }
@@ -142,6 +136,7 @@ public class ServerConfigurationUtils {
     */
    public Path writeFile() {
       try {
+         log.info(data);
          return Files.write(getOutputPath(), data.getBytes());
       } catch (IOException e) {
          log.error("Failed to write into server configuration. Location: "+getOutputPath(), e);
