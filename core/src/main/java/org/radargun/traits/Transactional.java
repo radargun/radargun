@@ -73,5 +73,19 @@ public interface Transactional {
        * Complete the transaction by rolling it back (changes are discarded).
        */
       void rollback();
+
+      /**
+       * Stop transaction processing in this thread.
+       *
+       * @throws UnsupportedOperationException if the transaction cannot span multiple threads.
+       */
+      void suspend();
+
+      /**
+       * Resume transaction processing in this thread.
+       *
+       * @throws UnsupportedOperationException if the transaction cannot span multiple threads.
+       */
+      void resume();
    }
 }

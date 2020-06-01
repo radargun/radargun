@@ -52,12 +52,9 @@ public class Hazelcast36Transactional implements Transactional {
          if (!started) begin();
          if (resource instanceof DistributedObject) {
             return (T) transactionContext.getMap(((DistributedObject) resource).getName());
-         } else if (resource instanceof Hazelcast36Operations.Cache) {
-            String cacheName = ((Hazelcast36Operations.Cache) resource).map.getName();
-            return (T) new Hazelcast36Operations.Cache(transactionContext.getMap(cacheName));
-         } else if (resource instanceof HazelcastQuery.Context) {
-            String cacheName = ((HazelcastQuery.Context) resource).map.getName();
-            return (T) new HazelcastQuery.Context(transactionContext.getMap(cacheName));
+         } else if (resource instanceof Transactable) {
+            Transactable transactable = (Transactable) resource;
+            return (T) transactable.wrap(transactionContext.getMap(transactable.name()));
          } else {
             throw new IllegalArgumentException(String.valueOf(resource));
          }
@@ -82,6 +79,16 @@ public class Hazelcast36Transactional implements Transactional {
       public void rollback() {
          if (trace) log.trace("Rolling back TX " + transactionContext.getTxnId());
          transactionContext.rollbackTransaction();
+      }
+
+      @Override
+      public void suspend() {
+         // noop
+      }
+
+      @Override
+      public void resume() {
+         // noop, the wrapped resource is already linked to the transaction
       }
    }
 }

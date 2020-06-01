@@ -177,6 +177,13 @@ public interface Statistics extends Serializable {
     */
    <T> T getRepresentation(String operation, Class<T> clazz, Object... args);
 
+   /**
+    * @return True if this instance can be safely accessed by concurrent threads.
+    */
+   default boolean isThreadSafe() {
+      return false;
+   }
+
    class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {
          super(Statistics.class);

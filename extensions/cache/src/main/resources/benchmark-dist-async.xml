@@ -1,0 +1,60 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <clusters>
+      <cluster size="4"/>
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 9.0">
+         <setup plugin="infinispan90">
+            <embedded xmlns="urn:radargun:plugins:infinispan90:3.0" file="dist-sync.xml"/>
+         </setup>
+      </config>
+      <config name="Hazelcast 3.7">
+         <setup plugin="hazelcast37">
+            <hazelcast xmlns="urn:radargun:plugins:hazelcast37:3.0" file="dist-sync.xml"/>
+         </setup>
+      </config>
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
+      <service-start />
+      <jvm-monitor-start />
+      <define var="num.entries" value="10000"/>
+
+      <cache:load num-entries="${num.entries}"/>
+
+      <cache:basic-async-operations-test test-name="warmup"
+                                         num-entries="${num.entries}"
+                                         duration="30s" >
+         <cache:put invocations="1"/>
+         <cache:get invocations="4"/>
+      </cache:basic-async-operations-test>
+
+      <rg:repeat name="async" from="1" to="5" inc="1">
+         <cache:basic-async-operations-test test-name="async" amend-test="true"
+                                            num-entries="${num.entries}" num-threads="8"
+                                            duration="30s" >
+            <cache:put invocations="${repeat.async.counter}"/>
+            <cache:get invocations="#{4 * ${repeat.async.counter}}"/>
+            <statistics>
+               <common/>
+            </statistics>
+         </cache:basic-async-operations-test>
+      </rg:repeat>
+
+      <jvm-monitor-stop />
+   </rg:scenario>
+
+   <reports>
+      <reporter type="csv" />
+      <reporter type="html" />
+      <reporter type="serialized" />
+   </reports>
+
+</benchmark>

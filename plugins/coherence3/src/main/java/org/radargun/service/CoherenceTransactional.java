@@ -95,6 +95,16 @@ public class CoherenceTransactional implements Transactional {
          endTransaction(false);
       }
 
+      @Override
+      public void suspend() {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void resume() {
+         throw new UnsupportedOperationException();
+      }
+
       private void endTransaction(boolean successful) {
          if (connection == null) {
             throw new IllegalStateException("Transaction was not started");

@@ -53,7 +53,7 @@ public class HazelcastQuery implements Query {
       return predicate;
    }
 
-   public static class Context implements Query.Context {
+   public static class Context implements Query.Context, Transactable {
       protected final IMap map;
       protected final TransactionalMap txMap;
 
@@ -69,6 +69,16 @@ public class HazelcastQuery implements Query {
 
       @Override
       public void close() {
+      }
+
+      @Override
+      public String name() {
+         return map.getName();
+      }
+
+      @Override
+      public Transactable wrap(TransactionalMap map) {
+         return new Context(map);
       }
    }
 

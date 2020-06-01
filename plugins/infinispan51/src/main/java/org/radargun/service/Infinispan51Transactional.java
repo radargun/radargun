@@ -56,5 +56,15 @@ public class Infinispan51Transactional extends InfinispanTransactional {
          if (trace) log.trace("Rolling back batch");
          impl.endBatch(false);
       }
+
+      @Override
+      public void suspend() {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void resume() {
+         throw new UnsupportedOperationException();
+      }
    }
 }

@@ -24,7 +24,7 @@ public class Hazelcast36Operations extends HazelcastOperations {
       return new Cache<K, V>(service.<K, V>getMap(cacheName));
    }
 
-   protected static class Cache<K, V> implements HazelcastCache<K, V> {
+   protected static class Cache<K, V> implements HazelcastCache<K, V>, Transactable<K, V> {
       protected final BaseMap<K, V> map;
       protected final IMap<K, V> clearMap;
 
@@ -100,6 +100,16 @@ public class Hazelcast36Operations extends HazelcastOperations {
       @Override
       public boolean replace(K key, V oldValue, V newValue) {
          return map.replace(key, oldValue, newValue);
+      }
+
+      @Override
+      public String name() {
+         return map.getName();
+      }
+
+      @Override
+      public Transactable<K, V> wrap(TransactionalMap<K, V> map) {
+         return new Cache<>(map);
       }
    }
 }

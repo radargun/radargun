@@ -56,5 +56,15 @@ public class HazelcastTransactional implements Transactional {
       public void rollback() {
          tx.rollback();
       }
+
+      @Override
+      public void suspend() {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void resume() {
+         throw new UnsupportedOperationException();
+      }
    }
 }

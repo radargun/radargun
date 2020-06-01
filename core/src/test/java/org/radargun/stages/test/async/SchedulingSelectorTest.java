@@ -1,4 +1,4 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.async;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,21 +82,20 @@ public class SchedulingSelectorTest extends PowerMockTestCase {
    }
 
    protected void setTime(long value) {
-      PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(value);
+      PowerMockito.when(TimeService.nanoTime()).thenReturn(value * 1_000_000);
    }
 
    protected void checkReturns(SchedulingSelector<String> selector, String... expected) throws InterruptedException {
       List<String> retvals = Collections.synchronizedList(new ArrayList<>());
       CountDownLatch latch = new CountDownLatch(1);
       executorService.execute(() -> {
-         for (int i = 0; i < expected.length; ++i) {
-            try {
+         try {
+            for (int i = 0; i < expected.length; ++i) {
                String next = selector.next();
                retvals.add(next);
-            } catch (InterruptedException e) {
-               log.error("Unexpected interruption", e);
-               break;
             }
+         } catch (InterruptedException e) {
+            retvals.add("Interrupted!");
          }
          latch.countDown();
       });
@@ -107,11 +106,12 @@ public class SchedulingSelectorTest extends PowerMockTestCase {
    }
 
    protected void checkBlocks(SchedulingSelector<String> selector) throws InterruptedException {
+      CountDownLatch latch = new CountDownLatch(1);
       Future<?> task = executorService.submit(() -> {
          try {
             selector.next();
          } catch (InterruptedException e) {
-            log.trace("Expected interruption", e);
+            latch.countDown();
          }
       });
       try {
@@ -120,7 +120,8 @@ public class SchedulingSelectorTest extends PowerMockTestCase {
       } catch (ExecutionException e) {
          fail("Unexpected exception", e);
       } catch (TimeoutException e) {
-         task.cancel(true);
+         assertTrue(task.cancel(true));
       }
+      latch.await(10, TimeUnit.SECONDS);
    }
 }

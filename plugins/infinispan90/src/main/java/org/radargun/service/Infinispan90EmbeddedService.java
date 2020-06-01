@@ -23,6 +23,11 @@ public class Infinispan90EmbeddedService extends Infinispan82EmbeddedService {
       return new Infinispan90CacheInfo(this);
    }
 
+   @ProvidesTrait
+   public Infinispan90AsyncOperations createAsyncOperations() {
+      return new Infinispan90AsyncOperations(this);
+   }
+
    @Override
    protected TP getTransportProtocol() {
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();

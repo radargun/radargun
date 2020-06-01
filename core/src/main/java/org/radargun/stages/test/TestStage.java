@@ -3,21 +3,15 @@ package org.radargun.stages.test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
-import org.radargun.Operation;
-import org.radargun.StageResult;
 import org.radargun.Version;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.reporting.Report;
-import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -116,55 +110,6 @@ public abstract class TestStage extends BaseTestStage {
          return newStatisticsAck(stressorsManager.getStressors());
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
-      }
-   }
-
-   /**
-    * To be overridden in inheritors.
-    */
-   protected void prepare() {
-   }
-
-   /**
-    * To be overridden in inheritors.
-    */
-   protected void destroy() {
-   }
-
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      return processAckOnMaster(acks, testName);
-   }
-
-   protected StageResult processAckOnMaster(List<DistStageAck> acks, String testNameOverride) {
-      StageResult result = super.processAckOnMaster(acks);
-      if (result.isError()) return result;
-
-      Report.Test test = getTest(amendTest, testNameOverride);
-      testIteration = test == null ? 0 : test.getIterations().size();
-      // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
-      List<StatisticsAck> statisticsAcks = instancesOf(acks, StatisticsAck.class);
-      Statistics aggregated = statisticsAcks.stream().flatMap(ack -> ack.statistics.stream()).reduce(null, Statistics.MERGE);
-      for (StatisticsAck ack : statisticsAcks) {
-         if (ack.statistics != null) {
-            if (test != null) {
-               int testIteration = getTestIteration();
-               String iterationValue = resolveIterationValue();
-               if (iterationValue != null) {
-                  test.setIterationValue(testIteration, iterationValue);
-               }
-               if (test.getGroupOperationsMap() == null) {
-                  test.setGroupOperationsMap(ack.getGroupOperationsMap());
-               }
-               test.addStatistics(testIteration, ack.getSlaveIndex(), ack.statistics);
-            }
-         } else {
-            log.trace("No statistics received from slave: " + ack.getSlaveIndex());
-         }
-      }
-      if (checkRepeatCondition(aggregated)) {
-         return StageResult.SUCCESS;
-      } else {
-         return StageResult.BREAK;
       }
    }
 
@@ -396,17 +341,4 @@ public abstract class TestStage extends BaseTestStage {
       }
    }
 
-   protected static class StatisticsAck extends DistStageAck {
-      public final List<Statistics> statistics;
-      private final Map<String, Set<Operation>> groupOperationsMap;
-
-      public StatisticsAck(SlaveState slaveState, List<Statistics> statistics, Map<String, Set<Operation>> groupOperationsMap) {
-         super(slaveState);
-         this.statistics = statistics;
-         this.groupOperationsMap = groupOperationsMap;
-      }
-      public Map<String, Set<Operation>> getGroupOperationsMap() {
-         return groupOperationsMap;
-      }
-   }
 }

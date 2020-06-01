@@ -1,10 +1,11 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.async;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.locks.LockSupport;
 
 import org.radargun.utils.TimeService;
 
@@ -14,12 +15,15 @@ import org.radargun.utils.TimeService;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SchedulingSelector<T> {
+   private static final AtomicIntegerFieldUpdater offsetUpdater = AtomicIntegerFieldUpdater.newUpdater(SchedulingSelector.class, "offset");
+   private static final long LOW_WORD = 0xFFFFFFFFL;
    private final int[] invocations;
    private final long[] intervals;
    private final T[] operations;
-   private final AtomicLongArray lastIntervals;
-   private final AtomicIntegerArray todoInvocations;
-   private volatile int offset;
+   // Higher word of count contains the truncated lowest bits of the actual interval number, lower word contains
+   // number of operations executed in this interval.
+   private final AtomicLongArray counts;
+   private volatile int offset = 0;
 
    /**
     * @param operations Returned invocations
@@ -31,68 +35,55 @@ public class SchedulingSelector<T> {
       this.operations = operations;
       this.invocations = invocations;
       this.intervals = intervals;
-      lastIntervals = new AtomicLongArray(operations.length);
-      todoInvocations = new AtomicIntegerArray(operations.length);
+      counts = new AtomicLongArray(operations.length);
+      long now = TimeService.nanoTime();
       for (int i = 0; i < operations.length; ++i) {
-         lastIntervals.set(i, Long.MIN_VALUE);
+         counts.set(i, now << 32);
       }
    }
 
-   /**
-    * @return
-    * @throws InterruptedException
-    */
    public T next() throws InterruptedException {
       WAIT_LOOP:
-      for (; ; ) {
-         long now = TimeService.currentTimeMillis();
+      do {
+         // While nanoTime() is more expensive than currentTimeMillis() but it's monotonic at least
+         long now = TimeService.nanoTime();
+         // Just to spread the iteration start more evenly; we don't want all operations of the same type
+         // to be executed in parallel
          int myOffset = offset;
+         offsetUpdater.lazySet(this, myOffset + 1);
+
+         long sleepTime = Long.MAX_VALUE;
          INVOCATIONS_LOOP:
          for (int i = 0; i < operations.length; ++i) {
             int operationIndex = (i + myOffset) % operations.length;
 
             long myInterval = intervals[operationIndex];
-            long currentInterval = now / myInterval;
+            long currentInterval = LOW_WORD & (now / (ns2ms(myInterval)));
 
-            long lastInterval;
-            boolean hasSetLastInterval = false;
+            long count, nextCount;
             do {
-               lastInterval = lastIntervals.get(operationIndex);
-            }
-            while (currentInterval > lastInterval && !(hasSetLastInterval = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
-            if (hasSetLastInterval) {
-               int frequency = invocations[operationIndex];
-               // we ignore the requests that should have been executed in previous slots;
-               // if the slot is too small
-               // -1 for immediatelly executed request
-               todoInvocations.set(operationIndex, frequency - 1);
-               synchronized (this) {
-                  this.notifyAll();
+               count = counts.get(operationIndex);
+               long lastInterval = count >>> 32;
+               if (lastInterval == currentInterval) {
+                  if ((count & LOW_WORD) < invocations[operationIndex]) {
+                     nextCount = count + 1;
+                  } else {
+                     sleepTime = Math.min(sleepTime, ns2ms(myInterval) - now % ns2ms(myInterval));
+                     continue INVOCATIONS_LOOP;
+                  }
+               } else {
+                  nextCount = (currentInterval << 32) + 1;
                }
-            } else {
-               int todos;
-               do {
-                  todos = todoInvocations.get(operationIndex);
-                  if (todos <= 0) continue INVOCATIONS_LOOP;
-               } while (!todoInvocations.compareAndSet(operationIndex, todos, todos - 1));
-            }
-
-            offset++;
+            } while (!counts.compareAndSet(operationIndex, count, nextCount));
             return operations[operationIndex];
          }
-         synchronized (this) {
-            // there is a race that thread A sets last timestamp but B checks
-            // the other branch before A updates todos. Then B goes to sleep after
-            // not finding any todos, but after A calling the notify. Therefore,
-            // we check once more here, while synchronized
-            for (int i = 0; i < todoInvocations.length(); ++i) {
-               if (todoInvocations.get(i) != 0) {
-                  continue WAIT_LOOP;
-               }
-            }
-            this.wait(1);
-         }
-      }
+         LockSupport.parkNanos(sleepTime);
+      } while (!Thread.currentThread().isInterrupted());
+      throw new InterruptedException();
+   }
+
+   private long ns2ms(long ms) {
+      return 1_000_000 * ms;
    }
 
    public static class Builder<T> {
@@ -124,8 +115,8 @@ public class SchedulingSelector<T> {
       public SchedulingSelector<T> build() {
          if (operations.isEmpty()) throw new IllegalStateException("No operations set!");
          return new SchedulingSelector(operations.toArray((T[]) Array.newInstance(clazz, operations.size())),
-            invocations.stream().mapToInt(i -> i.intValue()).toArray(),
-            intervals.stream().mapToLong(l -> l.longValue()).toArray());
+               invocations.stream().mapToInt(i -> i.intValue()).toArray(),
+               intervals.stream().mapToLong(l -> l.longValue()).toArray());
       }
    }
 }
