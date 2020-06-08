@@ -86,18 +86,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.jboss.narayana.jta</groupId>
-         <artifactId>narayana-jta</artifactId>
-         <optional>true</optional>
-         <exclusions>
-            <exclusion>
-               <groupId>org.jboss.logging</groupId>
-               <artifactId>jboss-logging-spi</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-
-      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-client-hotrod</artifactId>
          <optional>true</optional>
@@ -175,7 +163,7 @@
       <dependencies>
          <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-parent</artifactId>
+            <artifactId>infinispan-bom</artifactId>
             <version>${version.infinispan}</version>
             <type>pom</type>
             <scope>import</scope>
