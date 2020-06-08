@@ -42,6 +42,15 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    @Property(doc="A full path to a logging configuration file. If set, the server will use the provided logging configuration file. If not set, the default server logging configuration is used.")
    private String loggingConfig;
 
+   @Property(doc="Boolean property for enabling user creation on server. If set to true, the new user will be added with provided username and password. Default is false.")
+   private boolean addUser=false;
+
+   @Property(doc="Username of the user to be created.")
+   private String username;
+
+   @Property(doc="Password of the user to be created.")
+   private String password;
+
    protected Clustered clustered;
 
    @Override
@@ -69,8 +78,27 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
          // the extraction erases the executable bits
          Utils.setPermissions(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString(), "rwxr-xr-x");
 
+         if (addUser) {
+            if (username == null || password == null) {
+               throw new IllegalArgumentException("Username and Password should be provided for adding user to Server.");
+            } else {
+               Utils.setPermissions(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getCliScriptPrefix() + (getWindows() ? "bat" : "sh")).toString(), "rwxr-xr-x");
+               StringBuffer command = new StringBuffer(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getCliScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
+               command.append(" user create ").append(username).append(" -p \"").append(password).append("\"");
+
+               log.info(command.toString());
+               Process process = Runtime.getRuntime().exec(command.toString());
+               process.waitFor();
+
+               log.info("User is created.");
+            }
+         }
+
       } catch (IOException e) {
          log.error("Failed to prepare the server directory", e);
+         throw new RuntimeException(e);
+      } catch (InterruptedException e) {
+         log.error("Failed to create user", e);
          throw new RuntimeException(e);
       }
 
@@ -78,11 +106,16 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
          schedule(new ServerJGroupsDumper(this), jgroupsDumpPeriod);
       }
 
+      topologyHistory = new Infinispan60ServerTopologyHistory(this);
    }
 
    @Override
    protected String getStartScriptPrefix() {
       return "server.";
+   }
+
+   protected String getCliScriptPrefix() {
+      return "cli.";
    }
 
    @ProvidesTrait

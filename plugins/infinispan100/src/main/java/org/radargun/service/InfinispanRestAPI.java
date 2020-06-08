@@ -38,9 +38,20 @@ public class InfinispanRestAPI {
       this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
       this.cacheManagerName = System.getProperty("radargun.infinispan.cacheManagerName", "clustered");
-      this.restClientOkHttp = new RestClientOkHttp(new RestClientConfigurationBuilder()
-            .socketTimeout(DEFAULT_TIMEOUT).connectionTimeout(DEFAULT_TIMEOUT)
-            .addServer().host(lookupServerHost()).port(serverPort).build());
+      RestClientConfigurationBuilder config = new RestClientConfigurationBuilder();
+      config.socketTimeout(DEFAULT_TIMEOUT)
+              .connectionTimeout(DEFAULT_TIMEOUT)
+              .addServer()
+              .host(lookupServerHost())
+              .port(serverPort);
+
+      String authUsername =  System.getProperty("radargun.infinispan.auth.username");
+      String authPassword =  System.getProperty("radargun.infinispan.auth.password");
+      if (authUsername != null && authPassword != null) {
+         config.security().authentication().enable().username(authUsername).password(authPassword);
+      }
+
+      this.restClientOkHttp = new RestClientOkHttp(config.build());
    }
 
    private String lookupServerHost() throws IOException {
