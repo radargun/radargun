@@ -36,7 +36,7 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
       searchManager.getMassIndexer().start();
    }
 
-   private class EmbeddedQueryContext implements Query.Context, AdvancedCacheHolder {
+   public static class EmbeddedQueryContext implements Query.Context, AdvancedCacheHolder {
       private final AdvancedCache cache;
 
       public EmbeddedQueryContext(AdvancedCache cache) {
