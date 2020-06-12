@@ -1,7 +1,5 @@
 package org.radargun.util;
 
-import org.radargun.traits.Query;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -147,7 +145,7 @@ public class QueryTraitRepository extends CoreTraitRepository {
 
          @Override
          public Query build() {
-            return new Query(cache);
+            return new Queryable.Query(cache);
          }
       }
 

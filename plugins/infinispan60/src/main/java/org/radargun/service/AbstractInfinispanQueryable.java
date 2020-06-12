@@ -193,7 +193,7 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
    }
 
    protected static class QueryImpl implements Query {
-      private final org.infinispan.query.dsl.Query query;
+      protected final org.infinispan.query.dsl.Query query;
 
       public QueryImpl(org.infinispan.query.dsl.Query query) {
          this.query = query;
