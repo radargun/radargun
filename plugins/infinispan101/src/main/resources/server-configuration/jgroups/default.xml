@@ -1,3 +1,2 @@
 <jgroups transport="org.infinispan.remoting.transport.jgroups.JGroupsTransport">
-
 </jgroups>
