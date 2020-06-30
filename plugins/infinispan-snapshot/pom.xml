@@ -88,63 +88,57 @@
          <artifactId>infinispan-client-hotrod</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-query</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-jdbc</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-remote-query-client</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-remote-query-server</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-persistence-soft-index</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-jcache</artifactId>
          <optional>true</optional>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-kryo</artifactId>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-protostuff</artifactId>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-rocksdb</artifactId>
       </dependency>
-
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-persistence-soft-index</artifactId>
       </dependency>
-
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-anchored-keys</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
    </dependencies>
 
    <dependencyManagement>
@@ -174,7 +168,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>11.0.0-SNAPSHOT</version.infinispan>
+            <version.infinispan>11.0.1-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>
