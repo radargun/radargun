@@ -25,7 +25,7 @@ import org.radargun.logging.LogFactory;
 public class InfinispanRestAPI {
 
    // ms
-   private static final int DEFAULT_TIMEOUT = 1_000;
+   private static final int DEFAULT_TIMEOUT = 5_000;
 
    protected final Log log = LogFactory.getLog(getClass());
 

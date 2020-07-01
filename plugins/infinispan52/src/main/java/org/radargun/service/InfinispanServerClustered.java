@@ -2,6 +2,7 @@ package org.radargun.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -81,8 +82,10 @@ public class InfinispanServerClustered implements Clustered {
                String[] nodes;
                if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
                   nodes = new String[] { membersString };
+                  log.infof("single node: %s", Arrays.toString(nodes));
                } else {
                   nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
+                  log.infof("complex nodes: %s", Arrays.toString(nodes));
                }
                lastMembers = membersString;
 
