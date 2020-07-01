@@ -33,7 +33,7 @@ public class InfinispanRestAPI {
    private final RestClientOkHttp restClientOkHttp;
    private final String cacheManagerName;
 
-   public InfinispanRestAPI(Integer serverPort) throws IOException {
+   public InfinispanRestAPI(Integer serverPort, String username, String password) throws IOException {
       this.mapper = new ObjectMapper();
       this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
@@ -44,11 +44,8 @@ public class InfinispanRestAPI {
               .addServer()
               .host(lookupServerHost())
               .port(serverPort);
-
-      String authUsername =  System.getProperty("radargun.infinispan.auth.username");
-      String authPassword =  System.getProperty("radargun.infinispan.auth.password");
-      if (authUsername != null && authPassword != null) {
-         config.security().authentication().enable().username(authUsername).password(authPassword);
+      if (username != null && password != null) {
+         config.security().authentication().enable().username(username).password(password);
       }
 
       this.restClientOkHttp = new RestClientOkHttp(config.build());

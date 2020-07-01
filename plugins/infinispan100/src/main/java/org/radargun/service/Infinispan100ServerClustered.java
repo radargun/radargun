@@ -10,9 +10,9 @@ public class Infinispan100ServerClustered extends InfinispanServerClustered {
    private InfinispanRestAPI restAPI;
    private boolean coordinator;
 
-   public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort) throws IOException {
+   public Infinispan100ServerClustered(Infinispan100ServerService service, Integer defaultPort, String username, String password) throws IOException {
       super(service);
-      this.restAPI = new InfinispanRestAPI(defaultPort);
+      this.restAPI = new InfinispanRestAPI(defaultPort, username, password);
    }
 
    @Override
