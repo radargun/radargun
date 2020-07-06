@@ -19,10 +19,10 @@ import org.radargun.utils.Utils;
 @Service(doc = "Class encapsulating Apache Spark driver")
 public class SparkDriverService {
 
-   @Property(doc = "Name of the host where master node is deployed. Default is localhost.")
+   @Property(doc = "Name of the host where main node is deployed. Default is localhost.")
    protected String host = "localhost";
 
-   @Property(doc = "Port under which master node is accessible. Default is 7077.")
+   @Property(doc = "Port under which main node is accessible. Default is 7077.")
    protected int port = 7077;
 
    @Property(doc = "Name of the application to be deployed. Default is testApp.")

@@ -10,21 +10,21 @@ import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 
 /**
- * Common base for stages that start slaves.
+ * Common base for stages that start workers.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Parent class for stages handling service start.")
 public abstract class AbstractServiceStartStage extends AbstractDistStage {
 
-   @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
+   @Property(doc = "Set of workers where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
-         if (ack.isError() && (mayFailOn == null || !mayFailOn.contains(ack.getSlaveIndex()))) {
+         if (ack.isError() && (mayFailOn == null || !mayFailOn.contains(ack.getWorkerIndex()))) {
             log.warn("Received error ack " + ack);
             return errorResult();
          } else if (ack.isError()) {

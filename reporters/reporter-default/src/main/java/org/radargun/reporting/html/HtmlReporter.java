@@ -24,7 +24,7 @@ import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateModelException;
 import org.radargun.config.Configuration;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.logging.Log;
@@ -60,7 +60,7 @@ public class HtmlReporter extends AbstractReporter {
    private Collection<Report> reports;
 
    @Override
-   public void run(MasterConfig masterConfig, Collection<Report> reports) {
+   public void run(MainConfig mainConfig, Collection<Report> reports) {
       this.reports = reports;
       Set<String> allTests = new LinkedHashSet<>();
       Set<String> combinedTests = new LinkedHashSet<>();
@@ -71,7 +71,7 @@ public class HtmlReporter extends AbstractReporter {
 
       this.allTests = allTests;
 
-      writeIndexDocument(masterConfig, reports);
+      writeIndexDocument(mainConfig, reports);
       writeTimelineDocuments(reports, Timeline.Category.Type.CUSTOM);
       writeTimelineDocuments(reports, Timeline.Category.Type.SYSMONITOR);
       writeTestReportDocuments(combinedTests, testsByName);
@@ -111,16 +111,16 @@ public class HtmlReporter extends AbstractReporter {
    private void writeNormalizedConfigDocuments(Collection<Report> reports) {
       for (Report report : reports) {
          for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
-            Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
+            Set<Integer> workers = report.getCluster().getWorkers(setup.group);
             Set<String> normalized = new HashSet<>();
             for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
-               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
+               if (workers.contains(entry.getKey()) && entry.getValue() != null) {
                   normalized.addAll(entry.getValue().keySet());
                }
             }
             for (String config : normalized) {
                NormalizedConfigDocument document = new NormalizedConfigDocument(
-                  targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
+                  targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), workers);
 
                document.createReportDirectory();
 
@@ -205,10 +205,10 @@ public class HtmlReporter extends AbstractReporter {
       }
    }
 
-   private void writeIndexDocument(MasterConfig masterConfig, Collection<Report> reports) {
+   private void writeIndexDocument(MainConfig mainConfig, Collection<Report> reports) {
       IndexDocument index = new IndexDocument(targetDir);
       index.createReportDirectory();
-      index.writeMasterConfig(masterConfig);
+      index.writeMainConfig(mainConfig);
       index.prepareServiceConfigs(reports);
 
       try {

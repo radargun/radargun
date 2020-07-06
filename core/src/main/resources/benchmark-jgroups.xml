@@ -1,8 +1,8 @@
 <!-- RadarGun 2.0 benchmark aggregating miscellaneous features -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <!-- Specifies where should the master open socket  -->
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <!-- Specifies where should the main open socket  -->
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <!-- List of cluster configurations where the benchmark should run-->
    <clusters>
@@ -12,7 +12,7 @@
    <!-- List of configurations of the services -->
    <configurations>
       <config name="Infinispan 7.0 - distributed">
-         <!-- All slaves use the same configuration -->
+         <!-- All workers use the same configuration -->
          <setup plugin="infinispan70">
             <embedded xmlns="urn:radargun:plugins:infinispan70:3.0" file="dist-sync.xml">
                <enable-diagnostics>true</enable-diagnostics>
@@ -26,7 +26,7 @@
       <!-- Start services on all nodes -->
       <service-start/>
       <!-- Run JGroups probe wrapper & execute multiple queries in one batch -->
-      <j-groups-probe expected-response-count="2" timeout="30s" print-results-as-info="true" slaves="0">
+      <j-groups-probe expected-response-count="2" timeout="30s" print-results-as-info="true" workers="0">
          <queries>
             <!-- change log level for selected protocols -->
             <query value="op=FD_ALL.setLevel[DEBUG]"/>
@@ -35,7 +35,7 @@
             <query value="remove-protocol=MERGE3"/>
             <query value="insert-protocol=MERGE2=above=PING"/>
             <!-- insert custom protocol (just for illustration -->
-            <query value="insert-protocol=org.radargun.protocols.SLAVE_PARTITION_36=above=UDP"/>
+            <query value="insert-protocol=org.radargun.protocols.WORKER_PARTITION_36=above=UDP"/>
             <!-- Print information per protocol -->
             <query value="jmx=NAKACK2"/>
             <!-- Print information for the whole stack -->

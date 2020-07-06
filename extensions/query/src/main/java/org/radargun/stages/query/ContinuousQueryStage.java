@@ -13,7 +13,7 @@ import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
@@ -61,13 +61,13 @@ public class ContinuousQueryStage extends AbstractDistStage {
    private Map<String, SynchronizedStatistics> statistics;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
 
-      statistics = (Map<String, SynchronizedStatistics>) slaveState.get(statsKey);
+      statistics = (Map<String, SynchronizedStatistics>) workerState.get(statsKey);
       if (statistics == null) {
          statistics = new HashMap<String, SynchronizedStatistics>();
-         slaveState.put(statsKey, statistics);
+         workerState.put(statsKey, statistics);
       }
       if (!statistics.containsKey(statsKey)) {
          statistics.put(statsKey, new SynchronizedStatistics(new BasicOperationStats()));
@@ -76,17 +76,17 @@ public class ContinuousQueryStage extends AbstractDistStage {
       }
 
       if (!remove) {
-         registerCQ(slaveState);
+         registerCQ(workerState);
       } else {
-         unregisterCQ(slaveState);
+         unregisterCQ(workerState);
       }
 
-      return new ContinuousQueryAck(slaveState, statistics.get(statsKey).snapshot(true));
+      return new ContinuousQueryAck(workerState, statistics.get(statsKey).snapshot(true));
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError())
          return result;
 
@@ -97,7 +97,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
 
          for (ContinuousQueryAck ack : instancesOf(acks, ContinuousQueryAck.class)) {
             if (ack.stats != null)
-               test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
+               test.addStatistics(testIteration, ack.getWorkerIndex(), Collections.singletonList(ack.stats));
          }
       }
       return StageResult.SUCCESS;
@@ -108,19 +108,19 @@ public class ContinuousQueryStage extends AbstractDistStage {
          log.warn("No test name - results are not recorded");
          return null;
       } else {
-         Report report = masterState.getReport();
+         Report report = mainState.getReport();
          return report.createTest(testKey, iterationName, true);
       }
    }
 
-   private void registerCQ(SlaveState slaveState) {
+   private void registerCQ(WorkerState workerState) {
       if ((query.projectionAggregated != null && !query.projectionAggregated.isEmpty()) ||
             (query.groupBy != null && query.groupBy.length != 0) ||
             (query.orderByAggregatedColumns != null && !query.orderByAggregatedColumns.isEmpty())) {
          throw new IllegalStateException("Aggregations are not supported in continuous queries!");
       }
       Query q = QueryBase.constructBuilder(queryable, query).build();
-      slaveState.put(ContinuousQuery.QUERY, q);
+      workerState.put(ContinuousQuery.QUERY, q);
 
       ContinuousQuery.Listener cqListener = new ContinuousQuery.Listener() {
          private final String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
@@ -147,18 +147,18 @@ public class ContinuousQueryStage extends AbstractDistStage {
          }
       };
 
-      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) slaveState
+      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) workerState
          .get(ContinuousQuery.LISTENERS);
       if (listeners == null) {
          listeners = new HashMap<>();
-         slaveState.put(ContinuousQuery.LISTENERS, listeners);
+         workerState.put(ContinuousQuery.LISTENERS, listeners);
       }
       ContinuousQuery.ListenerReference ref = continuousQueryTrait.createContinuousQuery(cacheName, q, cqListener);
       listeners.put(testName, ref);
    }
 
-   public void unregisterCQ(SlaveState slaveState) {
-      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) slaveState
+   public void unregisterCQ(WorkerState workerState) {
+      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) workerState
          .get(ContinuousQuery.LISTENERS);
       if (listeners != null && listeners.containsKey(testName)) {
          ContinuousQuery.ListenerReference ref = listeners.remove(testName);
@@ -169,8 +169,8 @@ public class ContinuousQueryStage extends AbstractDistStage {
    private static class ContinuousQueryAck extends DistStageAck {
       public final Statistics stats;
 
-      public ContinuousQueryAck(SlaveState slaveState, Statistics stats) {
-         super(slaveState);
+      public ContinuousQueryAck(WorkerState workerState, Statistics stats) {
+         super(workerState);
          this.stats = stats;
       }
    }

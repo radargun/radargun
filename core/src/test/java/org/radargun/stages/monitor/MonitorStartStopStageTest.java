@@ -26,9 +26,9 @@ public class MonitorStartStopStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(monitorStartStage, 0));
+      acks.add(stageRunner.executeOnWorker(monitorStartStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(monitorStartStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(monitorStartStage, acks), StageResult.SUCCESS);
 
       Utils.sleep(3000);
 
@@ -36,9 +36,9 @@ public class MonitorStartStopStageTest {
 
       acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(monitorStopStage, 0));
+      acks.add(stageRunner.executeOnWorker(monitorStopStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(monitorStopStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(monitorStopStage, acks), StageResult.SUCCESS);
 
    }
 }

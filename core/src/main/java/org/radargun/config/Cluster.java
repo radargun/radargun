@@ -52,9 +52,9 @@ public class Cluster implements Serializable, Comparable<Cluster> {
       return totalSize;
    }
 
-   public Group getGroup(int slaveIndex) {
-      if (slaveIndex != -1) {
-         int index = slaveIndex;
+   public Group getGroup(int workerIndex) {
+      if (workerIndex != -1) {
+         int index = workerIndex;
          for (Group g : groups) {
             if (index < g.size) {
                return g;
@@ -62,12 +62,12 @@ public class Cluster implements Serializable, Comparable<Cluster> {
             index -= g.size;
          }
       }
-      throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
+      throw new IllegalStateException("Worker index is " + workerIndex + ", cluster is " + toString());
    }
 
-   public int getIndexInGroup(int slaveIndex) {
-      if (slaveIndex != -1) {
-         int index = slaveIndex;
+   public int getIndexInGroup(int workerIndex) {
+      if (workerIndex != -1) {
+         int index = workerIndex;
          for (Group g : groups) {
             if (index < g.size) {
                return index;
@@ -75,7 +75,7 @@ public class Cluster implements Serializable, Comparable<Cluster> {
             index -= g.size;
          }
       }
-      throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
+      throw new IllegalStateException("Worker index is " + workerIndex + ", cluster is " + toString());
    }
    
    public boolean groupExists(String groupName) {
@@ -139,15 +139,15 @@ public class Cluster implements Serializable, Comparable<Cluster> {
       return 0;
    }
 
-   public Set<Integer> getSlaves(String group) {
+   public Set<Integer> getWorkers(String group) {
       int index = 0;
       for (Group g : groups) {
          if (g.name.equals(group)) {
-            Set<Integer> slaves = new HashSet<>(g.size);
+            Set<Integer> workers = new HashSet<>(g.size);
             for (int i = 0; i < g.size; ++i) {
-               slaves.add(index + i);
+               workers.add(index + i);
             }
-            return slaves;
+            return workers;
          }
          index += g.size;
       }

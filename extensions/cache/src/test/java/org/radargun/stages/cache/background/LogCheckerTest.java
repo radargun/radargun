@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.radargun.logging.Log;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.util.CacheTestUtils;
 import org.radargun.util.CacheTraitRepository;
@@ -208,8 +208,8 @@ public class LogCheckerTest {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
       llc.enabled = true;
-      SlaveState slaveState = new SlaveState();
-      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
+      WorkerState workerState = new WorkerState();
+      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(workerState, "test");
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "backgroundStressorLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);

@@ -1,6 +1,6 @@
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <clusters>
       <cluster size="8">
@@ -13,7 +13,7 @@
       <config name="redis">
          <setup group="server" plugin="redis32">
             <server xmlns="urn:radargun:plugins:redis32:3.0" file="redis.conf"
-                    distribution-dir="/tmp/redisserver${slave.index}/" distribution-zip="${env.REDIS_DISTRO_ZIP_PATH}/redisdistro.zip" port="#{7000 + ${slave.index}}">
+                    distribution-dir="/tmp/redisserver${worker.index}/" distribution-zip="${env.REDIS_DISTRO_ZIP_PATH}/redisdistro.zip" port="#{7000 + ${worker.index}}">
             </server>
          </setup>
          <setup group="client" plugin="redis32">
@@ -31,7 +31,7 @@
       <service-start groups="server" />
 
       <!--cluster redis-->
-      <command slaves="0" cmd="sh" args="-c" non-parsed-args="echo yes | /tmp/redisserver0/src/redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005"/>
+      <command workers="0" cmd="sh" args="-c" non-parsed-args="echo yes | /tmp/redisserver0/src/redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005"/>
 
       <service-start groups="client" />
 

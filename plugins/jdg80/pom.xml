@@ -151,7 +151,7 @@
       TODO
       dependencyManagement for org.infinispan:infinispan-parent which overwrite the core/pom.xml jaxb-core dependency
       Infinisnpan jaxb-core version 2.3.1 doesn't exists
-      Once fixed in infinispan/master, remove this workaround
+      Once fixed in infinispan/main, remove this workaround
       -->
       <dependency>
          <groupId>org.glassfish.jaxb</groupId>

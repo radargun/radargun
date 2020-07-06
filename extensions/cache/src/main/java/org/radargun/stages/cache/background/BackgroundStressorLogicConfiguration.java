@@ -15,11 +15,11 @@ public class BackgroundStressorLogicConfiguration {
    @Property(doc = "Size of value used in the entry. Default is 1024 bytes.")
    protected int entrySize = 1024;
 
-   @Property(doc = "List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).")
-   protected List<Integer> loadDataOnSlaves;
+   @Property(doc = "List of workers where the data should be loaded (others immediately start executing requests). Default is all live workers).")
+   protected List<Integer> loadDataOnWorkers;
 
-   @Property(doc = "List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.")
-   protected List<Integer> loadDataForDeadSlaves;
+   @Property(doc = "List of workers whose data should be loaded by other threads because these workers are not alive. Default is empty.")
+   protected List<Integer> loadDataForDeadWorkers;
 
    @Property(doc = "If set to true, the stressor does not execute any requests after loading the data. Default is false.")
    protected boolean loadOnly = false;
@@ -44,12 +44,12 @@ public class BackgroundStressorLogicConfiguration {
       return entrySize;
    }
 
-   public List<Integer> getLoadDataOnSlaves() {
-      return loadDataOnSlaves;
+   public List<Integer> getLoadDataOnWorkers() {
+      return loadDataOnWorkers;
    }
 
-   public List<Integer> getLoadDataForDeadSlaves() {
-      return loadDataForDeadSlaves;
+   public List<Integer> getLoadDataForDeadWorkers() {
+      return loadDataForDeadWorkers;
    }
 
    public boolean isLoadOnly() {

@@ -8,7 +8,7 @@ import java.util.List;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.relay.RELAY2;
 import org.jgroups.protocols.relay.Relayer;
-import org.radargun.protocols.SLAVE_PARTITION;
+import org.radargun.protocols.WORKER_PARTITION;
 
 public class Infinispan52Lifecycle extends InfinispanPartitionableLifecycle {
    public Infinispan52Lifecycle(Infinispan52EmbeddedService service) {
@@ -65,7 +65,7 @@ public class Infinispan52Lifecycle extends InfinispanPartitionableLifecycle {
    }
 
    @Override
-   protected Class<? extends SLAVE_PARTITION> getPartitionProtocolClass() {
-      return SLAVE_PARTITION_33.class;
+   protected Class<? extends WORKER_PARTITION> getPartitionProtocolClass() {
+      return WORKER_PARTITION_33.class;
    }
 }

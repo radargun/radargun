@@ -106,7 +106,7 @@ public class FailureManager {
             log.debugf("Record: status=%s.", record.getStatus());
             // Especially with elasticity tests a node can be dead for a long time period. Check for progress may need to be skipped as stressors
             // on this node can't perform any operations.
-            if (manager.getLogLogicConfiguration().ignoreDeadCheckers && !manager.isSlaveAlive(record.getThreadId() / manager.getGeneralConfiguration().getNumThreads())) {
+            if (manager.getLogLogicConfiguration().ignoreDeadCheckers && !manager.isWorkerAlive(record.getThreadId() / manager.getGeneralConfiguration().getNumThreads())) {
                log.tracef("Node where stressor for this record resides is dead, skipping check");
                continue;
             }

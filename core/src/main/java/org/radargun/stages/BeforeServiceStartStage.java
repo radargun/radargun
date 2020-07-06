@@ -9,15 +9,15 @@ import org.radargun.config.Stage;
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted before the ServiceStartStage.")
 public final class BeforeServiceStartStage extends AbstractDistStage {
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       return successfulResponse();
    }
 
-   //Send this data from Master to Slaves
+   //Send this data from Main to Workers
    @Override
-   public Map<String, Object> createMasterData() {
+   public Map<String, Object> createMainData() {
       Map<String, Object> serviceProperties =
-         (Map<String, Object>) masterState.get(ServiceContext.class.getName());
+         (Map<String, Object>) mainState.get(ServiceContext.class.getName());
       if (serviceProperties != null) {
          return Collections.singletonMap(ServiceContext.class.getName(), serviceProperties);
       } else {

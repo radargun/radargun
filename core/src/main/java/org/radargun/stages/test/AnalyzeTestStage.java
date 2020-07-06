@@ -47,12 +47,12 @@ public class AnalyzeTestStage extends AbstractDistStage {
    protected RepresentationType statisticsType;
 
    @Override
-   public Map<String, Object> createMasterData() {
-      Report.Test test = masterState.getReport().getTest(testName);
+   public Map<String, Object> createMainData() {
+      Report.Test test = mainState.getReport().getTest(testName);
       if (test == null) throw new IllegalArgumentException("No test '" + testName + "' found.");
       Number result = analyze(test);
       log.infof("Result of analysis is %s, storing into %s", result, storeResultTo);
-      masterState.put(storeResultTo, result);
+      mainState.put(storeResultTo, result);
       return Collections.singletonMap(storeResultTo, (Object) result);
    }
 
@@ -174,7 +174,7 @@ public class AnalyzeTestStage extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       return successfulResponse();
    }
 
@@ -234,7 +234,7 @@ public class AnalyzeTestStage extends AbstractDistStage {
       VALUE,
       @DocumentedValue("Report the iteration number where we have found the desired value. Works for analyzis-type MAX or MIN.")
       ITERATION,
-      @DocumentedValue("Report the node (slave index) where we have found the desired value. Works for analyzis-type MAX or MIN.")
+      @DocumentedValue("Report the node (worker index) where we have found the desired value. Works for analyzis-type MAX or MIN.")
       NODE,
       @DocumentedValue("Report the global thread id where we have found the desired value. Works for analyzis-type MAX or MIN.")
       THREAD

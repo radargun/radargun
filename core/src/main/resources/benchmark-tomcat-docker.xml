@@ -1,7 +1,7 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}" />
 
    <clusters>
       <cluster>
@@ -19,7 +19,7 @@
                             docker-registry="${docker.registry:registry.hub.docker.com}"
                             username="${docker.username:}"
                             password="${docker.password:}"
-                            image="${image.name:karm/mod_cluster-master-dockerhub}" 
+                            image="${image.name:karm/mod_cluster-main-dockerhub}" 
                             container-name="mod_cluster">
                <!-- Ports exposed from the running container. Available for incoming requests. -->
                <exposed-ports>

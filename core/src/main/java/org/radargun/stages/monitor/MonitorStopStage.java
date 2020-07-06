@@ -5,37 +5,37 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.sysmonitor.MasterMonitors;
-import org.radargun.sysmonitor.SystemSlaveMonitor;
+import org.radargun.sysmonitor.MainMonitors;
+import org.radargun.sysmonitor.SystemWorkerMonitor;
 
 /**
  *
- * Stop collecting JVM statistics on each slave node and return collected statistics to the master node.
+ * Stop collecting JVM statistics on each worker node and return collected statistics to the main node.
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-@Stage(doc = "Stop collecting statistics on each slave node and return collected statistics to the master node.", deprecatedName = "jvm-monitor-stop")
+@Stage(doc = "Stop collecting statistics on each worker node and return collected statistics to the main node.", deprecatedName = "jvm-monitor-stop")
 public class MonitorStopStage extends AbstractDistStage {
 
    @Override
-   public DistStageAck executeOnSlave() {
-      SystemSlaveMonitor slaveMonitors = (SystemSlaveMonitor) slaveState.get(SystemSlaveMonitor.MONITORS);
-      if (slaveMonitors != null) {
-         slaveMonitors.stop();
+   public DistStageAck executeOnWorker() {
+      SystemWorkerMonitor workerMonitors = (SystemWorkerMonitor) workerState.get(SystemWorkerMonitor.MONITORS);
+      if (workerMonitors != null) {
+         workerMonitors.stop();
          return successfulResponse();
       } else {
-         return errorResponse("No Monitors object found on slave: " + slaveState.getSlaveIndex());
+         return errorResponse("No Monitors object found on worker: " + workerState.getWorkerIndex());
       }
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      MasterMonitors masterMonitors = (MasterMonitors) masterState.get(MasterMonitors.MONITORS);
-      if (masterMonitors != null) {
-         masterMonitors.stop();
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      MainMonitors mainMonitors = (MainMonitors) mainState.get(MainMonitors.MONITORS);
+      if (mainMonitors != null) {
+         mainMonitors.stop();
          return StageResult.SUCCESS;
       } else {
-         log.warn("No monitor found on master!");
+         log.warn("No monitor found on main!");
          return errorResult();
       }
    }

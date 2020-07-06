@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Converter;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -44,7 +44,7 @@ import org.radargun.utils.Utils;
 public class CsvReporter extends AbstractReporter {
 
    protected static final Log log = LogFactory.getLog(CsvReporter.class);
-   protected static final String SLAVE_INDEX = "SlaveIndex";
+   protected static final String WORKER_INDEX = "WorkerIndex";
    protected static final String ITERATION = "Iteration";
    protected static final String PERIOD = "Period";
    protected static final String THREAD_COUNT = "ThreadCount";
@@ -52,7 +52,7 @@ public class CsvReporter extends AbstractReporter {
    @Property(doc = "Directory into which will be report files written.")
    private String targetDir = "results" + File.separator + "csv";
 
-   @Property(doc = "Slaves whose results will be ignored.")
+   @Property(doc = "Workers whose results will be ignored.")
    private Set<Integer> ignore;
 
    @Property(doc = "Separator of columns in the CSV file. Default is ','")
@@ -69,7 +69,7 @@ public class CsvReporter extends AbstractReporter {
          ".*Get.*");
 
    @Override
-   public void run(MasterConfig masterConfig, Collection<Report> reports) {
+   public void run(MainConfig mainConfig, Collection<Report> reports) {
       for (Report report : reports) {
          for (Report.Test test : report.getTests()) {
             reportTest(report, test);
@@ -87,14 +87,14 @@ public class CsvReporter extends AbstractReporter {
          ArrayList<Map<String, String>> rows = new ArrayList<>();
          for (Report.TestIteration iteration : test.getIterations()) {
             Statistics aggregated = null;
-            for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.getStatistics()) {
-               if (ignore != null && ignore.contains(slaveStats.getKey())) {
+            for (Map.Entry<Integer, List<Statistics>> workerStats : iteration.getStatistics()) {
+               if (ignore != null && ignore.contains(workerStats.getKey())) {
                   continue;
                }
-               if (slaveStats.getValue().size() <= 0) {
+               if (workerStats.getValue().size() <= 0) {
                   continue;
                }
-               Statistics nodeSummary = processRow(it, columns, rows, slaveStats);
+               Statistics nodeSummary = processRow(it, columns, rows, workerStats);
                if (computeTotal) {
                   if (aggregated == null)
                      aggregated = nodeSummary.copy();
@@ -110,7 +110,7 @@ public class CsvReporter extends AbstractReporter {
                }
                columns.addAll(rowData.keySet());
 
-               rowData.put(SLAVE_INDEX, "TOTAL");
+               rowData.put(WORKER_INDEX, "TOTAL");
                rowData.put(ITERATION, String.valueOf(it));
                rowData.put(PERIOD, String.valueOf(aggregated.getEnd() - aggregated.getBegin()));
                rowData.put(THREAD_COUNT, String.valueOf(iteration.getThreadCount()));
@@ -153,9 +153,9 @@ public class CsvReporter extends AbstractReporter {
    }
 
    private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows,
-         Map.Entry<Integer, List<Statistics>> slaveStats) {
+         Map.Entry<Integer, List<Statistics>> workerStats) {
       // this reporter is merging statistics from all threads on each node
-      Statistics summary = slaveStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
+      Statistics summary = workerStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
          .orElseThrow(() -> new IllegalStateException("No statistics!"));
       Map<String, String> rowData = new HashMap<String, String>();
       rows.add(rowData);
@@ -164,10 +164,10 @@ public class CsvReporter extends AbstractReporter {
       }
       columns.addAll(rowData.keySet());
 
-      rowData.put(SLAVE_INDEX, String.valueOf(slaveStats.getKey()));
+      rowData.put(WORKER_INDEX, String.valueOf(workerStats.getKey()));
       rowData.put(ITERATION, String.valueOf(it));
       rowData.put(PERIOD, String.valueOf(summary.getEnd() - summary.getBegin()));
-      rowData.put(THREAD_COUNT, String.valueOf(slaveStats.getValue().size()));
+      rowData.put(THREAD_COUNT, String.valueOf(workerStats.getValue().size()));
       return summary;
    }
 
@@ -211,7 +211,7 @@ public class CsvReporter extends AbstractReporter {
    private void writeFile(FileWriter fileWriter, Set<String> columns, List<Map<String, String>> rows)
          throws IOException {
 
-      List<String> indexColumns = Arrays.asList(ITERATION, SLAVE_INDEX, PERIOD, THREAD_COUNT);
+      List<String> indexColumns = Arrays.asList(ITERATION, WORKER_INDEX, PERIOD, THREAD_COUNT);
 
       List<String> orderedColumns = new ArrayList<String>(indexColumns);
       orderedColumns.addAll(columns);
@@ -223,7 +223,7 @@ public class CsvReporter extends AbstractReporter {
       orderedColumns.sort(new ColumnComparator(columnOrderList));
 
       // sorts rows into correct order
-      rows.sort(new RowComparator(Arrays.asList(SLAVE_INDEX, ITERATION, PERIOD, THREAD_COUNT)));
+      rows.sort(new RowComparator(Arrays.asList(WORKER_INDEX, ITERATION, PERIOD, THREAD_COUNT)));
 
       for (String column : orderedColumns) {
          fileWriter.write(column);
@@ -242,28 +242,28 @@ public class CsvReporter extends AbstractReporter {
       }
    }
 
-   private static class ValueAndSlave implements Comparable<ValueAndSlave> {
+   private static class ValueAndWorker implements Comparable<ValueAndWorker> {
       Timeline.Value value;
-      int slaveIndex;
+      int workerIndex;
 
-      private ValueAndSlave(Timeline.Value value, int slaveIndex) {
+      private ValueAndWorker(Timeline.Value value, int workerIndex) {
          this.value = value;
-         this.slaveIndex = slaveIndex;
+         this.workerIndex = workerIndex;
       }
 
       @Override
-      public int compareTo(ValueAndSlave o) {
+      public int compareTo(ValueAndWorker o) {
          int c = Long.compare(value.timestamp, o.value.timestamp);
-         return c == 0 ? Integer.compare(slaveIndex, o.slaveIndex) : c;
+         return c == 0 ? Integer.compare(workerIndex, o.workerIndex) : c;
       }
    }
 
    private void reportTimelines(Report report) {
       Set<Timeline.Category> allCategories = new HashSet<>();
-      int maxSlaveIndex = 0;
+      int maxWorkerIndex = 0;
       for (Timeline t : report.getTimelines()) {
          allCategories.addAll(t.getValueCategories());
-         maxSlaveIndex = Math.max(maxSlaveIndex, t.slaveIndex);
+         maxWorkerIndex = Math.max(maxWorkerIndex, t.workerIndex);
       }
       for (Timeline.Category valueCategory : allCategories) {
          FileWriter writer = null;
@@ -271,26 +271,26 @@ public class CsvReporter extends AbstractReporter {
             writer = prepareOutputFile(report, "timeline", "_" + valueCategory.getName());
             writer.write("Timestamp");
             writer.write(separator);
-            for (int i = 0; i <= maxSlaveIndex; ++i) {
-               writer.write(String.format("Slave %d%s", i, separator));
+            for (int i = 0; i <= maxWorkerIndex; ++i) {
+               writer.write(String.format("Worker %d%s", i, separator));
             }
             writer.write('\n');
-            List<ValueAndSlave> values = new ArrayList<ValueAndSlave>();
+            List<ValueAndWorker> values = new ArrayList<ValueAndWorker>();
             for (Timeline t : report.getTimelines()) {
                List<Timeline.Value> list = t.getValues(valueCategory);
                if (list == null)
                   continue;
                for (Timeline.Value v : list) {
-                  values.add(new ValueAndSlave(v, t.slaveIndex));
+                  values.add(new ValueAndWorker(v, t.workerIndex));
                }
             }
             Collections.sort(values);
             long currTimestamp = Long.MIN_VALUE;
             int nextIndex = -1;
-            for (ValueAndSlave vas : values) {
+            for (ValueAndWorker vas : values) {
                if (currTimestamp != vas.value.timestamp) {
                   if (nextIndex >= 0) {
-                     for (int i = nextIndex; i <= maxSlaveIndex; ++i) {
+                     for (int i = nextIndex; i <= maxWorkerIndex; ++i) {
                         writer.write(separator);
                      }
                      writer.write('\n');
@@ -298,13 +298,13 @@ public class CsvReporter extends AbstractReporter {
                   nextIndex = 0;
                   writer.write(String.format("%d%s", vas.value.timestamp, separator));
                }
-               for (int i = nextIndex; i < vas.slaveIndex; ++i) {
+               for (int i = nextIndex; i < vas.workerIndex; ++i) {
                   writer.write(separator);
                }
                writer.write(vas.value.value.toString());
                writer.write(separator);
                currTimestamp = vas.value.timestamp;
-               nextIndex = vas.slaveIndex + 1;
+               nextIndex = vas.workerIndex + 1;
             }
          } catch (IOException e) {
             log.error("Failed to create timeline report for category " + valueCategory.getName(), e);

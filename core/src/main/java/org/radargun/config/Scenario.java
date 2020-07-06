@@ -30,7 +30,7 @@ public class Scenario implements Serializable {
 
    /**
     * @param stageClass
-    * @param properties Stage's attributes as written in configuration - evaluation takes place on slave.
+    * @param properties Stage's attributes as written in configuration - evaluation takes place on worker.
     * @param labelName  Label that should be used together with stage-defined prefix and suffix to uniquely
     *                   identify this stage in the scenario. Can be null.
     */
@@ -53,7 +53,7 @@ public class Scenario implements Serializable {
     * Get instance of stage with given ID, using additional properties (evaluable as ${foo}) from localExtras.
     *
     * @param stageId     ID of the executed stage.
-    * @param state       Master's or slave's state - used to resolve the properties.
+    * @param state       Main's or worker's state - used to resolve the properties.
     * @param localExtras Additional properties that could be used for property value resolution.
     * @param report      Report where the stage execution should be recorded.
     * @return Instance of the stage with properties set (not initialized and not injected with traits yet).

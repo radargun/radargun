@@ -43,7 +43,7 @@ public abstract class LogChecker extends Thread {
       }
    };
    protected final KeyGenerator keyGenerator;
-   protected final int slaveIndex;
+   protected final int workerIndex;
    protected final LogLogicConfiguration logLogicConfiguration;
    protected final StressorRecordPool stressorRecordPool;
    protected final FailureManager failureManager;
@@ -54,7 +54,7 @@ public abstract class LogChecker extends Thread {
    public LogChecker(String name, BackgroundOpsManager manager) {
       super(name);
       this.keyGenerator = manager.getKeyGenerator();
-      this.slaveIndex = manager.getSlaveState().getIndexInGroup();
+      this.workerIndex = manager.getWorkerState().getIndexInGroup();
       this.logLogicConfiguration = manager.getLogLogicConfiguration();
       this.stressorRecordPool = manager.getStressorRecordPool();
       this.failureManager = manager.getFailureManager();
@@ -62,16 +62,16 @@ public abstract class LogChecker extends Thread {
       this.debugableCache = manager.getDebugableCache();
    }
 
-   public static String checkerKey(int checkerSlaveId, int slaveAndThreadId) {
-      return String.format("checker_%d_%d", checkerSlaveId, slaveAndThreadId);
+   public static String checkerKey(int checkerWorkerId, int workerAndThreadId) {
+      return String.format("checker_%d_%d", checkerWorkerId, workerAndThreadId);
    }
 
-   public static String ignoredKey(int checkerSlaveId, int slaveAndThreadId) {
-      return String.format("ignored_%d_%d", checkerSlaveId, slaveAndThreadId);
+   public static String ignoredKey(int checkerWorkerId, int workerAndThreadId) {
+      return String.format("ignored_%d_%d", checkerWorkerId, workerAndThreadId);
    }
 
-   public static String lastOperationKey(int slaveAndThreadId) {
-      return String.format(LAST_OPERATION_PREFIX + "%d", slaveAndThreadId);
+   public static String lastOperationKey(int workerAndThreadId) {
+      return String.format(LAST_OPERATION_PREFIX + "%d", workerAndThreadId);
    }
 
    public void requestTerminate() {
@@ -104,7 +104,7 @@ public abstract class LogChecker extends Thread {
                }
             }
             if (record.getOperationId() == 0) {
-               Object last = basicCache.get(checkerKey(slaveIndex, record.getThreadId()));
+               Object last = basicCache.get(checkerKey(workerIndex, record.getThreadId()));
                if (last != null) {
                   LastOperation lastCheck = (LastOperation) last;
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
@@ -127,7 +127,7 @@ public abstract class LogChecker extends Thread {
                   log.tracef("Found operation %d for thread %d", record.getOperationId(), record.getThreadId());
                }
                if (record.getOperationId() % logLogicConfiguration.getCounterUpdatePeriod() == 0) {
-                  basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
+                  basicCache.put(checkerKey(workerIndex, record.getThreadId()),
                      new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
                }
                record.next();
@@ -191,7 +191,7 @@ public abstract class LogChecker extends Thread {
 
    protected boolean checkIgnoreRecord(StressorRecord record) {
       if (logLogicConfiguration.ignoreDeadCheckers) {
-         Long ignored = (Long) basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+         Long ignored = (Long) basicCache.get(ignoredKey(workerIndex, record.getThreadId()));
          if (ignored != null && record.getOperationId() <= ignored) {
             log.tracef("Operations %d - %d for thread %d are ignored", record.getOperationId(), ignored, record.getThreadId());
             while (record.getOperationId() <= ignored) {

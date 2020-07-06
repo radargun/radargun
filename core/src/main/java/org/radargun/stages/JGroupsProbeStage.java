@@ -15,7 +15,7 @@ import org.radargun.config.Stage;
 public class JGroupsProbeStage extends AbstractJGroupsProbeStage {
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
          String[] packetsResponse = run();
          for (String response : packetsResponse) {

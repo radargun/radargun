@@ -13,7 +13,7 @@ import org.radargun.stages.cache.test.BasicOperationsTestStage;
 import org.radargun.stages.cache.test.ConcurrentKeysSelector;
 import org.radargun.stages.cache.test.KeySelectorFactory;
 import org.radargun.stages.helpers.CacheSelector;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Lifecycle;
 import org.radargun.util.CacheStageRunner;
@@ -30,10 +30,10 @@ public class BasicOperationsCacheTestStageTest {
 
    public void smokeTest() throws Exception {
       CacheStageRunner stageRunner = new CacheStageRunner(1);
-      SlaveState slaveState = stageRunner.getSlaveState();
-      slaveState.put(KeyGenerator.KEY_GENERATOR, new StringKeyGenerator());
-      slaveState.put(ValueGenerator.VALUE_GENERATOR, new ByteArrayValueGenerator());
-      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
+      WorkerState workerState = stageRunner.getWorkerState();
+      workerState.put(KeyGenerator.KEY_GENERATOR, new StringKeyGenerator());
+      workerState.put(ValueGenerator.VALUE_GENERATOR, new ByteArrayValueGenerator());
+      workerState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
 
       Lifecycle lifecycle = stageRunner.getTraitImpl(Lifecycle.class);
       lifecycle.start();
@@ -52,11 +52,11 @@ public class BasicOperationsCacheTestStageTest {
       List<DistStageAck> acks = new ArrayList<>(1);
 
       long start = System.currentTimeMillis();
-      acks.add(stageRunner.executeOnSlave(basicOperationsLegacyTestStage, 0));
+      acks.add(stageRunner.executeOnWorker(basicOperationsLegacyTestStage, 0));
       long end = System.currentTimeMillis();
 
       Assert.assertTrue(end - start >= 3000);
       Assert.assertTrue(cache.size() > 0);
-      Assert.assertEquals(stageRunner.processAckOnMaster(basicOperationsLegacyTestStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(basicOperationsLegacyTestStage, acks), StageResult.SUCCESS);
    }
 }

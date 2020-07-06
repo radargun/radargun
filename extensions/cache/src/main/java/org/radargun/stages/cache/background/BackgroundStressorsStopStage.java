@@ -17,9 +17,9 @@ public class BackgroundStressorsStopStage extends AbstractDistStage {
    protected String name = BackgroundOpsManager.DEFAULT;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState, name);
+         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(workerState, name);
          if (instance != null) {
             instance.waitUntilLoaded();
             instance.stopBackgroundThreads();

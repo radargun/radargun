@@ -39,9 +39,9 @@ public class CheckTopologyStage extends AbstractDistStage {
    private TopologyHistory topologyHistory;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!shouldExecute()) {
-         log.debug("Ignoring this slave");
+         log.debug("Ignoring this worker");
          return successfulResponse();
       }
       if (checkEvents.contains(HistoryType.TOPOLOGY)) {

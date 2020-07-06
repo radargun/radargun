@@ -37,8 +37,8 @@ public class IterateStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(iterateStage, 0));
+      acks.add(stageRunner.executeOnWorker(iterateStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(iterateStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(iterateStage, acks), StageResult.SUCCESS);
    }
 }

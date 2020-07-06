@@ -72,7 +72,7 @@ public abstract class BaseTestStage extends AbstractDistStage {
          log.info("This test was executed as a warmup");
          return null;
       } else {
-         Report report = masterState.getReport();
+         Report report = mainState.getReport();
          return report.createTest(testName, iterationProperty, allowExisting);
       }
    }

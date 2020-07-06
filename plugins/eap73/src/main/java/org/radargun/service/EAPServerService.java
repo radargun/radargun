@@ -116,11 +116,11 @@ public class EAPServerService extends JavaProcessService {
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
       command.add(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + "sh").toString());
-      command.add("-Djboss.node.name=slave" + ServiceHelper.getContext().getSlaveIndex());
+      command.add("-Djboss.node.name=worker" + ServiceHelper.getContext().getWorkerIndex());
 
       command.addAll(args);
       command.add("-server-config");
-      command.add("radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
+      command.add("radargun-" + ServiceHelper.getContext().getWorkerIndex() + ".xml");
       return command;
    }
 

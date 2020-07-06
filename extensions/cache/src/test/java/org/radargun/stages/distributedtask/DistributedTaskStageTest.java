@@ -41,8 +41,8 @@ public class DistributedTaskStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(distributedTaskStage, 0));
+      acks.add(stageRunner.executeOnWorker(distributedTaskStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(distributedTaskStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(distributedTaskStage, acks), StageResult.SUCCESS);
    }
 }

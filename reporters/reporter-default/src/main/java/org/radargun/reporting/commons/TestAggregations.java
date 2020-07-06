@@ -81,16 +81,16 @@ public class TestAggregations {
       List<Integer> nodeThreads = new ArrayList<>();
       Optional<Statistics> totalStats = it.getStatistics().stream()
          .map(entry -> {
-            int slaveIndex = entry.getKey();
+            int workerIndex = entry.getKey();
             List<Statistics> list = entry.getValue();
             totalThreads.addAndGet(list.size());
             return list.stream().reduce(Statistics.MERGE).map(ns -> {
-               while (nodeStats.size() <= slaveIndex) {
+               while (nodeStats.size() <= workerIndex) {
                   nodeStats.add(null);
                   nodeThreads.add(0);
                }
-               nodeStats.set(slaveIndex, ns);
-               nodeThreads.set(slaveIndex, list.size());
+               nodeStats.set(workerIndex, ns);
+               nodeThreads.set(workerIndex, list.size());
                return ns;
             });
          })

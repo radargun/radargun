@@ -14,7 +14,7 @@ import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
- * Parent for Spark's Master & Worker lifecycles
+ * Parent for Spark's Main & Worker lifecycles
  *
  * @author Matej Cimbora
  */

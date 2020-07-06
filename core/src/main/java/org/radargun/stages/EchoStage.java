@@ -5,7 +5,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 
 @Stage(doc = "Allows to system out messages for more readable logs.")
-public class EchoStage extends AbstractMasterStage {
+public class EchoStage extends AbstractMainStage {
    @Property(optional = false, doc = "Message to be printed.")
    private String message;
 

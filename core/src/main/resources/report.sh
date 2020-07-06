@@ -22,7 +22,7 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -s              Directory with the serialized data."
   wrappedecho ""
-  wrappedecho "   -d              Debug master on given port."
+  wrappedecho "   -d              Debug main on given port."
   wrappedecho ""
   wrappedecho "   --debug-suspend Wait for the debugger to connect."
   wrappedecho ""

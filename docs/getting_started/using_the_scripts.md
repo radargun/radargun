@@ -11,25 +11,25 @@ RadarGun ships with a number of scripts to help you deploy the framework across 
 * UNIX or UNIX-like environment to run
     * Tested on Fedora and RHEL Linux
 
-* SSH with passphraseless keys installed such that the master node can connect to slaves transparently
+* SSH with passphraseless keys installed such that the main node can connect to workers transparently
     * Java, Maven and git installed and on the user's path on all of the nodes
 
 **Important**
 
-* the scripts that start master/slaves must be run from the distribution directory (i.e. one level up from `bin`). This is because the resulting processes will look up classed from `plugin` directory, and they depend on the relative location of it.
+* the scripts that start main/workers must be run from the distribution directory (i.e. one level up from `bin`). This is because the resulting processes will look up classed from `plugin` directory, and they depend on the relative location of it.
 * for all the scripts, when run `-h` argument will print a help message.
 
-### slave.sh
+### worker.sh
 
-Designed to be run for each slave on local or remote machine, to start up the local slave process. Slaves need to be aware of the IP[:port] of the master. Master must be running before starting a slave.
+Designed to be run for each worker on local or remote machine, to start up the local worker process. Workers need to be aware of the IP[:port] of the main. Main must be running before starting a worker.
 
-### master.sh
+### main.sh
 
-Designed to be run on the master node, in order to start the master
+Designed to be run on the main node, in order to start the main
 
 ### dist.sh
 
-Starts the master and then it starts all the slaves. For starting the master it relies on `master.sh`, for slaves it relies on `slave.sh`. In order to be able to start the slaves, it ssh on slaves's machine and runs `slave.sh` there. Addresses of slaves can be specified in `environment.sh`.
+Starts the main and then it starts all the workers. For starting the main it relies on `main.sh`, for workers it relies on `worker.sh`. In order to be able to start the workers, it ssh on workers's machine and runs `worker.sh` there. Addresses of workers can be specified in `environment.sh`.
 
 #### Using the dist.sh script on a single machine (Fedora 22) 
 
@@ -70,15 +70,15 @@ Starts the master and then it starts all the slaves. For starting the master it 
 
 ### environment.sh
 
-Used by other scripts to set environment variables (JVM options, binding addresses of slaves , etc.).
+Used by other scripts to set environment variables (JVM options, binding addresses of workers , etc.).
 
-### detect_slave_ips.sh
+### detect_worker_ips.sh
 
-This script helps detect slave IPs if slaves are assigned IPs using DHCP and no proper domain is set.  Assumes that the script is run on the master node, and the master node runs the DHCP server which the slaves use to obtain IPs.  Slave names are added to `/etc/hosts` so that slaves can easily be reached after running this script. This script shall be run manually, i.e. it is not called implicitly by `master.sh` or `slave.sh`.
+This script helps detect worker IPs if workers are assigned IPs using DHCP and no proper domain is set.  Assumes that the script is run on the main node, and the main node runs the DHCP server which the workers use to obtain IPs.  Worker names are added to `/etc/hosts` so that workers can easily be reached after running this script. This script shall be run manually, i.e. it is not called implicitly by `main.sh` or `worker.sh`.
 
 ### ssh_key_acceptor.sh
 
-Useful when slaves are reprovisioned each time, e.g., using PXE boot and kickstart.  This adds each slave's SSH keys/fingerprints to the local user's SSH `known_hosts` file so that the user isn't prompted to accept the fingerprint the first time an SSH connection is made.
+Useful when workers are reprovisioned each time, e.g., using PXE boot and kickstart.  This adds each worker's SSH keys/fingerprints to the local user's SSH `known_hosts` file so that the user isn't prompted to accept the fingerprint the first time an SSH connection is made.
 
 ### clean.sh
 

@@ -12,7 +12,7 @@ TEST_PROJECT=${TEST_PROJECT:-"myprojectradargun"}
 LOGIN_COMMAND=""
 RADARGUN_IMAGE=radargun
 FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
-RADARGUN_MASTER="radargun-master.${TEST_PROJECT}.svc"
+RADARGUN_MASTER="radargun-main.${TEST_PROJECT}.svc"
 CONFIG_DIR=${CONFIG_DIR:-"configs/"}
 RADARGUN_CONFIG="library-dist-reads.xml"
 DEFAULT_JAVA_OPTS="-XX:+UseG1GC -verbose:gc -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
@@ -39,8 +39,8 @@ help_and_exit() {
   wrappedecho '  -L LOGIN_COMMAND' 'Login command specific to your OpenShift provider. Defaults to empty string. Must start with oc. Applicable to login command.'
   wrappedecho "  -cd CONFIG_DIR" "Directory with confiration files for RadarGun and its plugins. Defaults to configs/. Applicable to deploy command."
   wrappedecho "  -cf CONFIG_FILE" "RadarGun benchmark file. Must be placed in CONFIG_DIR. Defaults to library-dist-reads.xml. Applicable to deploy command."
-  wrappedecho "  -s NUMBER_OF_SLAVES" "Number of RadarGun slaves. Defaults to 2. Applicable to deploy command."
-  wrappedecho "  -j CUSTOM_JAVA_OPTS" "Custom JAVA_OPTS that will be passed to the slave and master process JVM. Applicable to deploy command."
+  wrappedecho "  -s NUMBER_OF_SLAVES" "Number of RadarGun workers. Defaults to 2. Applicable to deploy command."
+  wrappedecho "  -j CUSTOM_JAVA_OPTS" "Custom JAVA_OPTS that will be passed to the worker and main process JVM. Applicable to deploy command."
   wrappedecho "  -m TOTAL_CONTAINER_MEM_SLAVE" "Total container memory for Slave containers. Defaults to 1024MiB. Applicable to deploy command."
   exit 0
 }
@@ -127,8 +127,8 @@ function create_config_map {
 
 function purge_project {
     oc delete all,secrets,sa,templates,configmaps,daemonsets,clusterroles,rolebindings,serviceaccounts,statefulsets --selector=template=radargun || true
-    oc delete persistentvolumeclaims --selector=application=radargun-master
-    oc delete persistentvolumeclaims --selector=application=radargun-slave
+    oc delete persistentvolumeclaims --selector=application=radargun-main
+    oc delete persistentvolumeclaims --selector=application=radargun-worker
     oc delete template radargun || true
 }
 

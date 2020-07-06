@@ -7,7 +7,7 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
@@ -16,14 +16,14 @@ import org.radargun.utils.Utils;
  * Distributed stage that would validate that cluster is correctly formed.
  * <pre>
  * Algorithm:
- * - each slave does a put(slaveIndex);
- * - each slave checks whether all (or part) of the remaining slaves replicated here.
+ * - each worker does a put(workerIndex);
+ * - each worker checks whether all (or part) of the remaining workers replicated here.
  *
  * Config:
- *   - 'partialReplication' : is set to true, then the slave will consider that the cluster is formed when one slave
+ *   - 'partialReplication' : is set to true, then the worker will consider that the cluster is formed when one worker
  *      replicated here. If false (default value) then replication will only be considered successful if all
  * (clusterSize)
- *      slaves replicated here.
+ *      workers replicated here.
  * </pre>
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -34,9 +34,9 @@ public class ClusterValidationStage extends AbstractDistStage {
    private static final String KEY = "_InstallBenchmarkStage_";
    private static final String CONFIRMATION_KEY = "_confirmation_";
 
-   @Property(doc = "If set to true, then the slave will consider that the cluster is formed when one slave " +
+   @Property(doc = "If set to true, then the worker will consider that the cluster is formed when one worker " +
       "replicated the control entry. Otherwise the replication will only be considered successful if all " +
-      "slaves replicated the control value. Default is false.")
+      "workers replicated the control value. Default is false.")
    private boolean partialReplication = false;
 
    @Property(doc = "How many times we should try to retrieve the control entry.")
@@ -50,7 +50,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private BasicOperations.Cache cache;
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
          if (!isServiceRunning()) {
             log.info("Missing wrapper, not participating on validation");
@@ -59,31 +59,31 @@ public class ClusterValidationStage extends AbstractDistStage {
          cache = basicOperations.getCache(null);
          int replResult = checkReplicationSeveralTimes();
          if (!partialReplication) {
-            if (replResult > 0) {//only executes this on the slaves on which replication happened.
+            if (replResult > 0) {//only executes this on the workers on which replication happened.
                int index = confirmReplication();
                if (index >= 0) {
-                  return errorResponse("Slave with index " + index + " hasn't confirmed the replication");
+                  return errorResponse("Worker with index " + index + " hasn't confirmed the replication");
                }
             }
          } else {
             log.info("Using partial replication, skipping confirm phase");
          }
-         return new ReplicationAck(slaveState, replResult);
+         return new ReplicationAck(workerState, replResult);
       } catch (Exception e) {
          return errorResponse("Exception thrown", e);
       }
    }
 
    private int confirmReplication() throws Exception {
-      cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
-      for (int i : getExecutingSlaves()) {
+      cache.put(confirmationKey(workerState.getWorkerIndex()), "true");
+      for (int i : getExecutingWorkers()) {
          for (int j = 0; j < 10 && (cache.get(confirmationKey(i)) == null); j++) {
             tryToPut();
-            cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
+            cache.put(confirmationKey(workerState.getWorkerIndex()), "true");
             Thread.sleep(1000);
          }
          if (cache.get(confirmationKey(i)) == null) {
-            log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowledged the test");
+            log.warn("Confirm phase unsuccessful. Worker " + i + " hasn't acknowledged the test");
             return i;
          }
       }
@@ -91,32 +91,32 @@ public class ClusterValidationStage extends AbstractDistStage {
       return -1;
    }
 
-   private String confirmationKey(int slaveIndex) {
-      return CONFIRMATION_KEY + slaveIndex;
+   private String confirmationKey(int workerIndex) {
+      return CONFIRMATION_KEY + workerIndex;
    }
 
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       logDurationInfo(acks);
       StageResult result = StageResult.SUCCESS;
       for (DistStageAck ack : acks) {
          if (ack.isError()) {
-            log.warn("Ack error from remote slave: " + ack);
+            log.warn("Ack error from remote worker: " + ack);
             result = errorResult();
          }
          if (!(ack instanceof ReplicationAck)) {
-            log.info("Slave " + ack.getSlaveIndex() + " did not sent any response");
+            log.info("Worker " + ack.getWorkerIndex() + " did not sent any response");
             continue;
          }
          ReplicationAck replicationAck = (ClusterValidationStage.ReplicationAck) ack;
          if (partialReplication) {
             if (replicationAck.result <= 0) {
-               log.warn("Replication hasn't occurred on slave: " + ack);
+               log.warn("Replication hasn't occurred on worker: " + ack);
                result = errorResult();
             }
          } else { //total replication expected
-            int expectedRepl = getExecutingSlaves().size() - 1;
+            int expectedRepl = getExecutingWorkers().size() - 1;
             if (!(replicationAck.result == expectedRepl)) {
-               log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replicationAck.result);
+               log.warn("On worker " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replicationAck.result);
                result = errorResult();
             }
          }
@@ -130,7 +130,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            cache.put(key(slaveState.getSlaveIndex()), "true");
+            cache.put(key(workerState.getWorkerIndex()), "true");
             return;
          } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
@@ -146,7 +146,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int replCount = 0;
       for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
-         if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getExecutingSlaves().size() - 1))) {
+         if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getExecutingWorkers().size() - 1))) {
             log.info("Replication test successfully passed. partialReplication? " + partialReplication + ", replicationCount = " + replCount);
             return replCount;
          }
@@ -161,11 +161,11 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int replicationCount() throws Exception {
-      int clusterSize = slaveState.getClusterSize();
+      int clusterSize = workerState.getClusterSize();
       int replicaCount = 0;
       for (int i = 0; i < clusterSize; i++) {
-         int currentSlaveIndex = slaveState.getSlaveIndex();
-         if (i == currentSlaveIndex) {
+         int currentWorkerIndex = workerState.getWorkerIndex();
+         if (i == currentWorkerIndex) {
             continue;
          }
          Object data = tryGet(i);
@@ -193,15 +193,15 @@ public class ClusterValidationStage extends AbstractDistStage {
       return null;
    }
 
-   private String key(int slaveIndex) {
-      return KEY + slaveIndex;
+   private String key(int workerIndex) {
+      return KEY + workerIndex;
    }
 
    private static class ReplicationAck extends DistStageAck {
       final int result;
 
-      private ReplicationAck(SlaveState slaveState, int result) {
-         super(slaveState);
+      private ReplicationAck(WorkerState workerState, int result) {
+         super(workerState);
          this.result = result;
       }
    }

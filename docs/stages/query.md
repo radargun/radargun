@@ -13,7 +13,7 @@ Benchmark operations performance with enabled/disabled continuous query.
 > conditions (**mandatory**) - Conditions used in the query  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > group-by (**optional**) - Use grouping, in form [attribute][,attribute]*. Default is without grouping.  
-> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > having (**optional**) - Conditions applied to groups when using group-by, can use aggregations.  
 > limit (**optional**) - Maximum number of the results. Default is none.  
 > merge-cq (**optional**) - If multiple queries are used, specifies, if statistics should be merged in one or each CQ should keep its own statistics. Default it false.  
@@ -24,9 +24,9 @@ Benchmark operations performance with enabled/disabled continuous query.
 > projection-aggregated (**optional**) - Projection, possibly with aggregations.  
 > remove (**optional**) - Allows to remove continuous query. Default is false.  
 > reset-stats (**optional**) - Allows to reset statistics at the begining of the stage. Default is false.  
-> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
-> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
 ### query
 Stage which executes a query.
@@ -40,7 +40,7 @@ Stage which executes a query.
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > exposed-attributes (**optional**) - Full names of the attribute queried from InternalsExposition. Expecting values parse-able as long values. Default are none.  
 > group-by (**optional**) - Use grouping, in form [attribute][,attribute]*. Default is without grouping.  
-> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > having (**optional**) - Conditions applied to groups when using group-by, can use aggregations.  
 > iteration-property (**optional**) - Property, which value will be used to identify individual iterations (e.g. num-threads).  
 > limit (**optional**) - Maximum number of the results. Default is none.  
@@ -57,8 +57,7 @@ Stage which executes a query.
 > ramp-up (**optional**) - Delay to let all threads start executing operations. Default is 0.  
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
 > report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
-> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
-> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
@@ -67,13 +66,14 @@ Stage which executes a query.
 > total-threads (**optional**) - Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.  
 > transaction-size (**optional**) - Number of requests in one transaction. Default is 1.  
 > use-transactions (**optional**) - Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
 ### reindex
 Runs Queryable.reindex()
 > container (**optional**) - Container (e.g. cache or DB table) which should be reindex. Default is the default container.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
-> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.  
-> roles (**optional**) - Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
-> slaves (**optional**) - Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > test (**optional**) - Test under which performance of reindexing should be recorded. Default is 'reindex'.  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 

@@ -31,7 +31,7 @@ public interface DistributedTaskExecutor<T> {
       Builder<T> failoverPolicy(String failoverPolicy);
 
       /**
-       * // TODO we should rather set list of slave ids where this should be executed
+       * // TODO we should rather set list of worker ids where this should be executed
        * @param nodeAddress Describes target node in plugin-specific way.
        * @return
        */

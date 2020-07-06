@@ -11,14 +11,14 @@ import org.radargun.config.Cluster;
  */
 public class NormalizedConfigDocument extends HtmlDocument {
    private SortedMap<String, SortedMap<Integer, String>> properties = new TreeMap<>();
-   private Set<Integer> slaves;
+   private Set<Integer> workers;
 
    public NormalizedConfigDocument(String directory, String configName, String groupName, Cluster cluster, String config,
-                                   Map<Integer, Map<String, Properties>> configs, Set<Integer> slaves) {
+                                   Map<Integer, Map<String, Properties>> configs, Set<Integer> workers) {
       super(directory, getFilename(configName, groupName, cluster, config), getTitle(configName, groupName, cluster, config));
-      this.slaves = slaves;
+      this.workers = workers;
       for (Map.Entry<Integer, Map<String, Properties>> entry : configs.entrySet()) {
-         if (slaves.contains(entry.getKey())) {
+         if (workers.contains(entry.getKey())) {
             Properties p = entry.getValue().get(config);
             if (p != null) {
                for (Map.Entry<Object, Object> property : p.entrySet()) {
@@ -52,8 +52,8 @@ public class NormalizedConfigDocument extends HtmlDocument {
       return properties;
    }
 
-   public Set<Integer> getSlaves() {
-      return slaves;
+   public Set<Integer> getWorkers() {
+      return workers;
    }
 
    public boolean checkForDifference(List<String> values) {

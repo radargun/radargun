@@ -37,8 +37,8 @@ public class MapReduceStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(mapReduceStage, 0));
+      acks.add(stageRunner.executeOnWorker(mapReduceStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(mapReduceStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(mapReduceStage, acks), StageResult.SUCCESS);
    }
 }

@@ -38,14 +38,14 @@ public class ServiceStopStage extends AbstractDistStage {
       "Default is false.")
    private boolean waitForDelayed = false;
 
-   public DistStageAck executeOnSlave() {
-      log.info("Received stop request from master...");
+   public DistStageAck executeOnWorker() {
+      log.info("Received stop request from main...");
       if (waitForDelayed) {
-         Thread t = (Thread) slaveState.get(STOP_DELAY_THREAD);
+         Thread t = (Thread) workerState.get(STOP_DELAY_THREAD);
          if (t != null) {
             try {
                t.join();
-               slaveState.remove(STOP_DELAY_THREAD);
+               workerState.remove(STOP_DELAY_THREAD);
             } catch (InterruptedException e) {
                return errorResponse("Interrupted while waiting for kill to be finished.", e);
             }
@@ -66,21 +66,21 @@ public class ServiceStopStage extends AbstractDistStage {
                   if (lifecycle == null || !lifecycle.isRunning()) {
                      log.info("The service on this node is not running or cannot be stopped");
                   } else {
-                     LifecycleHelper.stop(slaveState, graceful, async, gracefulStopTimeout);
+                     LifecycleHelper.stop(workerState, graceful, async, gracefulStopTimeout);
                   }
                }
             };
-            slaveState.put(STOP_DELAY_THREAD, t);
+            workerState.put(STOP_DELAY_THREAD, t);
             t.start();
          } else {
             if (lifecycle == null || !lifecycle.isRunning()) {
                log.info("The service on this node is not running or cannot be stopped");
             } else {
-               LifecycleHelper.stop(slaveState, graceful, async);
+               LifecycleHelper.stop(workerState, graceful, async);
             }
          }
       } else {
-         log.info("Ignoring stop request, not targeted for this slave");
+         log.info("Ignoring stop request, not targeted for this worker");
       }
       return successfulResponse();
    }

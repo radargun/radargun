@@ -48,7 +48,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
       complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = new CacheSelector.Default();
 
-   @Property(doc = "This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.")
+   @Property(doc = "This option forces local loading of all keys on all workers in this group (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;
 
    @Property(doc = "If set to true, the entries are removed instead of being inserted. Default is false.")
@@ -91,15 +91,15 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
          }
       }
 
-      slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
-      slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
-      slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
+      workerState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+      workerState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
+      workerState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
    }
 
    protected Loader createLoader(int threadBase, int threadIndex) {
       String cacheName = cacheSelector.getCacheName(threadBase + threadIndex);
       boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
-      int totalThreads = (loadAllKeys ? 1 : getExecutingSlaves().size()) * numThreads;
+      int totalThreads = (loadAllKeys ? 1 : getExecutingWorkers().size()) * numThreads;
       int globalThreadIndex = loadAllKeys ? threadIndex : threadBase + threadIndex;
       LoaderIds loaderIds = new RangeIds(keyIdOffset + numEntries * globalThreadIndex / totalThreads, keyIdOffset + numEntries * (globalThreadIndex + 1) / totalThreads);
       if (batchSize > 0) {

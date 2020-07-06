@@ -7,7 +7,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.state.ServiceListener;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.Killable;
 import org.radargun.traits.Lifecycle;
@@ -29,47 +29,47 @@ public class LifecycleHelper {
    /**
     * Starts the service. If the service supports {@link Clustered} trait and {@code validate} is
     * set to true, the method waits until {@link org.radargun.traits.Clustered#getMembers()
-    * clustered trait} reports {@code expectedSlaves} slaves or for {@code clusterFormationTimeout}
+    * clustered trait} reports {@code expectedWorkers} workers or for {@code clusterFormationTimeout}
     * milliseconds. If the service supports {@link Partitionable} trait, the set of
-    * {@code reachable} slaves is set up before the service is started. Also, this method calls the
-    * {@link ServiceListener service listeners} on {@link SlaveState}. If the start fails, attempt
+    * {@code reachable} workers is set up before the service is started. Also, this method calls the
+    * {@link ServiceListener service listeners} on {@link WorkerState}. If the start fails, attempt
     * to stop the service is executed.
     *
-    * @param slaveState
+    * @param workerState
     * @param validate
-    * @param expectedSlaves
+    * @param expectedWorkers
     * @param clusterFormationTimeout
     * @param reachable
     */
-   public static void start(SlaveState slaveState, boolean validate, Integer expectedSlaves,
+   public static void start(WorkerState workerState, boolean validate, Integer expectedWorkers,
                             long clusterFormationTimeout, Set<Integer> reachable) {
-      Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
-      Clustered clustered = slaveState.getTrait(Clustered.class);
-      Partitionable partitionable = slaveState.getTrait(Partitionable.class);
+      Lifecycle lifecycle = workerState.getTrait(Lifecycle.class);
+      Clustered clustered = workerState.getTrait(Clustered.class);
+      Partitionable partitionable = workerState.getTrait(Partitionable.class);
       try {
          if (partitionable != null) {
-            partitionable.setStartWithReachable(slaveState.getSlaveIndex(), reachable);
+            partitionable.setStartWithReachable(workerState.getWorkerIndex(), reachable);
          }
-         for (ServiceListener listener : slaveState.getListeners()) {
+         for (ServiceListener listener : workerState.getListeners()) {
             listener.beforeServiceStart();
          }
          long startingTime = TimeService.currentTimeMillis();
          lifecycle.start();
          long startedTime = TimeService.currentTimeMillis();
-         slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE,
+         workerState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE,
                new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
          if (validate && clustered != null) {
 
-            int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
+            int expectedNumberOfWorkers = expectedWorkers != null ? expectedWorkers : workerState.getGroupSize();
 
             long clusterFormationDeadline = TimeService.currentTimeMillis() + clusterFormationTimeout;
             for (;;) {
                Collection<Clustered.Member> members = clustered.getMembers();
-               String msg = "No members found in the cluster. Expected: " + expectedNumberOfSlaves;
-               if (members == null || members.size() != expectedNumberOfSlaves) {
+               String msg = "No members found in the cluster. Expected: " + expectedNumberOfWorkers;
+               if (members == null || members.size() != expectedNumberOfWorkers) {
                   if (members != null) {
                      msg = "(" + members + ") Number of members=" + members.size() + " is not the one expected: "
-                           + expectedNumberOfSlaves;
+                           + expectedNumberOfWorkers;
                   }
                   log.info(msg);
                   try {
@@ -91,7 +91,7 @@ public class LifecycleHelper {
                }
             }
          }
-         for (ServiceListener listener : slaveState.getListeners()) {
+         for (ServiceListener listener : workerState.getListeners()) {
             try {
                listener.afterServiceStart();
             } catch (Exception e) {
@@ -114,23 +114,23 @@ public class LifecycleHelper {
     * set to false, this trait is used to kill the service instead of stopping it. Also,
     * non-graceful stop can be executed asynchronously using
     * {@link org.radargun.traits.Killable#killAsync()}. This method calls the {@link ServiceListener
-    * service listeners} on {@link SlaveState}.
+    * service listeners} on {@link WorkerState}.
     *
-    * @param slaveState
+    * @param workerState
     * @param graceful
     * @param async
     */
-   public static void stop(SlaveState slaveState, boolean graceful, boolean async) {
-      stop(slaveState, graceful, async, 0);
+   public static void stop(WorkerState workerState, boolean graceful, boolean async) {
+      stop(workerState, graceful, async, 0);
    }
 
-   public static void stop(SlaveState slaveState, boolean graceful, boolean async, long gracefulStopTimeout) {
-      final Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
+   public static void stop(WorkerState workerState, boolean graceful, boolean async, long gracefulStopTimeout) {
+      final Lifecycle lifecycle = workerState.getTrait(Lifecycle.class);
       if (lifecycle == null)
          throw new IllegalArgumentException();
-      Killable killable = slaveState.getTrait(Killable.class);
+      Killable killable = workerState.getTrait(Killable.class);
       if (lifecycle.isRunning()) {
-         for (ServiceListener listener : slaveState.getListeners()) {
+         for (ServiceListener listener : workerState.getListeners()) {
             listener.beforeServiceStop(graceful);
          }
          try {
@@ -176,15 +176,15 @@ public class LifecycleHelper {
                }
             }
             long stoppedTime = TimeService.currentTimeMillis();
-            slaveState.getTimeline().addEvent(LIFECYCLE,
+            workerState.getTimeline().addEvent(LIFECYCLE,
                   new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
          } finally {
-            for (ServiceListener listener : slaveState.getListeners()) {
+            for (ServiceListener listener : workerState.getListeners()) {
                listener.afterServiceStop(graceful);
             }
          }
       } else {
-         log.info("No cache wrapper deployed on this slave, nothing to do.");
+         log.info("No cache wrapper deployed on this worker, nothing to do.");
       }
    }
 

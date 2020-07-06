@@ -7,7 +7,7 @@ package org.radargun.config;
  */
 public abstract class ConfigParser {
 
-   public abstract MasterConfig parseConfig(String config) throws Exception;
+   public abstract MainConfig parseConfig(String config) throws Exception;
 
    public static ConfigParser getConfigParser() {
       return new DomConfigParser();

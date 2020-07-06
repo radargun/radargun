@@ -32,7 +32,7 @@ interface ConfigSchema {
    String ELEMENT_ENVIRONMENT = "environment";
    String ELEMENT_GROUP = "group";
    String ELEMENT_INIT = "init";
-   String ELEMENT_MASTER = "master";
+   String ELEMENT_MAIN = "main";
    String ELEMENT_REPEAT = "repeat";
    String ELEMENT_REPORT = "report";
    String ELEMENT_REPORTER = "reporter";

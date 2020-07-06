@@ -23,9 +23,9 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
    public boolean waitForProgress = false;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (name != null) {
-         BackgroundOpsManager manager = BackgroundOpsManager.getInstance(slaveState, name);
+         BackgroundOpsManager manager = BackgroundOpsManager.getInstance(workerState, name);
          if (manager == null) {
             return errorResponse("Manager '" + name + "' does not exist");
          } else {
@@ -33,7 +33,7 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
             if (response != null) return response;
          }
       } else {
-         for (BackgroundOpsManager manager : BackgroundOpsManager.getAllInstances(slaveState)) {
+         for (BackgroundOpsManager manager : BackgroundOpsManager.getAllInstances(workerState)) {
             DistStageAck response = checkManager(manager);
             if (response != null) return response;
          }

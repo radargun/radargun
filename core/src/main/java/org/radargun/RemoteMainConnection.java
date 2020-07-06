@@ -13,24 +13,24 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.ArgsHolder;
 
 /**
- * Abstracts connection to the master node from slave side.
+ * Abstracts connection to the main node from worker side.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class RemoteMasterConnection {
-   private static Log log = LogFactory.getLog(RemoteMasterConnection.class);
+public class RemoteMainConnection {
+   private static Log log = LogFactory.getLog(RemoteMainConnection.class);
 
-   private String masterHost;
-   private int masterPort;
+   private String mainHost;
+   private int mainPort;
    private SocketChannel socketChannel;
    private ByteBuffer buffer;
 
-   public RemoteMasterConnection(String masterHost, int masterPort) {
-      this.masterHost = masterHost;
-      this.masterPort = masterPort;
+   public RemoteMainConnection(String mainHost, int mainPort) {
+      this.mainHost = mainHost;
+      this.mainPort = mainPort;
       int byteBufferSize = 8192;
       try {
-         byteBufferSize = Integer.valueOf(System.getProperty("slave.bufsize", "8192"));
+         byteBufferSize = Integer.valueOf(System.getProperty("worker.bufsize", "8192"));
       } catch (Exception e) {
          log.error("Couldn't parse byte buffer size, keeping default", e);
       }
@@ -38,15 +38,15 @@ public class RemoteMasterConnection {
    }
 
    /**
-    * Connects to the master node, sending requested slave ID.
+    * Connects to the main node, sending requested worker ID.
     *
-    * @param slaveIndex
-    * @return Local address of the slave.
+    * @param workerIndex
+    * @return Local address of the worker.
     * @throws IOException
     */
-   public InetAddress connectToMaster(int slaveIndex) throws IOException {
-      InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
-      log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
+   public InetAddress connectToMain(int workerIndex) throws IOException {
+      InetSocketAddress socketAddress = new InetSocketAddress(mainHost, mainPort);
+      log.info("Attempting to connect to main " + mainHost + ":" + mainPort);
       for (int i = 0; ; ++i) {
          try {
             socketChannel = SocketChannel.open();
@@ -61,14 +61,14 @@ public class RemoteMasterConnection {
                Thread.sleep(2000);
             } catch (InterruptedException interruptedException) {
                Thread.currentThread().interrupt();
-               log.warn("Slave thread interrupted", interruptedException);
+               log.warn("Worker thread interrupted", interruptedException);
             }
          }
       }
-      log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
+      log.info("Successfully established connection with main at: " + mainHost + ":" + mainPort);
 
       buffer.clear();
-      buffer.putInt(slaveIndex);
+      buffer.putInt(workerIndex);
       UUID uuid = ArgsHolder.getUuid();
       if (uuid == null) {
          buffer.putLong(0);
@@ -83,20 +83,20 @@ public class RemoteMasterConnection {
    }
 
    /**
-    * Receives final slave ID. Should be called after successful connectToMaster() call.
+    * Receives final worker ID. Should be called after successful connectToMain() call.
     * @return
     * @throws IOException
     */
-   public int receiveSlaveIndex() throws IOException {
+   public int receiveWorkerIndex() throws IOException {
       return readInt();
    }
 
    /**
-    * Receives total number of connected slaves. Should be called after receiveSlaveIndex().
+    * Receives total number of connected workers. Should be called after receiveWorkerIndex().
     * @return
     * @throws IOException
     */
-   public int receiveSlaveCount() throws IOException {
+   public int receiveWorkerCount() throws IOException {
       return readInt();
    }
 
@@ -124,7 +124,7 @@ public class RemoteMasterConnection {
    }
 
    /**
-    * Receive any (serializable) object from the master node.
+    * Receive any (serializable) object from the main node.
     * @return
     * @throws IOException
     */
@@ -150,9 +150,9 @@ public class RemoteMasterConnection {
    }
 
    /**
-    * Send any serializable object to the master node.
+    * Send any serializable object to the main node.
     * @param obj
-    * @param nextUuid UUID of the next generation of slaves, or null if this slave will continue
+    * @param nextUuid UUID of the next generation of workers, or null if this worker will continue
     * @throws IOException
     */
    public void sendObject(Serializable obj, UUID nextUuid) throws IOException {
@@ -165,10 +165,10 @@ public class RemoteMasterConnection {
          buffer = SerializationHelper.appendLong(nextUuid.getMostSignificantBits(), buffer);
          buffer = SerializationHelper.appendLong(nextUuid.getLeastSignificantBits(), buffer);
       }
-      log.trace("Sending a message to the master, message has " + buffer.position() + " bytes.");
+      log.trace("Sending a message to the main, message has " + buffer.position() + " bytes.");
       buffer.flip();
       while (buffer.hasRemaining()) socketChannel.write(buffer);
-      log.info("Message successfully sent to the master");
+      log.info("Message successfully sent to the main");
    }
 
    public void release() throws IOException {

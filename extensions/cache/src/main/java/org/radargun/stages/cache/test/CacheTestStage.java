@@ -22,15 +22,15 @@ public abstract class CacheTestStage extends TestStage {
    @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
    protected Fuzzy<Integer> entrySize = Fuzzy.uniform(1000);
 
-   @Property(doc = "Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.",
+   @Property(doc = "Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from worker state.",
       complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = null;
 
-   @Property(doc = "Generator of values used in the test. By default the generator is retrieved from slave state.",
+   @Property(doc = "Generator of values used in the test. By default the generator is retrieved from worker state.",
       complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = null;
 
-   @Property(doc = "Selects which caches will be used in the test. By default the selector is retrieved from slave state.",
+   @Property(doc = "Selects which caches will be used in the test. By default the selector is retrieved from worker state.",
       complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = null;
 
@@ -40,32 +40,32 @@ public abstract class CacheTestStage extends TestStage {
    @Override
    protected void prepare() {
       if (keyGenerator == null) {
-         keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+         keyGenerator = (KeyGenerator) workerState.get(KeyGenerator.KEY_GENERATOR);
          if (keyGenerator == null) {
             throw new IllegalStateException("Key generator was not specified and no key generator was used before.");
          }
       } else {
-         slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+         workerState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       }
       log.info("Using key generator " + keyGenerator.getClass().getName() + PropertyHelper.toString(keyGenerator));
 
       if (valueGenerator == null) {
-         valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
+         valueGenerator = (ValueGenerator) workerState.get(ValueGenerator.VALUE_GENERATOR);
          if (valueGenerator == null) {
             throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
          }
       } else {
-         slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
+         workerState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       }
       log.info("Using value generator " + valueGenerator.getClass().getName() + PropertyHelper.toString(valueGenerator));
 
       if (cacheSelector == null) {
-         cacheSelector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+         cacheSelector = (CacheSelector) workerState.get(CacheSelector.CACHE_SELECTOR);
          if (cacheSelector == null) {
             throw new IllegalStateException("No cache selector defined.");
          }
       } else {
-         slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
+         workerState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
       }
       log.info("Using cache selector " + cacheSelector);
    }

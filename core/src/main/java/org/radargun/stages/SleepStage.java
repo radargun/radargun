@@ -12,7 +12,7 @@ import org.radargun.utils.TimeConverter;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Stage(doc = "Sleeps specified number of milliseconds.")
-public class SleepStage extends AbstractMasterStage {
+public class SleepStage extends AbstractMainStage {
 
    @Property(optional = false, converter = TimeConverter.class, doc = "Sleep duration.")
    public long time;

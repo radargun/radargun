@@ -55,10 +55,10 @@ public class ThreadManager {
       if (backgroundStressorLogicConfiguration.isNoLoading()) {
          manager.setLoaded(true);
       }
-      if (backgroundStressorLogicConfiguration.loadDataOnSlaves != null
-         && !backgroundStressorLogicConfiguration.loadDataOnSlaves.isEmpty()
-         && !backgroundStressorLogicConfiguration.loadDataOnSlaves.contains(manager.getSlaveState().getSlaveIndex())) {
-         log.info("This slave is not loading any data");
+      if (backgroundStressorLogicConfiguration.loadDataOnWorkers != null
+         && !backgroundStressorLogicConfiguration.loadDataOnWorkers.isEmpty()
+         && !backgroundStressorLogicConfiguration.loadDataOnWorkers.contains(manager.getWorkerState().getWorkerIndex())) {
+         log.info("This worker is not loading any data");
          return;
       }
       if (stressorThreads != null) {
@@ -355,7 +355,7 @@ public class ThreadManager {
       @Override
       public void run() {
          try {
-            manager.getBasicCache().put("__keepAlive_" + manager.getSlaveState().getIndexInGroup(), TimeService.currentTimeMillis());
+            manager.getBasicCache().put("__keepAlive_" + manager.getWorkerState().getIndexInGroup(), TimeService.currentTimeMillis());
          } catch (Exception e) {
             log.error("Failed to place keep alive timestamp", e);
          }

@@ -49,7 +49,7 @@
           <#if results?api.get(report)?size == 0>
             <#assign nodeCount = 0 />
           <#else>
-            <#assign nodeCount = results?api.get(report)?first.slaveResults?size />
+            <#assign nodeCount = results?api.get(report)?first.workerResults?size />
           </#if>
 
           <tr>
@@ -87,11 +87,11 @@
                 <#assign dataCount = 0>
 
                 <#list results?api.get(report) as result>
-                  <#assign slaveResult = (result.slaveResults?api.get(node))! />
-                  <#if slaveResult?? && slaveResult.value??>
+                  <#assign workerResult = (result.workerResults?api.get(node))! />
+                  <#if workerResult?? && workerResult.value??>
                     <#assign rowClass = testReport.rowClass(result.suspicious) />
                     <td class="${rowClass}">
-                      ${slaveResult.value}
+                      ${workerResult.value}
                     </td>
                   <#else >
                     <td/>

@@ -40,7 +40,7 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
    private Clustered clustered;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return successfulResponse();
       }

@@ -8,7 +8,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -43,7 +43,7 @@ public class WriteSkewCheckStage extends CheckStage {
    private Transactional transactional;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       BasicOperations.Cache cache = basicOperations.getCache(null);
       if (!testNull) {
          try {
@@ -89,12 +89,12 @@ public class WriteSkewCheckStage extends CheckStage {
       } catch (Exception e) {
          return errorResponse("Failed to insert first value", e);
       }
-      return new Counters(slaveState, totalCounter.get(), skewCounter.get(), ispnCounter);
+      return new Counters(workerState, totalCounter.get(), skewCounter.get(), ispnCounter);
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       long sumIncrements = 0;
@@ -107,7 +107,7 @@ public class WriteSkewCheckStage extends CheckStage {
       }
       log.infof("Total increments: %d, Skews: %d, DB value: %d", sumIncrements, sumSkews, maxValue);
       if (maxValue + sumSkews != sumIncrements) {
-         log.errorf("Database contains value %d but slaves report %d successful increments",
+         log.errorf("Database contains value %d but workers report %d successful increments",
             maxValue, sumIncrements - sumSkews);
          return errorResult();
       } else {
@@ -121,8 +121,8 @@ public class WriteSkewCheckStage extends CheckStage {
       long skewCounter;
       long ispnCounter;
 
-      private Counters(SlaveState slaveState, long totalCounter, long skewCounter, long ispnCounter) {
-         super(slaveState);
+      private Counters(WorkerState workerState, long totalCounter, long skewCounter, long ispnCounter) {
+         super(workerState);
          this.totalCounter = totalCounter;
          this.skewCounter = skewCounter;
          this.ispnCounter = ispnCounter;

@@ -27,16 +27,16 @@
                <div class="graphDiv"
                     style="width: ${timelineDocument.getConfiguration().width}; height: ${timelineDocument.getConfiguration().height}; ">
                   <#list timelineDocument.getTimelines() as timeline>
-                     <#assign valueChartFile = timelineDocument.getValueChartFile(valueCategoryId, timeline.slaveIndex) />
-                     <img class="topLeft" id="layer_${valueCategoryId}_${timeline.slaveIndex}" src="${valueChartFile}">
+                     <#assign valueChartFile = timelineDocument.getValueChartFile(valueCategoryId, timeline.workerIndex) />
+                     <img class="topLeft" id="layer_${valueCategoryId}_${timeline.workerIndex}" src="${valueChartFile}">
 
                      <#list timeline.getEventCategories() as eventCategory>
                         <#assign events = timeline.getEvents(eventCategory)!false />
                         <#if !events?is_boolean>
                            <#assign eventCategoryId = timelineDocument.getEventCategories()[eventCategory] />
-                           <#assign eventChartFile = timelineDocument.generateEventChartFile(eventCategoryId, timeline.slaveIndex) />
+                           <#assign eventChartFile = timelineDocument.generateEventChartFile(eventCategoryId, timeline.workerIndex) />
                            <img class="topLeft"
-                                id="layer_${valueCategoryId}_${timelineDocument.eventCategories[eventCategory]}_${timeline.slaveIndex}"
+                                id="layer_${valueCategoryId}_${timelineDocument.eventCategories[eventCategory]}_${timeline.workerIndex}"
                                 src="${eventChartFile}">
                         </#if>
                      </#list>
@@ -72,19 +72,19 @@
       <#assign groups = timelineDocument.getCluster().getGroups() />
       <#list timelineDocument.getTimelines() as timeline>
          <span style="background-color: ${timelineDocument.getCheckboxColor(timeline)}">&nbsp</span>
-         <input type="checkbox" checked="checked" id="slave_${timeline.slaveIndex}"
+         <input type="checkbox" checked="checked" id="worker_${timeline.workerIndex}"
                 onclick="${resetDisplayTimeline(timeline)}">
-         <#if (timeline.slaveIndex >= 0)>
+         <#if (timeline.workerIndex >= 0)>
             <strong>
                Slave
                <#if (groups?size > 1)>
-                  ${timeline.slaveIndex} ${timelineDocument.getCluster().getGroup(timeline.slaveIndex).name}
+                  ${timeline.workerIndex} ${timelineDocument.getCluster().getGroup(timeline.workerIndex).name}
                <#else>
-                  ${timeline.slaveIndex}
+                  ${timeline.workerIndex}
                </#if>
             </strong> <br/>
          <#else>
-            <strong>Master</strong><br>
+            <strong>Main</strong><br>
          </#if>
       </#list>
       <#if (groups?has_content) >
@@ -103,8 +103,8 @@
    <#local result = "" />
    <#list timelineDocument.timelines as timeline>
       <#list timelineDocument.valueCategories?values as valuesId>
-      <#local result = result + (String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('slave_%d'), 'block');",
-         valuesId, value, timeline.slaveIndex, timeline.slaveIndex)) />
+      <#local result = result + (String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('worker_%d'), 'block');",
+         valuesId, value, timeline.workerIndex, timeline.workerIndex)) />
       </#list>
    </#list>
    <#return result/>
@@ -114,10 +114,10 @@
    <#local result = "" />
    <#list timelineDocument.valueCategories?values as valuesId>
       <#local result = result + (String.format("reset_display('layer_%d_%d', this.checked, 'block');",
-         valuesId, timeline.slaveIndex)) />
+         valuesId, timeline.workerIndex)) />
       <#list timelineDocument.eventCategories?values as eventsId>
          <#local result = result + (String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('cat_%d'), 'block');",
-            valuesId, eventsId, timeline.slaveIndex, eventsId)) />
+            valuesId, eventsId, timeline.workerIndex, eventsId)) />
       </#list>
    </#list>
    <#return result/>
@@ -125,11 +125,11 @@
 
 <#function resetDisplayGroup groups groupId>
    <#local result = "" />
-   <#list timelineDocument.cluster.getSlaves(groups?api.get(groupId).name) as slaveIndex>
+   <#list timelineDocument.cluster.getSlaves(groups?api.get(groupId).name) as workerIndex>
       <#list timelineDocument.valueCategories?values as valuesId>
-         <#local result = result + (String.format("document.getElementById('slave_%d').checked = this.checked;", slaveIndex)) />
+         <#local result = result + (String.format("document.getElementById('worker_%d').checked = this.checked;", workerIndex)) />
          <#local result = result + String.format("reset_display('layer_%d_%d', this.checked, 'block');",
-            valuesId, slaveIndex) />
+            valuesId, workerIndex) />
       </#list>
    </#list>
    <#return result/>

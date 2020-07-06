@@ -5,7 +5,7 @@ import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.Collection;
 
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.testng.annotations.Test;
 
 /**
@@ -30,7 +30,7 @@ public class AbstractReporterTest {
    private AbstractReporter createDummyAbstractReporter(boolean skipOnStageFailures) {
       return new AbstractReporter(skipOnStageFailures) {
          @Override
-         public void run(MasterConfig masterConfig, Collection<Report> reports) {
+         public void run(MainConfig mainConfig, Collection<Report> reports) {
          }
       };
    }

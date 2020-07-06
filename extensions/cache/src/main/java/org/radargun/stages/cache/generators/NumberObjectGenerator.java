@@ -56,7 +56,7 @@ public class NumberObjectGenerator implements ValueGenerator {
          getInt = clazz.getMethod("getInt");
          getDouble = clazz.getMethod("getDouble");
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.trace("Could not initialize generator " + this, e);
       }
    }

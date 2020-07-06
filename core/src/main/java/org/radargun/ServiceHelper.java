@@ -26,7 +26,7 @@ public final class ServiceHelper {
 
    /**
     * As we expect only one service at time to be running on one node, this sets current
-    * service context (including plugin, configuration name and slave index) that can be
+    * service context (including plugin, configuration name and worker index) that can be
     * later retrieved, e.g. in some init method (annotated by
     * {@link org.radargun.config.Init}) that would not be able to retrieve this information
     * in another way.
@@ -79,7 +79,7 @@ public final class ServiceHelper {
          throw new RuntimeException("Cannot instantiate service " + serviceClassName, e);
       }
 
-      // The customProperties are evaluated only on the slave, using the extras (such as ${slave.index} etc...)
+      // The customProperties are evaluated only on the worker, using the extras (such as ${worker.index} etc...)
       Map<String, String> backupExtras = new HashMap<String, String>();
       for (Map.Entry<String, String> extra : extras.entrySet()) {
          backupExtras.put(extra.getKey(), System.getProperty(extra.getKey()));

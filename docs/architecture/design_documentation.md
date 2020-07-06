@@ -4,31 +4,31 @@
 Design documentation
 --------------------
 
-### Master and Slaves
+### Main and Workers
 
 RadarGun has two types of nodes:
 
-**Master**
+**Main**
 
-There is always only one master. This loads the configuration, controls execution of the benchmark and produces reports. The master is started as a server, slaves connect to it. No Service (tested system - see below) is started on the master.
+There is always only one main. This loads the configuration, controls execution of the benchmark and produces reports. The main is started as a server, workers connect to it. No Service (tested system - see below) is started on the main.
 
-**Slave**
+**Worker**
 
-Slaves are nodes which execute the benchmark, gather statistics and other info. The slaves start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.), there can be many slaves.
+Workers are nodes which execute the benchmark, gather statistics and other info. The workers start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.), there can be many workers.
 
->Nothing prevents execution of multiple slaves on one machine. This is convenient for benchmark development, but usually undesirable for benchmarking. Exceptions may apply, e.g. in a case when the service is single-threaded and you want to host multiple services on multi-core machine to fully utilize it.
+>Nothing prevents execution of multiple workers on one machine. This is convenient for benchmark development, but usually undesirable for benchmarking. Exceptions may apply, e.g. in a case when the service is single-threaded and you want to host multiple services on multi-core machine to fully utilize it.
 
 ### Stages
 
-This is the core concept of RadarGun since its first days. After all Slaves connect to the Master, Master starts the scenario: a sequence of steps called Stages. Master synchronizes execution of these so that in every moment each Slave executes the same stage, in parallel.
+This is the core concept of RadarGun since its first days. After all Workers connect to the Main, Main starts the scenario: a sequence of steps called Stages. Main synchronizes execution of these so that in every moment each Worker executes the same stage, in parallel.
 
-There are two types of stages: MasterStage (executed only on Master), and DistStage (distributed to the slaves). 
+There are two types of stages: MainStage (executed only on Main), and DistStage (distributed to the workers). 
 
-MasterStage has only two methods: init() and execute(), dividing the initialization of class and actual execution of the stage.
+MainStage has only two methods: init() and execute(), dividing the initialization of class and actual execution of the stage.
 
-In DistStage, after the stage is initialized by initOnMaster() or initOnSlave(), the slaves run executeOnSlave(). The return value is either DistStageAck - simple acknowledgement that stage ran successfully or failed - or any serializable object extending it, usually carrying payload such as test statistics. Master collects these from all slaves and then runs processAcksOnMaster() on the master node.
+In DistStage, after the stage is initialized by initOnMain() or initOnWorker(), the workers run executeOnWorker(). The return value is either DistStageAck - simple acknowledgement that stage ran successfully or failed - or any serializable object extending it, usually carrying payload such as test statistics. Main collects these from all workers and then runs processAcksOnMain() on the main node.
 
-The stages have Properties configurable from the benchmark configuration file. The Properties are evaluated on the target node (Master or Slave) and the value can differ on each node (this is useful for example if it contains some file-system path). RadarGun can automatically convert basic types such as primitives, or collections of primitives, you can define simple converters from strings or complex converters from XML (note: this is very new feature).
+The stages have Properties configurable from the benchmark configuration file. The Properties are evaluated on the target node (Main or Worker) and the value can differ on each node (this is useful for example if it contains some file-system path). RadarGun can automatically convert basic types such as primitives, or collections of primitives, you can define simple converters from strings or complex converters from XML (note: this is very new feature).
 
 The XSD schema for the configuration XML is generated in each build of RadarGun by scanning the properties on stages, therefore, the documentation can be always up to date with sources. Also a Wiki documentation generator is available for presentation here, in the Markdown syntax.
 
@@ -50,19 +50,19 @@ The service name here is only symbolic; each plugin contains the file `conf/plug
 
     service.my_service=com.my.Service
 
-Subsequent executions of a benchmark scenario with different configuration is achieved by restarting the slave process, setting classpath anew. This guarantees that there won't be any leaked threads or memory leaks from the previous run, code is JITed again, and allows to change JVM arguments. Slaves are restarted when the cluster size is changing, too.
+Subsequent executions of a benchmark scenario with different configuration is achieved by restarting the worker process, setting classpath anew. This guarantees that there won't be any leaked threads or memory leaks from the previous run, code is JITed again, and allows to change JVM arguments. Workers are restarted when the cluster size is changing, too.
 
 >Previous versions of RadarGun used classloader isolation and were aggresively shutting down leaked threads, but this was found too unreliable and the practice was discontinued.
 
 ### Statistics and Reporters
 
-The statistics (values measured and events detected) obtained throughout the benchmark processing are stored in-memory on the Master node until all configurations (cluster sizes x configurations) are executed. Then these are passed to each of the configured reporters in order to create the desired output.
+The statistics (values measured and events detected) obtained throughout the benchmark processing are stored in-memory on the Main node until all configurations (cluster sizes x configurations) are executed. Then these are passed to each of the configured reporters in order to create the desired output.
 
 Methods on Traits that should be benchmarked are called Operations. The Trait provides a constants `Operation` (uniquely identified with a name in form TraitName.MethodName) passed to the statistics to identify these methods. 
 
 > In some scenarios, we need to denote a special version of this operation (to be distinguished in the statistics) - Operation.derive() method can be used to create a suffixed version of this operation.
 
-Usually each thread on slave operates on private instance of statistics, the statistics from multiple threads and subsequently slaves can be merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, provided that parameters of the stage execution ar the same. The results of a Test from different service configurations can be later compared against each other in the reporter.
+Usually each thread on worker operates on private instance of statistics, the statistics from multiple threads and subsequently workers can be merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, provided that parameters of the stage execution ar the same. The results of a Test from different service configurations can be later compared against each other in the reporter.
 If the results are expected to change during the Test execution (e.g. because we increase the number of testing threads, or the amount of data stored in the service grows), we can split the test into Iterations - this is more convenient and allows better presentation than using distinct Tests (chack `repeat` stage).
 
 > Many tests provide an option to append test results to previous iteration of the same stage, check `amend-test` parameter

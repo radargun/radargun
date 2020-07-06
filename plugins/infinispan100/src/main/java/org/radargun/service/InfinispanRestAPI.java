@@ -18,7 +18,7 @@ import org.radargun.logging.LogFactory;
 
 /**
  * <p> RestClient to consume Infinispan REST API to interact with the Cache Manager and obtain cluster and usage statistics. </p>
- * <p> @see <a href="https://github.com/infinispan/infinispan/blob/master/documentation/src/main/asciidoc/topics/rest_api_v2.adoc#cache-manager">Infinispan REST API</a> </p>
+ * <p> @see <a href="https://github.com/infinispan/infinispan/blob/main/documentation/src/main/asciidoc/topics/rest_api_v2.adoc#cache-manager">Infinispan REST API</a> </p>
  *
  * @author Gustavo Lira &lt;glira@redhat.com&gt;
  */

@@ -10,14 +10,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Holds the list of network interfaces and their IP addresses for a single slave.
+ * Holds the list of network interfaces and their IP addresses for a single worker.
  */
-public class SlaveConnectionInfo implements Serializable {
-   private int slaveIndex;
+public class WorkerConnectionInfo implements Serializable {
+   private int workerIndex;
    private Map<String, ArrayList<InetAddress>> interfaceToAddrs = new HashMap<>();
 
-   public void addAddresses(int slaveIndex, String interfaceName, ArrayList<InetAddress> addresses) {
-      this.slaveIndex = slaveIndex;
+   public void addAddresses(int workerIndex, String interfaceName, ArrayList<InetAddress> addresses) {
+      this.workerIndex = workerIndex;
       interfaceToAddrs.put(interfaceName, addresses);
    }
 
@@ -33,12 +33,12 @@ public class SlaveConnectionInfo implements Serializable {
       return interfaceToAddrs.keySet();
    }
 
-   public int getSlaveIndex() {
-      return slaveIndex;
+   public int getWorkerIndex() {
+      return workerIndex;
    }
 
    /**
-    * Used as a message ID for master-slave communication.
+    * Used as a message ID for main-worker communication.
     */
    public static class Request implements Serializable {
    }

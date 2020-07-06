@@ -308,7 +308,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected void writeStressorLastOperation() {
       try {
-         // we have to write down the keySelectorRandom as well in order to be able to continue work if this slave
+         // we have to write down the keySelectorRandom as well in order to be able to continue work if this worker
          // is restarted
          basicCache.put(LogChecker.lastOperationKey(stressor.id),
             new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
@@ -324,7 +324,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
     */
    protected long getCheckedOperation(int stressorId, long operationId) throws StressorException, BreakTxRequest {
       long minCheckedOperation = Long.MAX_VALUE;
-      for (int i = 0; i < manager.getSlaveState().getGroupSize(); ++i) {
+      for (int i = 0; i < manager.getWorkerState().getGroupSize(); ++i) {
          long lastCheckedOperationId = Long.MIN_VALUE;
          try {
             LastOperation lastOperation = (LastOperation) basicCache.get(LogChecker.checkerKey(i, stressorId));
@@ -332,14 +332,14 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                lastCheckedOperationId = lastOperation.getOperationId();
             }
          } catch (Exception e) {
-            log.errorf(e, "Cannot read last checked operation id for slave %d, stressor %d", i, stressorId);
+            log.errorf(e, "Cannot read last checked operation id for worker %d, stressor %d", i, stressorId);
             throw new StressorException(e);
          }
-         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
+         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isWorkerAlive(i)) {
             try {
                Long ignoredOperationId = (Long) basicCache.get(LogChecker.ignoredKey(i, stressorId));
                if (ignoredOperationId == null || ignoredOperationId < operationId) {
-                  log.tracef("Setting ignore operation for checker slave %d and stressor %d: %d -> %d (last checked operation %d)",
+                  log.tracef("Setting ignore operation for checker worker %d and stressor %d: %d -> %d (last checked operation %d)",
                      i, stressorId, ignoredOperationId, operationId, lastCheckedOperationId);
                   basicCache.put(LogChecker.ignoredKey(i, stressorId), operationId);
                   if (transactionSize > 0) {
@@ -350,7 +350,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             } catch (BreakTxRequest request) {
                throw request;
             } catch (Exception e) {
-               log.errorf(e, "Cannot overwrite ignored operation id for slave %d", "stressor %d", i, stressorId);
+               log.errorf(e, "Cannot overwrite ignored operation id for worker %d", "stressor %d", i, stressorId);
                throw new StressorException(e);
             }
          } else {

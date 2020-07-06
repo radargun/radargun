@@ -7,7 +7,7 @@ Scenario
 `Scenario` element contains the series of `stages` that will be executed on each [cluster](./clusters.html)-[configuration](./configurations.html) pair. Several base stages are defined on RadarGun core project, most stages are defined by RadarGun extensions they belong to and all are described on their respective pages.  
 
 **Stage** element attributes (shared)
-> slaves (**optional**) - specifies slaves the stage should be ran on by index (slave.index property)  
+> workers (**optional**) - specifies workers the stage should be ran on by index (worker.index property)  
 > groups (**optional**) - specifies which groups the stage will be ran on by name  
 
 
@@ -49,8 +49,8 @@ Scenario
 
 This is a rather basic scenario example rigged to test basic operations performance of cache.  
 
-* **service-start**		- starts assigned services on all slaves (can specify groups, slaves, delays etc. allowing for specific starting procedure)
-* **jvm-monitor-start**		- starts JVM monitor threads which monitor various JVM attributes (CPU usage, memory consumption etc.) on all slaves (including managed servers if plugin provides JMX connection)
+* **service-start**		- starts assigned services on all workers (can specify groups, workers, delays etc. allowing for specific starting procedure)
+* **jvm-monitor-start**		- starts JVM monitor threads which monitor various JVM attributes (CPU usage, memory consumption etc.) on all workers (including managed servers if plugin provides JMX connection)
 * **load**			- loads cache with 10000 entries, used to make sure all keys are loaded to cache
 * **basic-operations-test**	- the name removes any ambiguity about this stages purpose, it runs basic operations agains the cache, ratio of operations is configurable
   * **test-name** 		- test is named "warmup" so it will not store test results as to not influence final results, this is done to "warm up" the cluster

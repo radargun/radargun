@@ -1,6 +1,6 @@
 package org.radargun.state;
 
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Timeline;
 
@@ -9,15 +9,15 @@ import org.radargun.reporting.Timeline;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class MasterState extends StateBase<MasterListener> {
-   private MasterConfig config;
+public class MainState extends StateBase<MainListener> {
+   private MainConfig config;
    private Report report;
 
-   public MasterState(MasterConfig config) {
+   public MainState(MainConfig config) {
       this.config = config;
    }
 
-   public MasterConfig getConfig() {
+   public MainConfig getConfig() {
       return config;
    }
 

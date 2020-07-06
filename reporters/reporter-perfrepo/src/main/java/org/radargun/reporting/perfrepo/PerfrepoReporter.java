@@ -29,7 +29,7 @@ import org.perfrepo.model.builder.TestExecutionBuilder;
 import org.radargun.config.Configuration;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
@@ -99,7 +99,7 @@ public class PerfrepoReporter extends AbstractReporter {
    private List<String> configurations;
    @Property(doc = "Which tests should this reporter report. Default is all executed tests. Comma separated.")
    private List<String> tests;
-   private MasterConfig masterConfig;
+   private MainConfig mainConfig;
 
    @Init
    public void validate() {
@@ -112,8 +112,8 @@ public class PerfrepoReporter extends AbstractReporter {
    }
 
    @Override
-   public void run(MasterConfig masterConfig, Collection<Report> reports) throws Exception {
-      this.masterConfig = masterConfig;
+   public void run(MainConfig mainConfig, Collection<Report> reports) throws Exception {
+      this.mainConfig = mainConfig;
       if (perfRepoAuth == null) {
          log.error("perfRepoAuth parameter has to be set");
          return;
@@ -176,7 +176,7 @@ public class PerfrepoReporter extends AbstractReporter {
             mrdMapping.put(mapping, new ArrayList<>());
          }
       }
-      iteration.getStatistics().stream().map(slaveStats -> slaveStats.getValue().stream().reduce(Statistics.MERGE)
+      iteration.getStatistics().stream().map(workerStats -> workerStats.getValue().stream().reduce(Statistics.MERGE)
          .map(statistics -> addRepresentationValues(mrdMapping, statistics)))
          .filter(Optional::isPresent).map(Optional::get).reduce(Statistics.MERGE).ifPresent(aggregatedStatistics -> {
             long duration = TimeUnit.MILLISECONDS.toNanos(aggregatedStatistics.getEnd() - aggregatedStatistics.getBegin());
@@ -296,8 +296,8 @@ public class PerfrepoReporter extends AbstractReporter {
       for (Report.TestResult result : iteration.getResults().values()) {
          String resultPrefix = "result." + iteration.id + "." + result.name;
          testExecutionBuilder.parameter(resultPrefix + ".aggregated", result.aggregatedValue);
-         for (Map.Entry<Integer, Report.SlaveResult> slaveResult : result.slaveResults.entrySet()) {
-            testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
+         for (Map.Entry<Integer, Report.WorkerResult> workerResult : result.workerResults.entrySet()) {
+            testExecutionBuilder.parameter(resultPrefix + "." + workerResult.getKey(), workerResult.getValue().value);
          }
       }
    }
@@ -311,7 +311,7 @@ public class PerfrepoReporter extends AbstractReporter {
             if (configItem.getValue() != null) {
                for (Map.Entry<Object, Object> property : configItem.getValue().entrySet()) {
                   StringBuilder key = new StringBuilder();
-                  key.append("slave")
+                  key.append("worker")
                      .append(normalizedConfig.getKey())
                      .append(".");
                   key.append(configItem.getKey())
@@ -343,21 +343,21 @@ public class PerfrepoReporter extends AbstractReporter {
          for (Map.Entry<Integer, Map<String, byte[]>> originalConfig : report.getOriginalServiceConfig().entrySet()) {
             for (Map.Entry<String, byte[]> configItem : originalConfig.getValue().entrySet()) {
                if (configItem.getValue() != null && configItem.getValue().length > 0) {
-                  zos.putNextEntry(new ZipEntry("slave" + originalConfig.getKey() + "_" + configItem.getKey()));
+                  zos.putNextEntry(new ZipEntry("worker" + originalConfig.getKey() + "_" + configItem.getKey()));
                   zos.write(configItem.getValue());
                   zos.closeEntry();
                   contentExists = true;
                }
             }
          }
-         if (masterConfig != null) {
-            zos.putNextEntry(new ZipEntry("master_config.xml"));
-            zos.write(masterConfig.getMasterConfigBytes());
+         if (mainConfig != null) {
+            zos.putNextEntry(new ZipEntry("main_config.xml"));
+            zos.write(mainConfig.getMainConfigBytes());
             zos.closeEntry();
             contentExists = true;
-            if (masterConfig.getScenarioBytes() != null) {
-               zos.putNextEntry(new ZipEntry("master_scenario.xml"));
-               zos.write(masterConfig.getScenarioBytes());
+            if (mainConfig.getScenarioBytes() != null) {
+               zos.putNextEntry(new ZipEntry("main_scenario.xml"));
+               zos.write(mainConfig.getScenarioBytes());
                zos.closeEntry();
             }
          }

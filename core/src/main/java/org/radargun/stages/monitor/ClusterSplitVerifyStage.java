@@ -30,15 +30,15 @@ public class ClusterSplitVerifyStage extends AbstractDistStage {
    private Clustered clustered;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!verify) {
          int clusterSizeAtTestStart = clustered.getMembers().size();
          int membershipHistorySizeAtStart = clustered.getMembershipHistory().size();
-         slaveState.put(CLUSTER_SIZE_AT_START, clusterSizeAtTestStart);
-         slaveState.put(MEMBERSHIP_HISTORY_SIZE_AT_START, membershipHistorySizeAtStart);
+         workerState.put(CLUSTER_SIZE_AT_START, clusterSizeAtTestStart);
+         workerState.put(MEMBERSHIP_HISTORY_SIZE_AT_START, membershipHistorySizeAtStart);
       } else {
-         int clusterSizeAtTestStart = (int) slaveState.get(CLUSTER_SIZE_AT_START);
-         int membershipHistorySizeAtStart = (int) slaveState.get(MEMBERSHIP_HISTORY_SIZE_AT_START);
+         int clusterSizeAtTestStart = (int) workerState.get(CLUSTER_SIZE_AT_START);
+         int membershipHistorySizeAtStart = (int) workerState.get(MEMBERSHIP_HISTORY_SIZE_AT_START);
          for (int i = membershipHistorySizeAtStart; i < clustered.getMembershipHistory().size(); i++) {
             int clusterSizeDuringTest = clustered.getMembershipHistory().get(i).members.size();
             if (clusterSizeDuringTest != clusterSizeAtTestStart) {

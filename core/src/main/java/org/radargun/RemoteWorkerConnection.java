@@ -24,18 +24,18 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.utils.SlaveConnectionInfo;
 import org.radargun.utils.TimeService;
+import org.radargun.utils.WorkerConnectionInfo;
 
 /**
- * Connection to slaves in different JVMs
+ * Connection to workers in different JVMs
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class RemoteSlaveConnection {
+public class RemoteWorkerConnection {
 
    private static final long CONNECT_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
-   private static Log log = LogFactory.getLog(RemoteSlaveConnection.class);
+   private static Log log = LogFactory.getLog(RemoteWorkerConnection.class);
 
    private static final int UUID_BYTES = 16;
    private static final int EXPECTED_SIZE_BYTES = 4;
@@ -45,8 +45,8 @@ public class RemoteSlaveConnection {
    public static final int DEFAULT_PORT = 2103;
 
    private ServerSocketChannel serverSocketChannel;
-   private SlaveRecord[] slaves;
-   private SlaveAddresses slaveAddresses;
+   private WorkerRecord[] workers;
+   private WorkerAddresses workerAddresses;
 
    private ByteBuffer mcastBuffer;
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
@@ -60,42 +60,42 @@ public class RemoteSlaveConnection {
    private String host;
    private int port;
 
-   private static class SlaveRecord {
-      private UUID uuid; // key unique for given series of generations of this slave
+   private static class WorkerRecord {
+      private UUID uuid; // key unique for given series of generations of this worker
       private SocketChannel channel;
 
-      public SlaveRecord(int index, UUID uuid, SocketChannel channel) {
+      public WorkerRecord(int index, UUID uuid, SocketChannel channel) {
          this.uuid = uuid;
          this.channel = channel;
       }
    }
 
    /**
-    * Holds information about interfaces and IP addresses of individual slaves.
-    * This information is collected from individual slaves and re-distributed to the other
-    * slaves in the cluster.
+    * Holds information about interfaces and IP addresses of individual workers.
+    * This information is collected from individual workers and re-distributed to the other
+    * workers in the cluster.
     */
-   public static class SlaveAddresses implements Serializable {
-      public Map<Integer, SlaveConnectionInfo> slaveConnections;
+   public static class WorkerAddresses implements Serializable {
+      public Map<Integer, WorkerConnectionInfo> workerConnections;
 
-      public SlaveAddresses() {
-         this.slaveConnections = new HashMap<>();
+      public WorkerAddresses() {
+         this.workerConnections = new HashMap<>();
       }
 
-      public void addSlaveAddresses(int index, SlaveConnectionInfo connectionInfo) {
-         slaveConnections.put(index, connectionInfo);
+      public void addWorkerAddresses(int index, WorkerConnectionInfo connectionInfo) {
+         workerConnections.put(index, connectionInfo);
       }
 
-      public SlaveConnectionInfo getSlaveAddresses(int index) {
-         return slaveConnections.get(index);
+      public WorkerConnectionInfo getWorkerAddresses(int index) {
+         return workerConnections.get(index);
       }
    }
 
-   public RemoteSlaveConnection(int numSlaves, String host, int port) throws IOException {
+   public RemoteWorkerConnection(int numWorkers, String host, int port) throws IOException {
       this.host = host;
       this.port = port > 0 && port < 65536 ? port : DEFAULT_PORT;
-      slaves = new SlaveRecord[numSlaves];
-      slaveAddresses = new SlaveAddresses();
+      workers = new WorkerRecord[numWorkers];
+      workerAddresses = new WorkerAddresses();
       communicationSelector = Selector.open();
       startServerSocket();
    }
@@ -104,24 +104,24 @@ public class RemoteSlaveConnection {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
       mcastBuffer = ByteBuffer.allocate(DEFAULT_WRITE_BUFF_CAPACITY);
-      int slaveCount = 0;
+      int workerCount = 0;
       long deadline = TimeService.currentTimeMillis() + CONNECT_TIMEOUT;
-      while (slaveCount < slaves.length) {
+      while (workerCount < workers.length) {
          long timeout = deadline - TimeService.currentTimeMillis();
          if (timeout <= 0) {
-            throw new IOException((slaves.length - slaveCount) + " slaves haven't connected within timeout!");
+            throw new IOException((workers.length - workerCount) + " workers haven't connected within timeout!");
          }
-         log.info("Awaiting registration from " + (slaves.length - slaveCount) + " slaves.");
-         slaveCount += connectSlaves(timeout);
+         log.info("Awaiting registration from " + (workers.length - workerCount) + " workers.");
+         workerCount += connectWorkers(timeout);
       }
-      log.info("Connection established from " + slaveCount + " slaves.");
+      log.info("Connection established from " + workerCount + " workers.");
    }
 
-   private int connectSlaves(long timeout) throws IOException {
+   private int connectWorkers(long timeout) throws IOException {
       discoverySelector.select(timeout);
       Set<SelectionKey> keySet = discoverySelector.selectedKeys();
       Iterator<SelectionKey> it = keySet.iterator();
-      int slaveCount = 0;
+      int workerCount = 0;
       while (it.hasNext()) {
          SelectionKey selectionKey = it.next();
          it.remove();
@@ -131,47 +131,47 @@ public class RemoteSlaveConnection {
          ServerSocketChannel srvSocketChannel = (ServerSocketChannel) selectionKey.channel();
          SocketChannel socketChannel = srvSocketChannel.accept();
 
-         int slaveIndex = readInt(socketChannel);
+         int workerIndex = readInt(socketChannel);
          ByteBuffer uuidBytes = readBytes(socketChannel, UUID_BYTES);
          UUID uuid = new UUID(uuidBytes.getLong(), uuidBytes.getLong());
 
-         if (slaveIndex < 0) {
-            for (int i = 0; i < slaves.length; ++i) {
-               if (slaves[i] == null) {
-                  slaveIndex = i;
+         if (workerIndex < 0) {
+            for (int i = 0; i < workers.length; ++i) {
+               if (workers[i] == null) {
+                  workerIndex = i;
                   break;
                }
             }
-            if (slaveIndex < 0) {
-               throw new IllegalArgumentException("All slaves are already connected.");
+            if (workerIndex < 0) {
+               throw new IllegalArgumentException("All workers are already connected.");
             }
-         } else if (slaveIndex >= slaves.length) {
-            throw new IllegalArgumentException("Slave requests invalid slaveIndex "
-               + slaveIndex + " (expected " + slaves.length + " slaves)");
+         } else if (workerIndex >= workers.length) {
+            throw new IllegalArgumentException("Worker requests invalid workerIndex "
+               + workerIndex + " (expected " + workers.length + " workers)");
          }
-         if (slaves[slaveIndex] == null) {
+         if (workers[workerIndex] == null) {
             if (uuid.getLeastSignificantBits() != 0 || uuid.getMostSignificantBits() != 0) {
-               throw new IllegalArgumentException("We are expecting 0th generation slave " + slaveIndex + " but it already has UUID set!");
+               throw new IllegalArgumentException("We are expecting 0th generation worker " + workerIndex + " but it already has UUID set!");
             }
-            slaves[slaveIndex] = new RemoteSlaveConnection.SlaveRecord(slaveIndex, uuid, socketChannel);
-         } else if (slaves[slaveIndex] != null) {
-            RemoteSlaveConnection.SlaveRecord record = slaves[slaveIndex];
+            workers[workerIndex] = new RemoteWorkerConnection.WorkerRecord(workerIndex, uuid, socketChannel);
+         } else if (workers[workerIndex] != null) {
+            RemoteWorkerConnection.WorkerRecord record = workers[workerIndex];
             if (!uuid.equals(record.uuid)) {
-               throw new IllegalArgumentException(String.format("For slave %d expecting UUID %s but new generation (%s) has UUID %s",
-                  slaveIndex, record.uuid, socketChannel, uuid));
+               throw new IllegalArgumentException(String.format("For worker %d expecting UUID %s but new generation (%s) has UUID %s",
+                  workerIndex, record.uuid, socketChannel, uuid));
             }
             record.channel = socketChannel;
          }
-         writeInt(socketChannel, slaveIndex);
-         writeInt(socketChannel, slaves.length);
+         writeInt(socketChannel, workerIndex);
+         writeInt(socketChannel, workers.length);
 
-         slaveCount++;
-         channel2Index.put(socketChannel, slaveIndex);
+         workerCount++;
+         channel2Index.put(socketChannel, workerIndex);
          readBufferMap.put(socketChannel, ByteBuffer.allocate(DEFAULT_READ_BUFF_CAPACITY));
          socketChannel.configureBlocking(false);
-         log.trace("Added new slave connection " + slaveIndex + " from: " + socketChannel.socket().getInetAddress());
+         log.trace("Added new worker connection " + workerIndex + " from: " + socketChannel.socket().getInetAddress());
       }
-      return slaveCount;
+      return workerCount;
    }
 
    public void sendScenario(Scenario scenario, int clusterSize) throws IOException {
@@ -180,7 +180,7 @@ public class RemoteSlaveConnection {
    }
 
    public void sendConfiguration(Configuration configuration) throws IOException {
-      mcastObject(configuration, slaves.length);
+      mcastObject(configuration, workers.length);
       flushBuffers(0);
    }
 
@@ -191,33 +191,33 @@ public class RemoteSlaveConnection {
 
    private void clearBuffer() {
       if (!writeBufferMap.isEmpty()) {
-         throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
+         throw new IllegalStateException("Something not sent to workers yet: " + writeBufferMap);
       }
       mcastBuffer.clear();
    }
 
-   private void mcastBuffer(int numSlaves) throws IOException {
-      for (int i = 0; i < numSlaves; ++i) {
-         SocketChannel channel = slaves[i].channel;
-         if (channel == null) throw new IOException("Slave " + i + " disconnected");
+   private void mcastBuffer(int numWorkers) throws IOException {
+      for (int i = 0; i < numWorkers; ++i) {
+         SocketChannel channel = workers[i].channel;
+         if (channel == null) throw new IOException("Worker " + i + " disconnected");
          writeBufferMap.put(channel, ByteBuffer.wrap(mcastBuffer.array(), 0, mcastBuffer.position()));
          channel.register(communicationSelector, SelectionKey.OP_WRITE);
       }
    }
 
-   private void mcastObject(Serializable object, int numSlaves) throws IOException {
+   private void mcastObject(Serializable object, int numWorkers) throws IOException {
       clearBuffer();
       mcastBuffer = SerializationHelper.serializeObjectWithLength(object, mcastBuffer);
-      mcastBuffer(numSlaves);
+      mcastBuffer(numWorkers);
    }
 
-   public List<DistStageAck> runStage(int stageId, Map<String, Object> masterData, int numSlaves) throws IOException {
+   public List<DistStageAck> runStage(int stageId, Map<String, Object> mainData, int numWorkers) throws IOException {
       responses.clear();
       clearBuffer();
       mcastBuffer.putInt(stageId);
-      mcastBuffer = SerializationHelper.serializeObjectWithLength((Serializable) masterData, mcastBuffer);
-      mcastBuffer(numSlaves);
-      flushBuffers(numSlaves);
+      mcastBuffer = SerializationHelper.serializeObjectWithLength((Serializable) mainData, mcastBuffer);
+      mcastBuffer(numWorkers);
+      flushBuffers(numWorkers);
       ArrayList<DistStageAck> list = new ArrayList<>(responses.size());
       for (Object o : responses) {
          list.add((DistStageAck) o);
@@ -225,25 +225,25 @@ public class RemoteSlaveConnection {
       return list;
    }
 
-   public List<Timeline> receiveTimelines(int numSlaves) throws IOException {
+   public List<Timeline> receiveTimelines(int numWorkers) throws IOException {
       responses.clear();
-      mcastObject(new Timeline.Request(), numSlaves);
-      flushBuffers(numSlaves);
-      return Arrays.asList(responses.toArray(new Timeline[numSlaves]));
+      mcastObject(new Timeline.Request(), numWorkers);
+      flushBuffers(numWorkers);
+      return Arrays.asList(responses.toArray(new Timeline[numWorkers]));
    }
 
-   public void receiveSlaveAddresses() throws IOException {
+   public void receiveWorkerAddresses() throws IOException {
       responses.clear();
-      mcastObject(new SlaveConnectionInfo.Request(), slaves.length);
-      flushBuffers(slaves.length);
-      List<SlaveConnectionInfo> connections = Arrays.asList(responses.toArray(new SlaveConnectionInfo[slaves.length]));
-      for (SlaveConnectionInfo connectionInfo : connections) {
-         slaveAddresses.addSlaveAddresses(connectionInfo.getSlaveIndex(), connectionInfo);
+      mcastObject(new WorkerConnectionInfo.Request(), workers.length);
+      flushBuffers(workers.length);
+      List<WorkerConnectionInfo> connections = Arrays.asList(responses.toArray(new WorkerConnectionInfo[workers.length]));
+      for (WorkerConnectionInfo connectionInfo : connections) {
+         workerAddresses.addWorkerAddresses(connectionInfo.getWorkerIndex(), connectionInfo);
       }
    }
 
-   public void sendSlaveAddresses() throws IOException {
-      mcastObject(slaveAddresses, slaves.length);
+   public void sendWorkerAddresses() throws IOException {
+      mcastObject(workerAddresses, workers.length);
       flushBuffers(0);
    }
 
@@ -271,12 +271,12 @@ public class RemoteSlaveConnection {
       }
       long deadline = TimeService.currentTimeMillis() + CONNECT_TIMEOUT;
       while (reconnections > 0) {
-         log.infof("Waiting for %d reconnecting slaves", reconnections);
+         log.infof("Waiting for %d reconnecting workers", reconnections);
          long timeout = deadline - TimeService.currentTimeMillis();
          if (timeout <= 0) {
-            throw new IOException(reconnections + " slaves haven't connected within timeout!");
+            throw new IOException(reconnections + " workers haven't connected within timeout!");
          }
-         reconnections -= connectSlaves(timeout);
+         reconnections -= connectWorkers(timeout);
       }
    }
 
@@ -319,8 +319,8 @@ public class RemoteSlaveConnection {
                // we should expect reconnection
                int index = channel2Index.get(socketChannel);
                UUID uuid = new UUID(uuidMsb, uuidLsb);
-               log.tracef("Slave %d (%s) is going to restart with UUID %s", index, socketChannel.getRemoteAddress(), uuid);
-               SlaveRecord record = slaves[index];
+               log.tracef("Worker %d (%s) is going to restart with UUID %s", index, socketChannel.getRemoteAddress(), uuid);
+               WorkerRecord record = workers[index];
                record.uuid = uuid;
                record.channel.close();
                record.channel = null;
@@ -333,20 +333,20 @@ public class RemoteSlaveConnection {
          }
       }
       if (value < 0) {
-         Integer slaveIndex = channel2Index.get(socketChannel);
+         Integer workerIndex = channel2Index.get(socketChannel);
          key.cancel();
-         if (slaveIndex == null) {
-            throw new IllegalStateException("Unknown slave for socket " + socketChannel);
+         if (workerIndex == null) {
+            throw new IllegalStateException("Unknown worker for socket " + socketChannel);
          }
-         SlaveRecord record = slaves[slaveIndex];
+         WorkerRecord record = workers[workerIndex];
          if (record.channel == null) {
             // this channel was closed correctly
             return;
          } else if (record.channel != socketChannel) {
             throw new IllegalStateException("Unexpected socket channel " + socketChannel + "; should be " + record.channel);
          } else {
-            log.warn("Slave stopped! Index: " + slaveIndex + ". Remote socket is: " + socketChannel);
-            throw new IOException("Slave unexpectedly stopped");
+            log.warn("Worker stopped! Index: " + workerIndex + ". Remote socket is: " + socketChannel);
+            throw new IOException("Worker unexpectedly stopped");
          }
       }
    }
@@ -354,10 +354,10 @@ public class RemoteSlaveConnection {
    public void release() {
       if (mcastBuffer != null) {
          try {
-            mcastObject(null, slaves.length);
+            mcastObject(null, workers.length);
             flushBuffers(0);
          } catch (Exception e) {
-            log.warn("Failed to send termination to slaves.", e);
+            log.warn("Failed to send termination to workers.", e);
          }
       }
       if (discoverySelector != null) {
@@ -374,7 +374,7 @@ public class RemoteSlaveConnection {
             log.warn("Error closing comunication selector", e);
          }
       }
-      for (SlaveRecord record : slaves) {
+      for (WorkerRecord record : workers) {
          if (record != null && record.channel != null) {
             try {
                record.channel.close();
@@ -393,10 +393,10 @@ public class RemoteSlaveConnection {
       }
    }
 
-   public void restartSlaves(int numSlaves) throws IOException {
+   public void restartWorkers(int numWorkers) throws IOException {
       responses.clear();
-      mcastObject(new Restart(), numSlaves);
-      flushBuffers(numSlaves);
+      mcastObject(new Restart(), numWorkers);
+      flushBuffers(numWorkers);
    }
 
    private void startServerSocket() throws IOException {
@@ -408,7 +408,7 @@ public class RemoteSlaveConnection {
       } else {
          address = new InetSocketAddress(host, port);
       }
-      log.info("Attempting to start Master listening for connection on: " + address);
+      log.info("Attempting to start Main listening for connection on: " + address);
       serverSocketChannel.socket().bind(address);
       log.info("Waiting 5 seconds for server socket to open completely");
       try {
@@ -436,9 +436,9 @@ public class RemoteSlaveConnection {
       return buffer;
    }
 
-   private void writeInt(SocketChannel socketChannel, int slaveIndex) throws IOException {
+   private void writeInt(SocketChannel socketChannel, int workerIndex) throws IOException {
       ByteBuffer buffer = ByteBuffer.allocate(EXPECTED_SIZE_BYTES);
-      buffer.putInt(slaveIndex);
+      buffer.putInt(workerIndex);
       buffer.flip();
       while (buffer.hasRemaining()) {
          socketChannel.write(buffer);

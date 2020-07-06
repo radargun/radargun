@@ -15,15 +15,15 @@ import static org.testng.Assert.*;
 public class ArgsHolderTest {
 
    public void testParseArgs() {
-      String[] masterArgs = {"--config", "/foo/configFile.xml", "--add-reporter=/foo/reporterDir", "--add-reporter=/bar/reporterDir"};
-      String[] slaveArgs = {"--master", "127.0.0.1:2103", "--slaveIndex", "1", "--add-plugin=/foo/plugin1", "--add-config=plugin1:/foo/config.xml",
+      String[] mainArgs = {"--config", "/foo/configFile.xml", "--add-reporter=/foo/reporterDir", "--add-reporter=/bar/reporterDir"};
+      String[] workerArgs = {"--main", "127.0.0.1:2103", "--workerIndex", "1", "--add-plugin=/foo/plugin1", "--add-config=plugin1:/foo/config.xml",
          "--add-config=plugin1:/foo/jgroups.xml", "--add-plugin=/bar/plugin2", "--add-config=plugin2:/bar/config.xml"};
-      ArgsHolder.init(masterArgs, ArgsHolder.ArgType.LAUNCH_MASTER);
-      ArgsHolder.init(slaveArgs, ArgsHolder.ArgType.SLAVE);
+      ArgsHolder.init(mainArgs, ArgsHolder.ArgType.LAUNCH_MAIN);
+      ArgsHolder.init(workerArgs, ArgsHolder.ArgType.WORKER);
 
-      assertEquals("127.0.0.1", ArgsHolder.getMasterHost());
-      assertEquals(2103, ArgsHolder.getMasterPort());
-      assertEquals(1, ArgsHolder.getSlaveIndex());
+      assertEquals("127.0.0.1", ArgsHolder.getMainHost());
+      assertEquals(2103, ArgsHolder.getMainPort());
+      assertEquals(1, ArgsHolder.getWorkerIndex());
       assertEquals("/foo/configFile.xml", ArgsHolder.getConfigFile());
 
       List<String> reporterPaths = ArgsHolder.getReporterPaths();
@@ -44,14 +44,14 @@ public class ArgsHolderTest {
       List<String> configFiles2 = plugin2.getConfigFiles();
       assertTrue(configFiles2.contains("/bar/config.xml"));
 
-      String[] deprecatedMasterArgs = {"-config", "/deprecated/configFile.xml"};
-      String[] deprecatedSlaveArgs = {"-master", "127.0.0.2:2101", "-slaveIndex", "2"};
-      ArgsHolder.init(deprecatedMasterArgs, ArgsHolder.ArgType.LAUNCH_MASTER);
-      ArgsHolder.init(deprecatedSlaveArgs, ArgsHolder.ArgType.SLAVE);
+      String[] deprecatedMainArgs = {"-config", "/deprecated/configFile.xml"};
+      String[] deprecatedWorkerArgs = {"-main", "127.0.0.2:2101", "-workerIndex", "2"};
+      ArgsHolder.init(deprecatedMainArgs, ArgsHolder.ArgType.LAUNCH_MAIN);
+      ArgsHolder.init(deprecatedWorkerArgs, ArgsHolder.ArgType.WORKER);
 
-      assertEquals("127.0.0.2", ArgsHolder.getMasterHost());
-      assertEquals(2101, ArgsHolder.getMasterPort());
-      assertEquals(2, ArgsHolder.getSlaveIndex());
+      assertEquals("127.0.0.2", ArgsHolder.getMainHost());
+      assertEquals(2101, ArgsHolder.getMainPort());
+      assertEquals(2, ArgsHolder.getWorkerIndex());
       assertEquals("/deprecated/configFile.xml", ArgsHolder.getConfigFile());
    }
 }

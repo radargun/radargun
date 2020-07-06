@@ -12,7 +12,7 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Lifecycle;
@@ -33,15 +33,15 @@ public class XSReplCheckStageTest {
       StringKeyGenerator keyGenerator = new StringKeyGenerator();
       ByteArrayValueGenerator valueGenerator = new ByteArrayValueGenerator();
 
-      SlaveState slaveState = stageRunner.getSlaveState(0);
-      slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
-      slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
-      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
+      WorkerState workerState = stageRunner.getWorkerState(0);
+      workerState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+      workerState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
+      workerState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
 
-      slaveState = stageRunner.getSlaveState(1);
-      slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
-      slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
-      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
+      workerState = stageRunner.getWorkerState(1);
+      workerState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+      workerState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
+      workerState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.Default());
 
       Lifecycle lifecycle1 = stageRunner.getTraitImpl(Lifecycle.class, 0);
       lifecycle1.start();
@@ -76,8 +76,8 @@ public class XSReplCheckStageTest {
 
       Assert.assertEquals(cache.size(), 100);
 
-      List<DistStageAck> acks = stageRunner.executeOnSlave(new XSReplCheckStage[] {xsReplCheckStage1, xsReplCheckStage2}, new int[] {0, 1});
+      List<DistStageAck> acks = stageRunner.executeOnWorker(new XSReplCheckStage[] {xsReplCheckStage1, xsReplCheckStage2}, new int[] {0, 1});
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(xsReplCheckStage1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(xsReplCheckStage1, acks), StageResult.SUCCESS);
    }
 }

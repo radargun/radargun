@@ -8,8 +8,8 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.state.MasterState;
-import org.radargun.state.SlaveState;
+import org.radargun.state.MainState;
+import org.radargun.state.WorkerState;
 
 /**
  * This stage contains copy-paste of some convenience methods from {@link org.radargun.stages.AbstractDistStage}
@@ -21,27 +21,27 @@ import org.radargun.state.SlaveState;
 public abstract class InternalDistStage extends AbstractStage implements DistStage {
    protected Log log = LogFactory.getLog(getClass());
    /**
-    * This field is filled in only on master node, on slave it is set to null
+    * This field is filled in only on main node, on worker it is set to null
     */
-   protected MasterState masterState;
+   protected MainState mainState;
    /**
-    * This field is filled in only on slave node, on master it is set to null
+    * This field is filled in only on worker node, on main it is set to null
     */
-   protected SlaveState slaveState;
+   protected WorkerState workerState;
 
    @Override
-   public void initOnMaster(MasterState masterState) {
-      this.masterState = masterState;
+   public void initOnMain(MainState mainState) {
+      this.mainState = mainState;
    }
 
    @Override
-   public Map<String, Object> createMasterData() {
+   public Map<String, Object> createMainData() {
       return Collections.EMPTY_MAP;
    }
 
    @Override
-   public void initOnSlave(SlaveState slaveState) {
-      this.slaveState = slaveState;
+   public void initOnWorker(WorkerState workerState) {
+      this.workerState = workerState;
    }
 
    @Override
@@ -51,15 +51,15 @@ public abstract class InternalDistStage extends AbstractStage implements DistSta
 
    protected DistStageAck errorResponse(String message) {
       log.error(message);
-      return new DistStageAck(slaveState).error(message, null);
+      return new DistStageAck(workerState).error(message, null);
    }
 
    protected DistStageAck errorResponse(String message, Exception e) {
       log.error(message, e);
-      return new DistStageAck(slaveState).error(message, e);
+      return new DistStageAck(workerState).error(message, e);
    }
 
    protected DistStageAck successfulResponse() {
-      return new DistStageAck(slaveState);
+      return new DistStageAck(workerState);
    }
 }

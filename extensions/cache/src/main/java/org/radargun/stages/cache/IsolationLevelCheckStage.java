@@ -8,7 +8,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -52,7 +52,7 @@ public class IsolationLevelCheckStage extends CheckStage {
    private Transactional transactional;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (expectedLevel == null) {
          return errorResponse("No expected level set", null);
       } else if (!expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && !expectedLevel.equalsIgnoreCase(READ_COMMITTED)) {
@@ -86,17 +86,17 @@ public class IsolationLevelCheckStage extends CheckStage {
       finished = true;
       DistStageAck error = checkThreads(threads);
       if (error != null) return error;
-      return new ChangeAck(slaveState, valueChangeDetected);
+      return new ChangeAck(workerState, valueChangeDetected);
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       boolean anyValueChangeDetected = false;
       for (ChangeAck ack : instancesOf(acks, ChangeAck.class)) {
-         log.debugf("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected);
+         log.debugf("Value change detected on worker %d: %s", ack.getWorkerIndex(), ack.valueChangeDetected);
          if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);
             return errorResult();
@@ -113,8 +113,8 @@ public class IsolationLevelCheckStage extends CheckStage {
    private static class ChangeAck extends DistStageAck {
       final boolean valueChangeDetected;
 
-      private ChangeAck(SlaveState slaveState, boolean valueChangeDetected) {
-         super(slaveState);
+      private ChangeAck(WorkerState workerState, boolean valueChangeDetected) {
+         super(workerState);
          this.valueChangeDetected = valueChangeDetected;
       }
    }

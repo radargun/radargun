@@ -9,7 +9,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Statistics;
@@ -33,23 +33,23 @@ public class ReindexStage extends AbstractDistStage {
    private Queryable queryable;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       Statistics stats = new BasicStatistics(new BasicOperationStats());
       stats.begin();
       stats.startRequest().exec(Queryable.REINDEX, () -> queryable.reindex(container));
       stats.end();
-      return new StatisticsAck(slaveState, stats);
+      return new StatisticsAck(workerState, stats);
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
-      Report.Test test = masterState.getReport().createTest(this.test, null, false);
+      Report.Test test = mainState.getReport().createTest(this.test, null, false);
       for (DistStageAck ack : acks) {
          if (ack instanceof StatisticsAck) {
-            test.addStatistics(0, ack.getSlaveIndex(), Collections.singletonList(((StatisticsAck) ack).stats));
+            test.addStatistics(0, ack.getWorkerIndex(), Collections.singletonList(((StatisticsAck) ack).stats));
          }
       }
       return StageResult.SUCCESS;
@@ -58,8 +58,8 @@ public class ReindexStage extends AbstractDistStage {
    private static class StatisticsAck extends DistStageAck {
       private final Statistics stats;
 
-      public StatisticsAck(SlaveState slaveState, Statistics stats) {
-         super(slaveState);
+      public StatisticsAck(WorkerState workerState, Statistics stats) {
+         super(workerState);
          this.stats = stats;
       }
    }

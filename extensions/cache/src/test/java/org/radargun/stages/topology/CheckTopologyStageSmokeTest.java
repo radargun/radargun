@@ -42,7 +42,7 @@ public class CheckTopologyStageSmokeTest {
 
       Thread stageThread = new Thread(() -> {
          try {
-            acks.add(stageRunner.executeOnSlave(checkTopologyStage, 0));
+            acks.add(stageRunner.executeOnWorker(checkTopologyStage, 0));
          } catch (Exception e) {
             throw new IllegalStateException(e);
          }
@@ -54,6 +54,6 @@ public class CheckTopologyStageSmokeTest {
       Assert.assertFalse(topologyHistory.getTopologyChangeHistory(null).isEmpty());
       Assert.assertFalse(topologyHistory.getRehashHistory(null).isEmpty());
       Assert.assertFalse(topologyHistory.getCacheStatusChangeHistory(null).isEmpty());
-      Assert.assertEquals(stageRunner.processAckOnMaster(checkTopologyStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(checkTopologyStage, acks), StageResult.SUCCESS);
    }
 }

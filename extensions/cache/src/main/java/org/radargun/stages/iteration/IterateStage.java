@@ -18,7 +18,7 @@ import org.radargun.stages.test.Invocation;
 import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
@@ -73,19 +73,19 @@ public class IterateStage extends TestStage {
    @Override
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       List<IterationResult> results = gatherResults(stressors, new IterationResultRetriever());
-      return new IterationAck(slaveState, results,
+      return new IterationAck(workerState, results,
          info != null ? info.getCache(containerName).getTotalSize() : -1);
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       Report.Test test = getTest(true); // test already created in super
       long prevTotalSize = -1;
       long totalMinElements = -1, totalMaxElements = -1;
-      Map<Integer, Report.SlaveResult> slaveResults = new HashMap<>();
+      Map<Integer, Report.WorkerResult> workerResults = new HashMap<>();
       if (test != null) {
          int testIteration = test.getIterations().size();
          String iterationValue = resolveIterationValue();
@@ -95,54 +95,54 @@ public class IterateStage extends TestStage {
       }
       for (IterationAck ack : instancesOf(acks, IterationAck.class)) {
          if (test != null) {
-            test.addStatistics(getTestIteration(), ack.getSlaveIndex(), ack.results.stream().map(r -> r.stats).collect(Collectors.toList()));
+            test.addStatistics(getTestIteration(), ack.getWorkerIndex(), ack.results.stream().map(r -> r.stats).collect(Collectors.toList()));
          }
-         long slaveMinElements = -1, slaveMaxElements = -1;
+         long workerMinElements = -1, workerMaxElements = -1;
          for (int i = 0; i < ack.results.size(); ++i) {
             IterationResult sr = ack.results.get(i);
             if (sr.failed) {
                result = failOnFailedIteration ? errorResult() : result;
-               log.warnf("Slave %d, stressor %d has failed", ack.getSlaveIndex(), i);
+               log.warnf("Worker %d, stressor %d has failed", ack.getWorkerIndex(), i);
             } else {
                if (sr.minElements != sr.maxElements) {
-                  log.warnf("Slave %d, stressor %d reports %d .. %d elements",
-                     ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
+                  log.warnf("Worker %d, stressor %d reports %d .. %d elements",
+                     ack.getWorkerIndex(), i, sr.minElements, sr.maxElements);
                   result = failOnUnevenElements ? errorResult() : result;
                }
                if (totalMinElements < 0) {
                   totalMinElements = sr.minElements;
                   totalMaxElements = sr.maxElements;
                } else if (totalMinElements != sr.minElements || totalMaxElements != sr.maxElements) {
-                  log.warnf("Previous stressor reported %d .. %d elements but slave %d, stressor %d reports %d .. %d elements",
-                     totalMinElements, totalMaxElements, ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
+                  log.warnf("Previous stressor reported %d .. %d elements but worker %d, stressor %d reports %d .. %d elements",
+                     totalMinElements, totalMaxElements, ack.getWorkerIndex(), i, sr.minElements, sr.maxElements);
                   result = failOnUnevenElements ? errorResult() : result;
                }
                if (ack.totalSize >= 0 && (sr.minElements != ack.totalSize || sr.maxElements != ack.totalSize)) {
-                  log.warnf("Slave %d stressor %d reports %d element but " +
-                     "total size is %d", ack.getSlaveIndex(), i, sr.maxElements, ack.totalSize);
+                  log.warnf("Worker %d stressor %d reports %d element but " +
+                     "total size is %d", ack.getWorkerIndex(), i, sr.maxElements, ack.totalSize);
                   result = failOnNotTotalSize ? errorResult() : result;
                }
                totalMinElements = Math.min(totalMinElements, sr.minElements);
                totalMaxElements = Math.min(totalMaxElements, sr.maxElements);
-               if (slaveMinElements < 0) {
-                  slaveMinElements = sr.minElements;
-                  slaveMaxElements = sr.maxElements;
+               if (workerMinElements < 0) {
+                  workerMinElements = sr.minElements;
+                  workerMaxElements = sr.maxElements;
                } else {
-                  slaveMinElements = Math.min(slaveMinElements, sr.minElements);
-                  slaveMaxElements = Math.min(slaveMaxElements, sr.maxElements);
+                  workerMinElements = Math.min(workerMinElements, sr.minElements);
+                  workerMaxElements = Math.min(workerMaxElements, sr.maxElements);
                }
             }
          }
          if (prevTotalSize < 0) prevTotalSize = ack.totalSize;
          else if (prevTotalSize != ack.totalSize) {
-            log.warnf("Previous total size was %d but slave %d reports total size %d", prevTotalSize, ack.getSlaveIndex(), ack.totalSize);
+            log.warnf("Previous total size was %d but worker %d reports total size %d", prevTotalSize, ack.getWorkerIndex(), ack.totalSize);
             result = failOnNotTotalSize ? errorResult() : result;
          }
-         slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(range(slaveMinElements, slaveMaxElements),
-            slaveMinElements != slaveMaxElements));
+         workerResults.put(ack.getWorkerIndex(), new Report.WorkerResult(range(workerMinElements, workerMaxElements),
+            workerMinElements != workerMaxElements));
       }
       if (test != null) {
-         test.addResult(getTestIteration(), new Report.TestResult("Elements", slaveResults,
+         test.addResult(getTestIteration(), new Report.TestResult("Elements", workerResults,
             range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements));
       }
       return result;
@@ -309,8 +309,8 @@ public class IterateStage extends TestStage {
       private List<IterationResult> results;
       private long totalSize;
 
-      public IterationAck(SlaveState slaveState, List<IterationResult> results, long totalSize) {
-         super(slaveState);
+      public IterationAck(WorkerState workerState, List<IterationResult> results, long totalSize) {
+         super(workerState);
          this.results = results;
          this.totalSize = totalSize;
       }

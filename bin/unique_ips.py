@@ -4,7 +4,7 @@ import sys
 import re
 
 ip_address_file = sys.argv[1]
-slave_prefix = sys.argv[2]
+worker_prefix = sys.argv[2]
 
 exp = re.compile('^[0-9]*\.[0-9]*\.[0-9]*\.([0-9]*)$')
 
@@ -31,5 +31,5 @@ finally:
 
 counter=1
 for ip in sorted(ips, compare_ips):
-  print "%s %s%s" % (ip, slave_prefix, counter)
+  print "%s %s%s" % (ip, worker_prefix, counter)
   counter += 1

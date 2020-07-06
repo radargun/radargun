@@ -7,7 +7,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 import org.radargun.DistStageAck;
 import org.radargun.logging.Log;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeService;
 import org.testng.annotations.Test;
@@ -93,19 +93,19 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
       doReturn(new Date(6)).when(singleEvent2).getTime();
       doReturn(TopologyHistory.Event.EventType.SINGLE).when(singleEvent2).getType();
 
-      SlaveState slaveState = getClassProperty(AbstractDistStage.class, stage, "slaveState", SlaveState.class);
+      WorkerState workerState = getClassProperty(AbstractDistStage.class, stage, "workerState", WorkerState.class);
 
       switch (condition) {
          case START: {
-            doReturn(unfinishedEvent1).when(slaveState).get(anyString());
+            doReturn(unfinishedEvent1).when(workerState).get(anyString());
             break;
          }
          case END: {
-            doReturn(finishedEvent1).when(slaveState).get(anyString());
+            doReturn(finishedEvent1).when(workerState).get(anyString());
             break;
          }
          case SINGLE: {
-            doReturn(singleEvent1).when(slaveState).get(anyString());
+            doReturn(singleEvent1).when(workerState).get(anyString());
             break;
          }
       }
@@ -136,7 +136,7 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
       PowerMockito.mockStatic(TimeService.class);
       PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(7l).thenReturn(8l);
 
-      DistStageAck stageResult = stage.executeOnSlave();
+      DistStageAck stageResult = stage.executeOnWorker();
       assertFalse(stageResult.isError());
 
       switch (checkType) {
@@ -157,7 +157,7 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
 
    public void testPutOnly() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologyEventStage stage = initStage(TopologyHistory.HistoryType.TOPOLOGY, EventType.START, true, false, 10);
-      SlaveState slaveState = getClassProperty(AbstractDistStage.class, stage, "slaveState", SlaveState.class);
+      WorkerState workerState = getClassProperty(AbstractDistStage.class, stage, "workerState", WorkerState.class);
 
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologyEventStage.class, stage, "topologyHistory", topologyHistory);
@@ -167,16 +167,16 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
       doReturn(new Date(1)).when(unfinishedEvent1).getTime();
       doReturn(TopologyHistory.Event.EventType.START).when(unfinishedEvent1).getType();
 
-      DistStageAck stageResult = stage.executeOnSlave();
+      DistStageAck stageResult = stage.executeOnWorker();
       assertFalse(stageResult.isError());
 
-      verify(slaveState, times(1)).put(anyString(), anyObject());
+      verify(workerState, times(1)).put(anyString(), anyObject());
    }
 
    private WaitForTopologyEventStage initStage(TopologyHistory.HistoryType checkType, EventType condition,
                                                boolean set, boolean wait, long timeout) throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologyEventStage stage = spy(new WaitForTopologyEventStage());
-      stage.initOnSlave(mock(SlaveState.class));
+      stage.initOnWorker(mock(WorkerState.class));
 
       Log log = mock(Log.class);
       setClassProperty(AbstractDistStage.class, stage, "log", log);

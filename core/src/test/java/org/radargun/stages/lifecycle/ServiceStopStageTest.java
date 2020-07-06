@@ -24,9 +24,9 @@ public class ServiceStopStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
       ServiceStopStage serviceStopStage = new ServiceStopStage();
-      acks.add(stageRunner.executeOnSlave(serviceStopStage, 0));
+      acks.add(stageRunner.executeOnWorker(serviceStopStage, 0));
 
       Assert.assertFalse(lifecycle.isRunning());
-      Assert.assertEquals(stageRunner.processAckOnMaster(serviceStopStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(serviceStopStage, acks), StageResult.SUCCESS);
    }
 }

@@ -15,14 +15,14 @@ import org.radargun.traits.Transactional;
 import org.radargun.utils.Utils;
 
 /**
- * Distributed stage that will clear the content of the cache wrapper on each slave.
+ * Distributed stage that will clear the content of the cache wrapper on each worker.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(doc = "Removes all data from the cache", deprecatedName = "clear-cache")
 public class ClearStage extends AbstractDistStage {
 
-   @Property(doc = "Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service." +
+   @Property(doc = "Execute local variant of clear on each worker. Default is null - local clear is performed, only if it is provided by the service." +
       " True enforces local clear - if given service does not provide the feature, exception is thrown.")
    private Boolean local = null;
 
@@ -44,10 +44,10 @@ public class ClearStage extends AbstractDistStage {
    @InjectTrait
    private CacheInformation cacheInformation;
 
-   public DistStageAck executeOnSlave() {
-      BackgroundOpsManager.beforeCacheClear(slaveState);
+   public DistStageAck executeOnWorker() {
+      BackgroundOpsManager.beforeCacheClear(workerState);
       if (!isServiceRunning()) {
-         log.info("This slave is dead, cannot clear cache.");
+         log.info("This worker is dead, cannot clear cache.");
          return successfulResponse();
       }
       if (Boolean.TRUE.equals(local) && localBasicOperations == null) {

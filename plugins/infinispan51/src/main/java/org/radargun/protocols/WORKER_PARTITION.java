@@ -14,25 +14,25 @@ import org.jgroups.logging.LogFactory;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.Streamable;
 
-public class SLAVE_PARTITION extends Protocol {
+public class WORKER_PARTITION extends Protocol {
 
    protected static final short PROTOCOL_ID = (short) 0x51A7;
-   protected static Log log = LogFactory.getLog(SLAVE_PARTITION.class);
+   protected static Log log = LogFactory.getLog(WORKER_PARTITION.class);
 
-   protected int slaveIndex = -1;
-   protected Set<Integer> allowedSlaves;
+   protected int workerIndex = -1;
+   protected Set<Integer> allowedWorkers;
 
    static {
-      log.info("Registering SLAVE_PARTITION with id " + PROTOCOL_ID);
-      ClassConfigurator.add(PROTOCOL_ID, SlaveHeader.class);
+      log.info("Registering WORKER_PARTITION with id " + PROTOCOL_ID);
+      ClassConfigurator.add(PROTOCOL_ID, WorkerHeader.class);
    }
 
-   public void setAllowedSlaves(Set<Integer> slaves) {
-      allowedSlaves = slaves;
+   public void setAllowedWorkers(Set<Integer> workers) {
+      allowedWorkers = workers;
    }
 
-   public void setSlaveIndex(int slaveIndex) {
-      this.slaveIndex = slaveIndex;
+   public void setWorkerIndex(int workerIndex) {
+      this.workerIndex = workerIndex;
    }
 
    @Override
@@ -40,12 +40,12 @@ public class SLAVE_PARTITION extends Protocol {
       switch (evt.getType()) {
          case Event.MSG:
             Message msg = (Message) evt.getArg();
-            SlaveHeader header = (SlaveHeader) msg.getHeader(PROTOCOL_ID);
+            WorkerHeader header = (WorkerHeader) msg.getHeader(PROTOCOL_ID);
             if (header != null && header.getIndex() < 0) {
-               log.trace("Message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex -1");
-            } else if (header != null && allowedSlaves != null) {
-               if (!allowedSlaves.contains(header.getIndex())) {
-                  log.trace("Discarding message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex " + header.getIndex());
+               log.trace("Message " + msg.getSrc() + " -> " + msg.getDest() + " with workerIndex -1");
+            } else if (header != null && allowedWorkers != null) {
+               if (!allowedWorkers.contains(header.getIndex())) {
+                  log.trace("Discarding message " + msg.getSrc() + " -> " + msg.getDest() + " with workerIndex " + header.getIndex());
                   return null;
                }
             }
@@ -59,18 +59,18 @@ public class SLAVE_PARTITION extends Protocol {
       switch (evt.getType()) {
          case Event.MSG:
             Message msg = (Message) evt.getArg();
-            msg.putHeader(PROTOCOL_ID, new SlaveHeader(this.slaveIndex));
+            msg.putHeader(PROTOCOL_ID, new WorkerHeader(this.workerIndex));
       }
       return down_prot.down(evt);
    }
 
-   public static class SlaveHeader extends Header implements Streamable {
+   public static class WorkerHeader extends Header implements Streamable {
       int index = -1;
 
-      public SlaveHeader() {
+      public WorkerHeader() {
       }
 
-      public SlaveHeader(int index) {
+      public WorkerHeader(int index) {
          this.index = index;
       }
 
@@ -79,7 +79,7 @@ public class SLAVE_PARTITION extends Protocol {
       }
 
       public String toString() {
-         return "slaveIndex=" + index;
+         return "workerIndex=" + index;
       }
 
       public int size() {

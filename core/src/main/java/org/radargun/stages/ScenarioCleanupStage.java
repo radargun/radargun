@@ -13,7 +13,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -49,11 +49,11 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    private Long initialFreeMemory;
    private Set<Thread> initialThreads;
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
-         initialFreeMemory = (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY);
-         initialThreads = (Set<Thread>) slaveState.get(ScenarioInitStage.INITIAL_THREADS);
-         slaveState.reset();
+         initialFreeMemory = (Long) workerState.get(ScenarioInitStage.INITIAL_FREE_MEMORY);
+         initialThreads = (Set<Thread>) workerState.get(ScenarioInitStage.INITIAL_THREADS);
+         workerState.reset();
 
          int unfinishedThreads = 0;
          if (checkThreads) {
@@ -76,7 +76,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
          if ((unfinishedThreads > 0 || !memoryCheckResult) && heapDumpDir != null) {
             try {
-               File heapDumpFile = new File(heapDumpDir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
+               File heapDumpFile = new File(heapDumpDir, workerState.getConfigName() + "." + workerState.getWorkerIndex()
                   + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
                log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
                Utils.dumpHeap(heapDumpFile.getAbsolutePath());
@@ -88,22 +88,22 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
          Runtime runtime = Runtime.getRuntime();
          long availableMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
-         return new CleanupAck(slaveState, memoryCheckResult, initialFreeMemory, availableMemory, unfinishedThreads);
+         return new CleanupAck(workerState, memoryCheckResult, initialFreeMemory, availableMemory, unfinishedThreads);
       } finally {
          log.info("Memory after cleanup: \n" + Utils.getMemoryInfo());
       }
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       for (CleanupAck ack : instancesOf(acks, CleanupAck.class)) {
          log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
-            ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
+            ack.getWorkerIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
          if (ack.isError()) {
             log.warn("Ack contains errors: " + ack);
          }
       }
-      // since we restart the whole slave, it is not necessary to fail the scenario
+      // since we restart the whole worker, it is not necessary to fail the scenario
       // if the memory was not released properly.
       return StageResult.SUCCESS;
    }
@@ -202,8 +202,8 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       private final long initialAvailableMemory, finalAvailableMemory;
       private final int unfinishedThreads;
 
-      private CleanupAck(SlaveState slaveState, boolean memoryCheckResult, long initialAvailableMemory, long finalAvailableMemory, int unfinishedThreads) {
-         super(slaveState);
+      private CleanupAck(WorkerState workerState, boolean memoryCheckResult, long initialAvailableMemory, long finalAvailableMemory, int unfinishedThreads) {
+         super(workerState);
          this.memoryCheckResult = memoryCheckResult;
          this.initialAvailableMemory = initialAvailableMemory;
          this.finalAvailableMemory = finalAvailableMemory;

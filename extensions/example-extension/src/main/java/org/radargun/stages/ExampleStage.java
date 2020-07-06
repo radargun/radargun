@@ -6,7 +6,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.utils.TimeConverter;
 
 /**
@@ -22,22 +22,22 @@ public class ExampleStage extends AbstractDistStage {
    private long delay = 5000;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
          Thread.sleep(delay);
       } catch (InterruptedException e) {
          log.warn("Stage was interrupted!", e);
       }
-      log.infof("Slave %d says: %s", slaveState.getSlaveIndex(), foo);
-      return new ExampleAck(slaveState, String.format("Slave %d said: %s", slaveState.getSlaveIndex(), foo));
+      log.infof("Worker %d says: %s", workerState.getWorkerIndex(), foo);
+      return new ExampleAck(workerState, String.format("Worker %d said: %s", workerState.getWorkerIndex(), foo));
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (!result.isError()) {
          for (ExampleAck ack : instancesOf(acks, ExampleAck.class)) {
-            log.infof("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage());
+            log.infof("Worker %d reports: %s", ack.getWorkerIndex(), ack.getExampleMessage());
          }
       }
       return result;
@@ -46,8 +46,8 @@ public class ExampleStage extends AbstractDistStage {
    private static class ExampleAck extends DistStageAck {
       private String exampleMessage;
 
-      public ExampleAck(SlaveState slaveState, String exampleMessage) {
-         super(slaveState);
+      public ExampleAck(WorkerState workerState, String exampleMessage) {
+         super(workerState);
          this.exampleMessage = exampleMessage;
       }
 

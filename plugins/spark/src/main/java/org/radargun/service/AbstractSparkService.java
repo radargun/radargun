@@ -10,7 +10,7 @@ import org.radargun.utils.TimeConverter;
 /**
  * @author Matej Cimbora
  */
-@Service(doc = "Parent for Master & Worker services")
+@Service(doc = "Parent for Main & Worker services")
 public abstract class AbstractSparkService extends JavaProcessService {
 
    @Property(doc = "Home directory of the Spark distribution.", optional = false)

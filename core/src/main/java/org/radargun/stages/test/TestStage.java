@@ -17,7 +17,7 @@ import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -100,9 +100,9 @@ public abstract class TestStage extends BaseTestStage {
       if (reportLatencyAsServiceTime && cycleTime == 0) throw new IllegalStateException("Report Latency as Service Time can be enabled when cycleTime > 0");
    }
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         log.info("Not running test on this slave as service is not running.");
+         log.info("Not running test on this worker as service is not running.");
          return successfulResponse();
       }
       prepare();
@@ -131,12 +131,12 @@ public abstract class TestStage extends BaseTestStage {
    protected void destroy() {
    }
 
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      return processAckOnMaster(acks, testName);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      return processAckOnMain(acks, testName);
    }
 
-   protected StageResult processAckOnMaster(List<DistStageAck> acks, String testNameOverride) {
-      StageResult result = super.processAckOnMaster(acks);
+   protected StageResult processAckOnMain(List<DistStageAck> acks, String testNameOverride) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       Report.Test test = getTest(amendTest, testNameOverride);
@@ -155,10 +155,10 @@ public abstract class TestStage extends BaseTestStage {
                if (test.getGroupOperationsMap() == null) {
                   test.setGroupOperationsMap(ack.getGroupOperationsMap());
                }
-               test.addStatistics(testIteration, ack.getSlaveIndex(), ack.statistics);
+               test.addStatistics(testIteration, ack.getWorkerIndex(), ack.statistics);
             }
          } else {
-            log.trace("No statistics received from slave: " + ack.getSlaveIndex());
+            log.trace("No statistics received from worker: " + ack.getWorkerIndex());
          }
       }
       if (checkRepeatCondition(aggregated)) {
@@ -231,9 +231,9 @@ public abstract class TestStage extends BaseTestStage {
 
    protected Completion createCompletion() {
       if (numOperations > 0) {
-         long countPerNode = numOperations / getExecutingSlaves().size();
-         long modCountPerNode = numOperations % getExecutingSlaves().size();
-         if (getExecutingSlaveIndex() + 1 <= modCountPerNode) {
+         long countPerNode = numOperations / getExecutingWorkers().size();
+         long modCountPerNode = numOperations % getExecutingWorkers().size();
+         if (getExecutingWorkerIndex() + 1 <= modCountPerNode) {
             countPerNode++;
          }
          return new CountStressorCompletion(countPerNode);
@@ -254,8 +254,8 @@ public abstract class TestStage extends BaseTestStage {
    }
 
    protected List<Stressor> startStressors() {
-      int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
-      int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
+      int myFirstThread = getFirstThreadOn(workerState.getWorkerIndex());
+      int myNumThreads = getNumThreadsOn(workerState.getWorkerIndex());
       CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
 
       List<Stressor> stressors = new ArrayList<>();
@@ -275,7 +275,7 @@ public abstract class TestStage extends BaseTestStage {
 
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       List<Statistics> results = gatherResults(stressors, new StatisticsResultRetriever());
-      return new StatisticsAck(slaveState, results, statisticsPrototype.getGroupOperationsMap());
+      return new StatisticsAck(workerState, results, statisticsPrototype.getGroupOperationsMap());
    }
 
    protected <T> List<T> gatherResults(List<Stressor> stressors, ResultRetriever<T> retriever) {
@@ -300,29 +300,29 @@ public abstract class TestStage extends BaseTestStage {
       if (totalThreads > 0) {
          return totalThreads;
       } else if (numThreadsPerNode > 0) {
-         return getExecutingSlaves().size() * numThreadsPerNode;
+         return getExecutingWorkers().size() * numThreadsPerNode;
       } else throw new IllegalStateException();
    }
 
-   public int getFirstThreadOn(int slave) {
-      List<Integer> executingSlaves = getExecutingSlaves();
-      int execId = executingSlaves.indexOf(slave);
+   public int getFirstThreadOn(int worker) {
+      List<Integer> executingWorkers = getExecutingWorkers();
+      int execId = executingWorkers.indexOf(worker);
       if (numThreadsPerNode > 0) {
          return execId * numThreadsPerNode;
       } else if (totalThreads > 0) {
-         return execId * totalThreads / executingSlaves.size();
+         return execId * totalThreads / executingWorkers.size();
       } else {
          throw new IllegalStateException();
       }
    }
 
-   public int getNumThreadsOn(int slave) {
-      List<Integer> executingSlaves = getExecutingSlaves();
+   public int getNumThreadsOn(int worker) {
+      List<Integer> executingWorkers = getExecutingWorkers();
       if (numThreadsPerNode > 0) {
-         return executingSlaves.contains(slaveState.getSlaveIndex()) ? numThreadsPerNode : 0;
+         return executingWorkers.contains(workerState.getWorkerIndex()) ? numThreadsPerNode : 0;
       } else if (totalThreads > 0) {
-         int execId = executingSlaves.indexOf(slave);
-         return (execId + 1) * totalThreads / executingSlaves.size() - execId * totalThreads / executingSlaves.size();
+         int execId = executingWorkers.indexOf(worker);
+         return (execId + 1) * totalThreads / executingWorkers.size() - execId * totalThreads / executingWorkers.size();
       } else {
          throw new IllegalStateException();
       }
@@ -400,8 +400,8 @@ public abstract class TestStage extends BaseTestStage {
       public final List<Statistics> statistics;
       private final Map<String, Set<Operation>> groupOperationsMap;
 
-      public StatisticsAck(SlaveState slaveState, List<Statistics> statistics, Map<String, Set<Operation>> groupOperationsMap) {
-         super(slaveState);
+      public StatisticsAck(WorkerState workerState, List<Statistics> statistics, Map<String, Set<Operation>> groupOperationsMap) {
+         super(workerState);
          this.statistics = statistics;
          this.groupOperationsMap = groupOperationsMap;
       }

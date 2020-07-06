@@ -43,15 +43,15 @@ public class BackgroundRESTOperationsStopStage extends RESTOperationsTestStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         log.info("Not running test on this slave as service is not running.");
+         log.info("Not running test on this worker as service is not running.");
          return successfulResponse();
       }
       try {
-         BackgroundRESTOperationsStartStage startedStage = (BackgroundRESTOperationsStartStage) slaveState.get(testNameToStop);
+         BackgroundRESTOperationsStartStage startedStage = (BackgroundRESTOperationsStartStage) workerState.get(testNameToStop);
          if (startedStage == null) {
-            throw new RuntimeException("Unable to find the test in slaveState: " + testNameToStop);
+            throw new RuntimeException("Unable to find the test in workerState: " + testNameToStop);
          }
          log.info("Stopping test " + startedStage.testName + " running in the background.");
 
@@ -66,7 +66,7 @@ public class BackgroundRESTOperationsStopStage extends RESTOperationsTestStage {
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      return processAckOnMaster(acks, testNameToStop);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      return processAckOnMain(acks, testNameToStop);
    }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 @Trait(doc = "Information about clustered nodes.")
 public interface Clustered {
    /**
-    * @return True if this slave has unique role in the cluster
+    * @return True if this worker has unique role in the cluster
     */
    boolean isCoordinator();
 
@@ -34,7 +34,7 @@ public interface Clustered {
        */
       public final String name;
       /**
-       * True if the member is on this slave.
+       * True if the member is on this worker.
        */
       public final boolean local;
       /**
@@ -42,7 +42,7 @@ public interface Clustered {
        */
       public final boolean coordinator;
 
-      // TODO: it would be very nice to have getSlaveIndex() here, but we cannot find that out for remote nodes
+      // TODO: it would be very nice to have getWorkerIndex() here, but we cannot find that out for remote nodes
 
       public Member(String name, boolean local, boolean coordinator) {
          this.name = name;

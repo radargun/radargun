@@ -1,8 +1,8 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <!-- Specifies where should the master open socket  -->
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <!-- Specifies where should the main open socket  -->
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <!-- List of cluster configurations where the benchmark should run-->
    <clusters>
@@ -16,9 +16,9 @@
    <!-- List of configurations of the services -->
    <configurations>
       <config name="Infinispan 5.2 - distributed">
-         <!-- All slaves use the same configuration -->
+         <!-- All workers use the same configuration -->
          <setup plugin="infinispan52">
-            <!-- You can set JVM arguments for slaves here. -->
+            <!-- You can set JVM arguments for workers here. -->
             <vm-args>
                <memory max="4G" />
             </vm-args>

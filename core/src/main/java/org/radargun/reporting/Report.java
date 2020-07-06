@@ -38,16 +38,16 @@ public class Report implements Comparable<Report>, Serializable {
       this.timelines.add(new Timeline(-1));
    }
 
-   public void addNormalizedServiceConfig(int slaveIndex, Map<String, Properties> serviceConfigs) {
-      normalizedServiceConfigs.put(slaveIndex, serviceConfigs);
+   public void addNormalizedServiceConfig(int workerIndex, Map<String, Properties> serviceConfigs) {
+      normalizedServiceConfigs.put(workerIndex, serviceConfigs);
    }
 
    public Map<Integer, Map<String, Properties>> getNormalizedServiceConfigs() {
       return Collections.unmodifiableMap(normalizedServiceConfigs);
    }
 
-   public void addOriginalServiceConfig(int slaveIndex, Map<String, byte[]> serviceConfigs) {
-      originalServiceConfig.put(slaveIndex, serviceConfigs);
+   public void addOriginalServiceConfig(int workerIndex, Map<String, byte[]> serviceConfigs) {
+      originalServiceConfig.put(workerIndex, serviceConfigs);
    }
 
    public Map<Integer, Map<String, byte[]>> getOriginalServiceConfig() {
@@ -168,15 +168,15 @@ public class Report implements Comparable<Report>, Serializable {
       }
 
       /**
-       * Set statistics from given slave for given iteration.
+       * Set statistics from given worker for given iteration.
        * @param iteration
-       * @param slaveIndex
+       * @param workerIndex
        * @param stats
        */
-      public void addStatistics(int iteration, int slaveIndex, List<Statistics> stats) {
+      public void addStatistics(int iteration, int workerIndex, List<Statistics> stats) {
          ensureIterations(iteration + 1);
          TestIteration ti = iterations.get(iteration);
-         ti.addStatistics(slaveIndex, stats);
+         ti.addStatistics(workerIndex, stats);
       }
 
       /**
@@ -214,7 +214,7 @@ public class Report implements Comparable<Report>, Serializable {
       public final int id;
       private String value;
 
-      /* Slave index - Statistics from threads */
+      /* Worker index - Statistics from threads */
       private Map<Integer, List<Statistics>> statistics = new HashMap<>();
       private Map<String, TestResult> results = new TreeMap<>();
       private int threadCount;
@@ -225,13 +225,13 @@ public class Report implements Comparable<Report>, Serializable {
       }
 
       /**
-       * Add statistics for given slave.
-       * @param slaveIndex
-       * @param slaveStats
+       * Add statistics for given worker.
+       * @param workerIndex
+       * @param workerStats
        */
-      public void addStatistics(int slaveIndex, List<Statistics> slaveStats) {
-         statistics.put(slaveIndex, slaveStats);
-         threadCount += slaveStats.size();
+      public void addStatistics(int workerIndex, List<Statistics> workerStats) {
+         statistics.put(workerIndex, workerStats);
+         threadCount += workerStats.size();
       }
 
       /**
@@ -251,8 +251,8 @@ public class Report implements Comparable<Report>, Serializable {
          return Collections.unmodifiableSet(statistics.entrySet());
       }
 
-      public List<Statistics> getStatistics(int slaveIndex) {
-         return statistics.get(slaveIndex);
+      public List<Statistics> getStatistics(int workerIndex) {
+         return statistics.get(workerIndex);
       }
 
       public int getThreadCount() {
@@ -273,20 +273,20 @@ public class Report implements Comparable<Report>, Serializable {
     */
    public static class TestResult implements Serializable {
       public final String name;
-      public final Map<Integer, SlaveResult> slaveResults;
+      public final Map<Integer, WorkerResult> workerResults;
       public final String aggregatedValue;
       public final boolean suspicious;
       private TestIteration iteration;
 
       /**
        * @param name Name of the result must be unique.
-       * @param slaveResults Results from each slave.
-       * @param aggregatedValue Results from slaves 'merged' together.
+       * @param workerResults Results from each worker.
+       * @param aggregatedValue Results from workers 'merged' together.
        * @param suspicious Flag that the result is unexpected and should be highlighted in the report.
        */
-      public TestResult(String name, Map<Integer, SlaveResult> slaveResults, String aggregatedValue, boolean suspicious) {
+      public TestResult(String name, Map<Integer, WorkerResult> workerResults, String aggregatedValue, boolean suspicious) {
          this.name = name;
-         this.slaveResults = Collections.unmodifiableMap(slaveResults);
+         this.workerResults = Collections.unmodifiableMap(workerResults);
          this.aggregatedValue = aggregatedValue;
          this.suspicious = suspicious;
       }
@@ -301,13 +301,13 @@ public class Report implements Comparable<Report>, Serializable {
    }
 
    /**
-    * Result data from single slave.
+    * Result data from single worker.
     */
-   public static class SlaveResult implements Serializable {
+   public static class WorkerResult implements Serializable {
       public final String value;
       public final boolean suspicious;
 
-      public SlaveResult(String value, boolean suspicious) {
+      public WorkerResult(String value, boolean suspicious) {
          this.value = value;
          this.suspicious = suspicious;
       }

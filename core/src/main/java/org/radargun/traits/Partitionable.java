@@ -8,18 +8,18 @@ import java.util.Set;
 @Trait(doc = "Allows the wrapper to simulate partition split.")
 public interface Partitionable {
    /**
-    * Changes with which members this slave can communicate. Should be run only when the wrapper is started.
+    * Changes with which members this worker can communicate. Should be run only when the wrapper is started.
     *
-    * @param slaveIndex Index of this slave
-    * @param members Index of slaves with which this slave can communicate
+    * @param workerIndex Index of this worker
+    * @param members Index of workers with which this worker can communicate
     */
-   void setMembersInPartition(int slaveIndex, Set<Integer> members);
+   void setMembersInPartition(int workerIndex, Set<Integer> members);
 
    /**
     * Allows to set the partition before the wrapper is started.
     *
-    * @param slaveIndex Index of this slave
-    * @param members Index of slaves with which this slave can communicate
+    * @param workerIndex Index of this worker
+    * @param members Index of workers with which this worker can communicate
     */
-   void setStartWithReachable(int slaveIndex, Set<Integer> members);
+   void setStartWithReachable(int workerIndex, Set<Integer> members);
 }

@@ -7,7 +7,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 import org.radargun.DistStageAck;
 import org.radargun.logging.Log;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeService;
 import org.testng.annotations.Test;
@@ -88,17 +88,17 @@ public class CheckTopologyStageTest extends PowerMockTestCase {
       PowerMockito.mockStatic(TimeService.class);
       PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(10l);
 
-      DistStageAck stageResult = stage.executeOnSlave();
+      DistStageAck stageResult = stage.executeOnWorker();
       assertFalse(stageResult.isError());
 
       PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(13l);
-      stageResult = stage.executeOnSlave();
+      stageResult = stage.executeOnWorker();
       assertTrue(stageResult.isError());
    }
 
    private CheckTopologyStage initStage(EnumSet<HistoryType> checkEvents, long checkPeriod, boolean changed) throws NoSuchFieldException, IllegalAccessException {
       CheckTopologyStage stage = spy(new CheckTopologyStage());
-      stage.initOnSlave(mock(SlaveState.class));
+      stage.initOnWorker(mock(WorkerState.class));
 
       Log log = mock(Log.class);
       setClassProperty(AbstractDistStage.class, stage, "log", log);

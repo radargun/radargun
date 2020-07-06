@@ -13,7 +13,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.Request;
@@ -83,13 +83,13 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    public List<KeyValueProperty> collatorParams = null;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-      + "final results of the MapReduceTask are stored in the slave state. "
+      + "final results of the MapReduceTask are stored in the worker state. "
       + "The default is false.")
    public boolean storeResult = false;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
       + "final results of the MapReduceTask are written to the log of the "
-      + "first slave node. The default is false.")
+      + "first worker node. The default is false.")
    public boolean printResult = false;
 
    @Property(doc = "A timeout value for the remote communication that happens "
@@ -103,7 +103,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          "on data sets with many distinct keys. On false, only result sizes are checked. The default is true.")
    private boolean deepComparePreviousExecutions = true;
 
-   @Property(doc = "The name of the key in the MasterState object that returns the total number of "
+   @Property(doc = "The name of the key in the MainState object that returns the total number of "
       + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    public String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
@@ -114,17 +114,17 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private MapReducer<KOut, VOut, R> mapReducer;
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError())
          return result;
 
-      Report report = masterState.getReport();
+      Report report = mainState.getReport();
       Report.Test test = report.createTest("Map_Reduce_Stage", null, true);
       int testIteration = test.getIterations().size();
 
-      Map<Integer, Report.SlaveResult> numberOfResultKeysResult = new HashMap<Integer, Report.SlaveResult>();
-      Map<Integer, Report.SlaveResult> durationsResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.WorkerResult> numberOfResultKeysResult = new HashMap<Integer, Report.WorkerResult>();
+      Map<Integer, Report.WorkerResult> durationsResult = new HashMap<Integer, Report.WorkerResult>();
 
       for (MapReduceAck ack : instancesOf(acks, MapReduceAck.class)) {
          if (ack.stats != null) {
@@ -132,13 +132,13 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             if (opStats == null) {
                opStats = (DataOperationStats) ack.stats.getOperationStats(MapReducer.MAPREDUCE_COLLATOR.name);
             }
-            opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
-            test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
-            durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
+            opStats.setTotalBytes((Long) mainState.get(totalBytesKey));
+            test.addStatistics(testIteration, ack.getWorkerIndex(), Collections.singletonList(ack.stats));
+            durationsResult.put(ack.getWorkerIndex(), new Report.WorkerResult(opStats.getResponseTimes(), false));
             test.addResult(testIteration, new Report.TestResult("Map/Reduce durations", durationsResult, "", false));
          }
          if (ack.numberOfResultKeys != null) {
-            numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
+            numberOfResultKeysResult.put(ack.getWorkerIndex(), new Report.WorkerResult(ack.numberOfResultKeys, false));
             test.addResult(testIteration, new Report.TestResult("Key count in Map/Reduce result map",
                numberOfResultKeysResult, "", false));
          }
@@ -148,7 +148,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return errorResponse("Service is not runnning", null);
       }
@@ -198,9 +198,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       if (storeResult) {
          try {
             if (collatorFqn == null) {
-               slaveState.put(MAPREDUCE_RESULT_KEY, new MapReduceResult<>(payloadMap));
+               workerState.put(MAPREDUCE_RESULT_KEY, new MapReduceResult<>(payloadMap));
             } else {
-               slaveState.put(MAPREDUCE_RESULT_KEY, new MapReduceResult<>(payloadObject));
+               workerState.put(MAPREDUCE_RESULT_KEY, new MapReduceResult<>(payloadObject));
             }
          } catch (Exception e) {
             log.error("Failed to put result object into cache", e);
@@ -240,7 +240,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    }
 
    private DistStageAck executeMapReduceTask(Task<KOut, VOut, R> task, Statistics stats) {
-      MapReduceAck ack = new MapReduceAck(slaveState);
+      MapReduceAck ack = new MapReduceAck(workerState);
       try {
          if (collatorFqn != null) {
             Request request = stats.startRequest();
@@ -263,7 +263,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                if (storeResult) {
                   log.info("MapReduce task completed in " + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
 
-                  MapReduceResult<KOut, VOut, R> mapReduceResult = (MapReduceResult) slaveState.get(MAPREDUCE_RESULT_KEY);
+                  MapReduceResult<KOut, VOut, R> mapReduceResult = (MapReduceResult) workerState.get(MAPREDUCE_RESULT_KEY);
                   int totalSize = 0;
                   if (mapReduceResult != null) {
                      if (mapReduceResult.payloadMap != null) {
@@ -317,8 +317,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       private Statistics stats;
       private String numberOfResultKeys;
 
-      private MapReduceAck(SlaveState slaveState) {
-         super(slaveState);
+      private MapReduceAck(WorkerState workerState) {
+         super(workerState);
       }
 
       public void setStats(Statistics stats) {

@@ -16,7 +16,7 @@ import org.radargun.utils.TimeService;
  */
 public class Timeline implements Serializable, Comparable<Timeline> {
 
-   public final int slaveIndex;
+   public final int workerIndex;
    /* Events plotted on all charts as marker events. */
    private Map<String, List<MarkerEvent>> events = new HashMap<>();
    /* Values plotted in separate charts */
@@ -24,8 +24,8 @@ public class Timeline implements Serializable, Comparable<Timeline> {
    private long firstTimestamp = Long.MAX_VALUE;
    private long lastTimestamp = Long.MIN_VALUE;
 
-   public Timeline(int slaveIndex) {
-      this.slaveIndex = slaveIndex;
+   public Timeline(int workerIndex) {
+      this.workerIndex = workerIndex;
    }
 
    public synchronized void addEvent(String category, MarkerEvent e) {
@@ -145,7 +145,7 @@ public class Timeline implements Serializable, Comparable<Timeline> {
 
    @Override
    public int compareTo(Timeline o) {
-      return Integer.compare(slaveIndex, o.slaveIndex);
+      return Integer.compare(workerIndex, o.workerIndex);
    }
 
 
@@ -216,7 +216,7 @@ public class Timeline implements Serializable, Comparable<Timeline> {
    }
 
    /**
-    * Occurence of this event is not a value in any series, such as slave crash.
+    * Occurence of this event is not a value in any series, such as worker crash.
     */
    public static class TextEvent extends MarkerEvent {
       public final String text;

@@ -11,13 +11,13 @@ import org.radargun.config.Property;
 /**
  * @author Matej Cimbora
  */
-@Service(doc = "Service encapsulating Apache Spark (worker node). Current implementation is limited to one slave per host.")
+@Service(doc = "Service encapsulating Apache Spark (worker node). Current implementation is limited to one worker per host.")
 public class SparkWorkerService extends AbstractSparkService {
 
-   @Property(doc = "Name of the host where master node is deployed. Default is localhost.")
+   @Property(doc = "Name of the host where main node is deployed. Default is localhost.")
    protected String host = "localhost";
 
-   @Property(doc = "Port under which master node is accessible. Default is 7077.")
+   @Property(doc = "Port under which main node is accessible. Default is 7077.")
    protected int port = 7077;
 
    @Init
@@ -28,7 +28,7 @@ public class SparkWorkerService extends AbstractSparkService {
    @Override
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
-      command.add(FileSystems.getDefault().getPath(home, "sbin", "start-slave.sh").toString());
+      command.add(FileSystems.getDefault().getPath(home, "sbin", "start-worker.sh").toString());
       command.add("spark://" + host + ":" + port);
       return command;
    }

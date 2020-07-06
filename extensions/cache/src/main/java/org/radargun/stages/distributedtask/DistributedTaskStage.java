@@ -18,7 +18,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.Request;
@@ -59,7 +59,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    @Property(doc = "The name of the failover policy. The default is default policy of the service.")
    public String failoverPolicy;
 
-   // TODO: specify rather the slave ids/groups - RadarGun identifier.
+   // TODO: specify rather the worker ids/groups - RadarGun identifier.
    // However, another stage + trait to gather these data would be required.
    @Property(doc = "The node address where the task will be "
       + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
@@ -68,7 +68,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    @Property(doc = "The number of times to execute the Callable. The default is 1.")
    public int numExecutions = 1;
 
-   @Property(doc = "The name of the key in the MasterState object that returns the total number of "
+   @Property(doc = "The name of the key in the MainState object that returns the total number of "
       + "bytes processed by the Callable. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    public String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
@@ -82,22 +82,22 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private Clustered clustered;
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
 
-      Report report = masterState.getReport();
+      Report report = mainState.getReport();
       Report.Test test = report.createTest("Distributed_Task_Stage", null, true);
       int testIteration = test.getIterations().size();
 
-      Map<Integer, Report.SlaveResult> durationsResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.WorkerResult> durationsResult = new HashMap<Integer, Report.WorkerResult>();
 
       for (DistributedTaskAck ack : instancesOf(acks, DistributedTaskAck.class)) {
          if (ack.stats != null) {
             DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationStats(DistributedTaskExecutor.EXECUTE.name);
-            opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
-            durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
+            opStats.setTotalBytes((Long) mainState.get(totalBytesKey));
+            durationsResult.put(ack.getWorkerIndex(), new Report.WorkerResult(opStats.getResponseTimes(), false));
             test.addResult(testIteration, new Report.TestResult("Callable durations", durationsResult, "", false));
-            test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
+            test.addStatistics(testIteration, ack.getWorkerIndex(), Collections.singletonList(ack.stats));
          }
       }
 
@@ -105,7 +105,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return errorResponse("Service not running", null);
       }
@@ -114,15 +114,15 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          return errorResponse("The distributed task or callable class must be specified.", null);
       }
 
-      if (slaveState.getSlaveIndex() == 0) {
+      if (workerState.getWorkerIndex() == 0) {
          return executeTask();
       } else {
-         return new DistributedTaskAck(slaveState);
+         return new DistributedTaskAck(workerState);
       }
    }
 
    private DistStageAck executeTask() {
-      DistributedTaskAck ack = new DistributedTaskAck(slaveState);
+      DistributedTaskAck ack = new DistributedTaskAck(workerState);
       Statistics stats = new BasicStatistics(new DataOperationStats());
 
       stats.begin();
@@ -178,8 +178,8 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private static class DistributedTaskAck extends DistStageAck {
       private Statistics stats;
 
-      public DistributedTaskAck(SlaveState slaveState) {
-         super(slaveState);
+      public DistributedTaskAck(WorkerState workerState) {
+         super(workerState);
       }
 
       public void setStats(Statistics stats) {

@@ -63,8 +63,8 @@ public class OpenShiftService implements Lifecycle {
    @Property(doc = "Selector for pods. The service will wait for the pods to be ready before proceeding.", converter = EnvsConverter.class)
    protected Map<String, String> podsSelector = Collections.emptyMap();
 
-   @Property(doc = "URL of OpenShift master. Default is 127.0.0.1:8443.", optional = false)
-   protected String masterUrl = "127.0.0.1:8443";
+   @Property(doc = "URL of OpenShift main. Default is 127.0.0.1:8443.", optional = false)
+   protected String mainUrl = "127.0.0.1:8443";
 
    @Property(doc = "OpenShift namespace to be used. Default is myproject.")
    protected String namespace = "myproject";
@@ -179,7 +179,7 @@ public class OpenShiftService implements Lifecycle {
 
    private void configureOpenShiftClient() {
       ConfigBuilder builder = new ConfigBuilder();
-      builder.withMasterUrl(masterUrl).withNamespace(namespace);
+      builder.withMasterUrl(mainUrl).withNamespace(namespace);
       if (oauthToken != null) {
          builder.withOauthToken(oauthToken);
       } else {

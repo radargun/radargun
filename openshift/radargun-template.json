@@ -20,9 +20,9 @@
          "kind": "Service",
          "metadata": {
              "labels": {
-                "application": "radargun-slave"
+                "application": "radargun-worker"
              },
-             "name": "radargun-slave-router"
+             "name": "radargun-worker-router"
          },
          "spec": {
              "clusterIP": "None",
@@ -35,7 +35,7 @@
                 }
              ],
              "selector": {
-                 "application": "radargun-slave"
+                 "application": "radargun-worker"
              },
              "sessionAffinity": "None",
              "type": "ClusterIP"
@@ -52,20 +52,20 @@
                "description": "RadarGun Master service"
             },
             "labels": {
-               "application": "radargun-master"
+               "application": "radargun-main"
             },
-            "name": "radargun-master"
+            "name": "radargun-main"
          },
          "spec": {
             "ports": [
                {
-                  "name": "radargun-master",
+                  "name": "radargun-main",
                   "port": 2103,
                   "targetPort": 2103
                }
             ],
             "selector": {
-               "statefulSet": "radargun-master"
+               "statefulSet": "radargun-main"
             }
          }
       },
@@ -74,9 +74,9 @@
          "kind": "StatefulSet",
          "metadata": {
             "labels": {
-               "application": "radargun-master"
+               "application": "radargun-main"
             },
-            "name": "radargun-master"
+            "name": "radargun-main"
          },
          "spec": { 
             "replicas": 1,
@@ -93,11 +93,11 @@
             "template": {
                "metadata": {
                   "labels": {
-                     "application": "radargun-master",
-                     "statefulSet": "radargun-master",
+                     "application": "radargun-main",
+                     "statefulSet": "radargun-main",
                      "template": "radargun"
                   },
-                  "name": "radargun-master"
+                  "name": "radargun-main"
                },
                "spec": {
                   "containers": [
@@ -109,7 +109,7 @@
                            },
                            {
                               "name": "CUSTOM_JAVA_OPTS",
-                              "value": "-Xms412M -Xmx412M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -Xloggc:gc-master.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
+                              "value": "-Xms412M -Xmx412M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -Xloggc:gc-main.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
                            },
                            {
                               "name": "OPENSHIFT_MASTER_URL",
@@ -129,9 +129,9 @@
                            }
                         ],
                         "image": "radargun:latest",
-                        "name": "radargun-master",
+                        "name": "radargun-main",
                         "command": [
-                           "/opt/radargun/run_master.sh"
+                           "/opt/radargun/run_main.sh"
                         ],
                         "volumeMounts": [
                             {
@@ -146,7 +146,7 @@
                         "ports": [
                            {
                               "containerPort": 2103,
-                              "name": "master-port",
+                              "name": "main-port",
                               "protocol": "TCP"
                            }
                         ],
@@ -204,10 +204,10 @@
          "kind": "StatefulSet",
          "metadata": {
             "labels": {
-               "application": "radargun-slave",
+               "application": "radargun-worker",
                "template": "radargun"
             },
-            "name": "radargun-slave"
+            "name": "radargun-worker"
          },
          "spec": { 
             "replicas": "${{NUMBER_OF_SLAVES}}",
@@ -225,11 +225,11 @@
             "template": {
                "metadata": {
                   "labels": {
-                     "application": "radargun-slave",
-                     "statefulSet": "radargun-slave",
+                     "application": "radargun-worker",
+                     "statefulSet": "radargun-worker",
                      "template": "radargun"
                   },
-                  "name": "radargun-slave"
+                  "name": "radargun-worker"
                },
                "spec": {
                   "containers": [
@@ -261,9 +261,9 @@
                            }
                         ],
                         "image": "radargun:latest",
-                        "name": "radargun-slave",
+                        "name": "radargun-worker",
                         "command": [
-                           "/opt/radargun/run_slave.sh"
+                           "/opt/radargun/run_worker.sh"
                         ],
                         "volumeMounts": [
                             {
@@ -338,7 +338,7 @@
          "name": "RADARGUN_MASTER",
          "displayName": "RadarGun Master hostname",
          "required": true,
-         "value": "radargun-master.myproject.svc"
+         "value": "radargun-main.myproject.svc"
       },
       {
          "description": "RadarGun configuration/benchmark file",
@@ -350,12 +350,12 @@
       {
          "description": "Number of instances in the cluster.",
          "name": "NUMBER_OF_SLAVES",
-         "displayName": "Number of slaves",
+         "displayName": "Number of workers",
          "required": true,
          "value": "1"
       },
       {
-         "description": "Total container memory in MiB for RadarGun slaves.",
+         "description": "Total container memory in MiB for RadarGun workers.",
          "displayName": "Total Memory",
          "name": "TOTAL_CONTAINER_MEM",
          "required": false,
@@ -375,8 +375,8 @@
          "required": false
       },
       {
-         "description": "The master-url attribute from openshift plugin",
-         "displayName": "The master-url attribute from openshift plugin",
+         "description": "The main-url attribute from openshift plugin",
+         "displayName": "The main-url attribute from openshift plugin",
          "name": "OPENSHIFT_MASTER_URL",
          "required": false
       },

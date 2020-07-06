@@ -29,9 +29,9 @@ public class CheckCounterStage extends AbstractDistStage {
    protected CounterOperations counterOperations;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         log.info("Not running test on this slave as service is not running.");
+         log.info("Not running test on this worker as service is not running.");
          return successfulResponse();
       }
       CounterOperations.Counter counter = counterOperations.getCounter(counterName);
@@ -47,7 +47,7 @@ public class CheckCounterStage extends AbstractDistStage {
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      return super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      return super.processAckOnMain(acks);
    }
 }

@@ -18,9 +18,9 @@ public class BackgroundStatisticsStartStage extends AbstractDistStage {
    private long statsIterationDuration = 5000;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
-         BackgroundStatisticsManager instance = BackgroundStatisticsManager.getOrCreateInstance(slaveState, name, statsIterationDuration);
+         BackgroundStatisticsManager instance = BackgroundStatisticsManager.getOrCreateInstance(workerState, name, statsIterationDuration);
 
          log.info("Starting statistics threads");
          instance.startStats();

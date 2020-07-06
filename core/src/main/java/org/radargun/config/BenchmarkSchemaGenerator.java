@@ -54,9 +54,9 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       benchmarkElement.appendChild(benchmarkComplex);
       Element benchmarkSequence = createSequence(benchmarkComplex);
 
-      Element masterComplex = createComplexElement(benchmarkSequence, ELEMENT_MASTER, 0, 1, null);
-      addAttribute(masterComplex, ATTR_BIND_ADDRESS, false);
-      addAttribute(masterComplex, ATTR_PORT, intType.toString(), null, false);
+      Element mainComplex = createComplexElement(benchmarkSequence, ELEMENT_MAIN, 0, 1, null);
+      addAttribute(mainComplex, ATTR_BIND_ADDRESS, false);
+      addAttribute(mainComplex, ATTR_PORT, intType.toString(), null, false);
 
       Element clustersChoice = createChoice(benchmarkSequence, 0, 1);
       Element clustersComplex = createComplexElement(clustersChoice, ELEMENT_CLUSTERS, 0, 1, null);

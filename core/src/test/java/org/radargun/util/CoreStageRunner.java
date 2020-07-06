@@ -15,13 +15,13 @@ import org.radargun.StageResult;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.InitHelper;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.AbstractMasterStage;
-import org.radargun.state.MasterState;
-import org.radargun.state.SlaveState;
+import org.radargun.stages.AbstractMainStage;
+import org.radargun.state.MainState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.TraitHelper;
 
 /**
@@ -30,7 +30,7 @@ import org.radargun.traits.TraitHelper;
 public class CoreStageRunner {
 
    private final Cluster cluster;
-   private final List<PerSlaveConfiguration> perSlaveConfigurations = new ArrayList<>(2);
+   private final List<PerWorkerConfiguration> perWorkerConfigurations = new ArrayList<>(2);
 
    private static final String DEFAULT_PLUGIN = "plugin";
    private static final String DEFAULT_SERVICE = "service";
@@ -48,40 +48,40 @@ public class CoreStageRunner {
       this.cluster = cluster;
       for (int i = 0; i < clusterSize; i++) {
          Map<Class<?>, Object> traitMap = getDefaultTraitMap();
-         SlaveState slaveState = new SlaveState();
-         slaveState.setSlaveIndex(i);
-         slaveState.setCluster(cluster);
-         slaveState.setPlugin(DEFAULT_PLUGIN);
-         slaveState.setService(DEFAULT_SERVICE);
-         slaveState.setTimeline(new Timeline(i));
-         slaveState.setTraits(traitMap);
-         MasterState masterState = new MasterState(new MasterConfig(DEFAULT_PORT, DEFAULT_HOST));
-         masterState.setCluster(cluster);
-         masterState.setReport(new Report(new Configuration(DEFAULT_CONFIGURATION), cluster));
-         perSlaveConfigurations.add(new PerSlaveConfiguration(traitMap, slaveState, masterState));
+         WorkerState workerState = new WorkerState();
+         workerState.setWorkerIndex(i);
+         workerState.setCluster(cluster);
+         workerState.setPlugin(DEFAULT_PLUGIN);
+         workerState.setService(DEFAULT_SERVICE);
+         workerState.setTimeline(new Timeline(i));
+         workerState.setTraits(traitMap);
+         MainState mainState = new MainState(new MainConfig(DEFAULT_PORT, DEFAULT_HOST));
+         mainState.setCluster(cluster);
+         mainState.setReport(new Report(new Configuration(DEFAULT_CONFIGURATION), cluster));
+         perWorkerConfigurations.add(new PerWorkerConfiguration(traitMap, workerState, mainState));
       }
    }
 
-   public DistStageAck executeOnSlave(AbstractDistStage stage) throws Exception {
-      return executeOnSlave(stage, 0);
+   public DistStageAck executeOnWorker(AbstractDistStage stage) throws Exception {
+      return executeOnWorker(stage, 0);
    }
 
-   public DistStageAck executeOnSlave(AbstractDistStage stage, int slaveIndex) throws Exception {
-      checkSlaveIndex(slaveIndex);
-      PerSlaveConfiguration perSlaveConfiguration = perSlaveConfigurations.get(slaveIndex);
-      TraitHelper.inject(stage, perSlaveConfiguration.traitMap);
+   public DistStageAck executeOnWorker(AbstractDistStage stage, int workerIndex) throws Exception {
+      checkWorkerIndex(workerIndex);
+      PerWorkerConfiguration perWorkerConfiguration = perWorkerConfigurations.get(workerIndex);
+      TraitHelper.inject(stage, perWorkerConfiguration.traitMap);
       InitHelper.init(stage);
-      stage.initOnSlave(perSlaveConfiguration.slaveState);
+      stage.initOnWorker(perWorkerConfiguration.workerState);
       // TODO move elsewhere?
-      stage.initOnMaster(perSlaveConfiguration.masterState);
-      return stage.executeOnSlave();
+      stage.initOnMain(perWorkerConfiguration.mainState);
+      return stage.executeOnWorker();
    }
 
-   public List<DistStageAck> executeOnSlave(AbstractDistStage[] stages, int[] slaveIndices) throws Exception {
+   public List<DistStageAck> executeOnWorker(AbstractDistStage[] stages, int[] workerIndices) throws Exception {
       ExecutorService executor = Executors.newFixedThreadPool(stages.length);
       List<Callable<DistStageAck>> callables = new ArrayList<>(stages.length);
       IntStream.range(0, stages.length).forEach(i -> {
-         callables.add(() -> executeOnSlave(stages[i], slaveIndices[i]));
+         callables.add(() -> executeOnWorker(stages[i], workerIndices[i]));
       });
       List<Future<DistStageAck>> futures = executor.invokeAll(callables);
       List<DistStageAck> acks = new ArrayList<>(stages.length);
@@ -97,17 +97,17 @@ public class CoreStageRunner {
       return acks;
    }
 
-   public StageResult processAckOnMaster(AbstractDistStage stage, List<DistStageAck> acks) {
-      return stage.processAckOnMaster(acks);
+   public StageResult processAckOnMain(AbstractDistStage stage, List<DistStageAck> acks) {
+      return stage.processAckOnMain(acks);
    }
 
-   public StageResult executeMasterStage(AbstractMasterStage stage) throws Exception {
+   public StageResult executeMainStage(AbstractMainStage stage) throws Exception {
       // TODO more initialization
       InitHelper.init(stage);
-      MasterState masterState = new MasterState(new MasterConfig(DEFAULT_PORT, DEFAULT_HOST));
-      masterState.setCluster(cluster);
-      masterState.setReport(new Report(new Configuration(DEFAULT_CONFIGURATION), cluster));
-      stage.init(masterState);
+      MainState mainState = new MainState(new MainConfig(DEFAULT_PORT, DEFAULT_HOST));
+      mainState.setCluster(cluster);
+      mainState.setReport(new Report(new Configuration(DEFAULT_CONFIGURATION), cluster));
+      stage.init(mainState);
       return stage.execute();
    }
 
@@ -119,47 +119,47 @@ public class CoreStageRunner {
       return getTraitImpl(clazz, 0);
    }
 
-   public <T> T getTraitImpl(Class<T> clazz, int slaveIndex) {
-      checkSlaveIndex(slaveIndex);
-      return (T) perSlaveConfigurations.get(slaveIndex).traitMap.get(clazz);
+   public <T> T getTraitImpl(Class<T> clazz, int workerIndex) {
+      checkWorkerIndex(workerIndex);
+      return (T) perWorkerConfigurations.get(workerIndex).traitMap.get(clazz);
    }
 
    public void replaceTraitImpl(Class clazz, Object traitImpl) {
       replaceTraitImpl(clazz, 0);
    }
 
-   public void replaceTraitImpl(Class clazz, Object traitImpl, int slaveIndex) {
-      checkSlaveIndex(slaveIndex);
-      if (!perSlaveConfigurations.get(slaveIndex).traitMap.containsKey(clazz)) {
+   public void replaceTraitImpl(Class clazz, Object traitImpl, int workerIndex) {
+      checkWorkerIndex(workerIndex);
+      if (!perWorkerConfigurations.get(workerIndex).traitMap.containsKey(clazz)) {
          throw new IllegalArgumentException("Trait implementation for class " + clazz + " not found");
       }
-      perSlaveConfigurations.get(slaveIndex).traitMap.put(clazz, traitImpl);
+      perWorkerConfigurations.get(workerIndex).traitMap.put(clazz, traitImpl);
    }
 
-   public SlaveState getSlaveState() {
-      return getSlaveState(0);
+   public WorkerState getWorkerState() {
+      return getWorkerState(0);
    }
 
-   public SlaveState getSlaveState(int slaveIndex) {
-      checkSlaveIndex(slaveIndex);
-      return perSlaveConfigurations.get(slaveIndex).slaveState;
+   public WorkerState getWorkerState(int workerIndex) {
+      checkWorkerIndex(workerIndex);
+      return perWorkerConfigurations.get(workerIndex).workerState;
    }
 
-   private static class PerSlaveConfiguration {
+   private static class PerWorkerConfiguration {
       private final Map<Class<?>, Object> traitMap;
-      private final SlaveState slaveState;
-      private final MasterState masterState;
+      private final WorkerState workerState;
+      private final MainState mainState;
 
-      public PerSlaveConfiguration(Map<Class<?>, Object> traitMap, SlaveState slaveState, MasterState masterState) {
+      public PerWorkerConfiguration(Map<Class<?>, Object> traitMap, WorkerState workerState, MainState mainState) {
          this.traitMap = traitMap;
-         this.slaveState = slaveState;
-         this.masterState = masterState;
+         this.workerState = workerState;
+         this.mainState = mainState;
       }
    }
 
-   private void checkSlaveIndex(int slaveIndex) {
-      if (slaveIndex >= cluster.getSize()) {
-         throw new IllegalArgumentException("Illegal slave index provided, expected value from range (0 - " + (cluster.getSize() - 1) + "), was " + slaveIndex);
+   private void checkWorkerIndex(int workerIndex) {
+      if (workerIndex >= cluster.getSize()) {
+         throw new IllegalArgumentException("Illegal worker index provided, expected value from range (0 - " + (cluster.getSize() - 1) + "), was " + workerIndex);
       }
    }
 }

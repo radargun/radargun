@@ -91,11 +91,11 @@ public class CsvReporterTest {
          report1.addStage("stage1");
          report1.addStage("stage2");
          Report.Test test1 = report1.createTest("test1", "it1", true);
-         Map<Integer, Report.SlaveResult> slaveResults = new HashMap<>();
-         slaveResults.put(0, new Report.SlaveResult("10", false));
-         slaveResults.put(1, new Report.SlaveResult("20", false));
-         test1.addResult(0, new Report.TestResult("test1", slaveResults, "30", false));
-         test1.addResult(1, new Report.TestResult("test1", slaveResults, "30", false));
+         Map<Integer, Report.WorkerResult> workerResults = new HashMap<>();
+         workerResults.put(0, new Report.WorkerResult("10", false));
+         workerResults.put(1, new Report.WorkerResult("20", false));
+         test1.addResult(0, new Report.TestResult("test1", workerResults, "30", false));
+         test1.addResult(1, new Report.TestResult("test1", workerResults, "30", false));
          test1.addStatistics(0, 0, Arrays.asList((Statistics) basicStatistics1));
          test1.addStatistics(0, 1, Arrays.asList((Statistics) basicStatistics1));
          test1.addStatistics(1, 0, Arrays.asList((Statistics) basicStatistics1));
@@ -106,12 +106,12 @@ public class CsvReporterTest {
          report2.addStage("stage1");
          report2.addStage("stage2");
          Report.Test test2 = report2.createTest("test1", "it1", true);
-         slaveResults = new HashMap<>();
-         slaveResults.put(0, new Report.SlaveResult("10", false));
-         slaveResults.put(1, new Report.SlaveResult("20", false));
-         slaveResults.put(2, new Report.SlaveResult("30", false));
-         test2.addResult(0, new Report.TestResult("test1", slaveResults, "60", false));
-         test2.addResult(1, new Report.TestResult("test1", slaveResults, "60", false));
+         workerResults = new HashMap<>();
+         workerResults.put(0, new Report.WorkerResult("10", false));
+         workerResults.put(1, new Report.WorkerResult("20", false));
+         workerResults.put(2, new Report.WorkerResult("30", false));
+         test2.addResult(0, new Report.TestResult("test1", workerResults, "60", false));
+         test2.addResult(1, new Report.TestResult("test1", workerResults, "60", false));
          test2.addStatistics(0, 0, Arrays.asList((Statistics) basicStatistics1));
          test2.addStatistics(0, 1, Arrays.asList((Statistics) basicStatistics1));
          test2.addStatistics(0, 2, Arrays.asList((Statistics) basicStatistics1));
@@ -128,7 +128,7 @@ public class CsvReporterTest {
          List<String> lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "test1_conf1_default_2.csv"));
          // header (1 line) + 2 iterations (4 lines) + summary (2 lines)
          Assert.assertEquals(lines.size(), 7);
-         Assert.assertEquals(lines.get(0), "SlaveIndex;Iteration;Period;ThreadCount;" +
+         Assert.assertEquals(lines.get(0), "WorkerIndex;Iteration;Period;ThreadCount;" +
             "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
             "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
             "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
@@ -142,7 +142,7 @@ public class CsvReporterTest {
          lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "test1_conf1_default_3.csv"));
          // header (1 line) + 2 iterations (6 lines) + summary (2 lines)
          Assert.assertEquals(lines.size(), 9);
-         Assert.assertEquals(lines.get(0), "SlaveIndex;Iteration;Period;ThreadCount;" +
+         Assert.assertEquals(lines.get(0), "WorkerIndex;Iteration;Period;ThreadCount;" +
             "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
             "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
             "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
@@ -157,25 +157,25 @@ public class CsvReporterTest {
 
          lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "timeline_conf1_default_2_event1.csv"));
          Assert.assertEquals(lines.size(), 3);
-         Assert.assertEquals(lines.get(0), "Timestamp;Slave 0;Slave 1;");
+         Assert.assertEquals(lines.get(0), "Timestamp;Worker 0;Worker 1;");
          Assert.assertEquals(lines.get(1), "0;1;1;");
          Assert.assertEquals(lines.get(2), "1000;2;2;");
 
          lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "timeline_conf1_default_2_event2.csv"));
          Assert.assertEquals(lines.size(), 3);
-         Assert.assertEquals(lines.get(0), "Timestamp;Slave 0;Slave 1;");
+         Assert.assertEquals(lines.get(0), "Timestamp;Worker 0;Worker 1;");
          Assert.assertEquals(lines.get(1), "0;1;1;");
          Assert.assertEquals(lines.get(2), "1000;2;2;");
 
          lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "timeline_conf1_default_3_event1.csv"));
          Assert.assertEquals(lines.size(), 3);
-         Assert.assertEquals(lines.get(0), "Timestamp;Slave 0;Slave 1;Slave 2;");
+         Assert.assertEquals(lines.get(0), "Timestamp;Worker 0;Worker 1;Worker 2;");
          Assert.assertEquals(lines.get(1), "0;1;1;1;");
          Assert.assertEquals(lines.get(2), "1000;2;2;2;");
 
          lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "timeline_conf1_default_3_event2.csv"));
          Assert.assertEquals(lines.size(), 3);
-         Assert.assertEquals(lines.get(0), "Timestamp;Slave 0;Slave 1;Slave 2;");
+         Assert.assertEquals(lines.get(0), "Timestamp;Worker 0;Worker 1;Worker 2;");
          Assert.assertEquals(lines.get(1), "0;1;1;1;");
          Assert.assertEquals(lines.get(2), "1000;2;2;2;");
       } catch (Exception e) {

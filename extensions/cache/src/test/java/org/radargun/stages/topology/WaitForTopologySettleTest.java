@@ -41,7 +41,7 @@ public class WaitForTopologySettleTest {
 
       Thread stageThread = new Thread(() -> {
          try {
-            acks.add(stageRunner.executeOnSlave(waitForTopologySettleStage, 0));
+            acks.add(stageRunner.executeOnWorker(waitForTopologySettleStage, 0));
          } catch (Exception e) {
             throw new IllegalStateException(e);
          }
@@ -54,6 +54,6 @@ public class WaitForTopologySettleTest {
       Assert.assertFalse(topologyHistory.getTopologyChangeHistory(null).isEmpty());
       Assert.assertFalse(topologyHistory.getRehashHistory(null).isEmpty());
       Assert.assertFalse(topologyHistory.getCacheStatusChangeHistory(null).isEmpty());
-      Assert.assertEquals(stageRunner.processAckOnMaster(waitForTopologySettleStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(waitForTopologySettleStage, acks), StageResult.SUCCESS);
    }
 }

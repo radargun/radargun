@@ -71,7 +71,7 @@ public class JProfilerStage extends AbstractDistStage {
    protected boolean resetMemoryStats;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (operations == null || operations.isEmpty()) {
          log.warn("No operation specified");
          return successfulResponse();
@@ -108,7 +108,7 @@ public class JProfilerStage extends AbstractDistStage {
             if (snapshotDirectory == null)
                throw new NullPointerException("snapshotOutput not set");
             return new Object[] {String.format("%s%s-node%d-profiler.jps",
-               snapshotDirectory, slaveState.getConfigName(), slaveState.getSlaveIndex())};
+               snapshotDirectory, workerState.getConfigName(), workerState.getWorkerIndex())};
          case START_CPU_RECORDING:
             return new Object[] {resetCPUStats};
          case START_MEMORY_RECORDING:

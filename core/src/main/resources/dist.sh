@@ -12,11 +12,11 @@ WORKING_DIR=`pwd`
 CONFIG=$RADARGUN_HOME/conf/benchmark-dist.xml
 VERBOSE=false
 REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
-MASTER=`hostname`
-SLAVES=""
+MAIN=`hostname`
+WORKERS=""
 DEBUG=""
 DEBUG_SUSPEND=""
-SLAVE_COUNT=0
+WORKER_COUNT=0
 TAILF=false
 WAITF=false
 PLUGIN_PATHS=""
@@ -24,12 +24,12 @@ PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
 OUT_DIR=""
 EXTRA_JAVA_OPTS=""
-EXTRA_JAVA_OPTS_MASTER=""
-EXTRA_JAVA_OPTS_SLAVES=""
+EXTRA_JAVA_OPTS_MAIN=""
+EXTRA_JAVA_OPTS_WORKERS=""
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ dist.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port [--debug-suspend master|SLAVE]*] SLAVE...'
+  wrappedecho '  $ dist.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MAIN_IP[:PORT]] [-d port [--debug-suspend main|WORKER]*] WORKER...'
   wrappedecho ""
   wrappedecho "e.g."
   wrappedecho "  $ dist.sh node1 node2 node3 node4"
@@ -37,25 +37,25 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -c              Configuration file. Defaults to '$CONFIG'."
   wrappedecho ""
-  wrappedecho "   -u              SSH user to use when SSH'ing across to the slaves.  Defaults to '$SSH_USER'."
+  wrappedecho "   -u              SSH user to use when SSH'ing across to the workers.  Defaults to '$SSH_USER'."
   wrappedecho ""
-  wrappedecho "   -w              Working directory on the slave.  Defaults to '$WORKING_DIR'."
+  wrappedecho "   -w              Working directory on the worker.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
-  wrappedecho "   -m              Connection to MASTER server.  Specified as host or host:port.  Defaults to '$MASTER'."
+  wrappedecho "   -m              Connection to MAIN server.  Specified as host or host:port.  Defaults to '$MAIN'."
   wrappedecho ""
   wrappedecho "   -r              Command for remote command execution.  Defaults to '$REMOTE_CMD'."
   wrappedecho ""
-  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the main node's log file."
   wrappedecho ""
   wrappedecho "   -d              Open debugging port on each node."
   wrappedecho ""
-  wrappedecho "   --debug-suspend Wait for the debugger to connect on given slave/master."
+  wrappedecho "   --debug-suspend Wait for the debugger to connect on given worker/main."
   wrappedecho ""
-  wrappedecho "   -J              Add Java options to both master and slaves."
+  wrappedecho "   -J              Add Java options to both main and workers."
   wrappedecho ""
-  wrappedecho "   -Jm             Add Java option to master."
+  wrappedecho "   -Jm             Add Java option to main."
   wrappedecho ""
-  wrappedecho "   -Js             Add Java option to all slaves."
+  wrappedecho "   -Js             Add Java option to all workers."
   wrappedecho ""
   wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   wrappedecho ""
@@ -63,9 +63,9 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   --add-reporter  Path to custom reporter directory. Can be specified multiple times."
   wrappedecho ""
-  wrappedecho "   --wait          Wait until the master process finishes."
+  wrappedecho "   --wait          Wait until the main process finishes."
   wrappedecho ""
-  wrappedecho "   -o              Output directory. The logs will then be master.log and slave_/hostname/.log in this directory."
+  wrappedecho "   -o              Output directory. The logs will then be main.log and worker_/hostname/.log in this directory."
   wrappedecho ""
   wrappedecho "   -h              Displays this help screen"
   wrappedecho ""
@@ -93,11 +93,11 @@ do
       shift
       ;;
     "-m")
-      MASTER=$2
+      MAIN=$2
       shift
       ;;
     "-x")
-      SLAVE_COUNT=1
+      WORKER_COUNT=1
       ;;
     "-t")
       TAILF=true
@@ -130,11 +130,11 @@ do
       shift
       ;;
     "-Jm")
-      EXTRA_JAVA_OPTS_MASTER="${EXTRA_JAVA_OPTS_MASTER} ${2}"
+      EXTRA_JAVA_OPTS_MAIN="${EXTRA_JAVA_OPTS_MAIN} ${2}"
       shift
       ;;
     "-Js")
-      EXTRA_JAVA_OPTS_SLAVES="${EXTRA_JAVA_OPTS_SLAVES} ${2}"
+      EXTRA_JAVA_OPTS_WORKERS="${EXTRA_JAVA_OPTS_WORKERS} ${2}"
       shift
       ;;
     "--wait")
@@ -149,8 +149,8 @@ do
         echo "Warning: unknown argument ${1}" 
         help_and_exit
       fi
-      SLAVES=$@
-      SLAVE_COUNT=$(($SLAVE_COUNT + $#))
+      WORKERS=$@
+      WORKER_COUNT=$(($WORKER_COUNT + $#))
       shift $#
       ;;
   esac
@@ -158,60 +158,60 @@ do
 done
 
 ### Make sure the vars are properly set
-if [ -z "$SLAVES" ] ; then
-  echo "FATAL: No slave nodes specified!"
+if [ -z "$WORKERS" ] ; then
+  echo "FATAL: No worker nodes specified!"
   help_and_exit
 fi
 
 
-####### first start the master
+####### first start the main
 DEBUG_CMD=""
 if [ ! -z $DEBUG ]; then
    DEBUG_CMD="-d localhost:$DEBUG"
 fi
-if echo $DEBUG_SUSPEND | grep -e "\bmaster\b"; then
+if echo $DEBUG_SUSPEND | grep -e "\bmain\b"; then
    DEBUG_CMD="${DEBUG_CMD} --debug-suspend"
 fi
 if [ ! -z $OUT_DIR ]; then
-   OUT_CMD="-o $OUT_DIR/master.log"
+   OUT_CMD="-o $OUT_DIR/main.log"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} -J "${EXTRA_JAVA_OPTS} ${EXTRA_JAVA_OPTS_MASTER}" ${REPORTER_PATHS} -w &
-MASTER_SH_PID=$!
-#### Sleep for a few seconds so master can open its port
+${RADARGUN_HOME}/bin/main.sh -s ${WORKER_COUNT} -m ${MAIN} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} -J "${EXTRA_JAVA_OPTS} ${EXTRA_JAVA_OPTS_MAIN}" ${REPORTER_PATHS} -w &
+MAIN_SH_PID=$!
+#### Sleep for a few seconds so main can open its port
 
 ####### then start the rest of the nodes
 
 INDEX=0
-for slave in $SLAVES; do
+for worker in $WORKERS; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX -J \"$EXTRA_JAVA_OPTS $EXTRA_JAVA_OPTS_SLAVES\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+  CMD="$CMD ; ${RADARGUN_HOME}/bin/worker.sh -m ${MAIN} -n $worker -i $INDEX -J \"$EXTRA_JAVA_OPTS $EXTRA_JAVA_OPTS_WORKERS\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ ! -z $DEBUG ]; then
-     CMD="$CMD -d $slave:$DEBUG"
+     CMD="$CMD -d $worker:$DEBUG"
   fi
-  if echo $DEBUG_SUSPEND | grep -e "\b${slave}\b"; then
+  if echo $DEBUG_SUSPEND | grep -e "\b${worker}\b"; then
      CMD="$CMD --debug-suspend"
   fi
   if [ ! -z $OUT_DIR ]; then
-     CMD="$CMD -o $OUT_DIR/slave_${slave}.log"
+     CMD="$CMD -o $OUT_DIR/worker_${worker}.log"
   fi
   let INDEX=INDEX+1
 
-  # The slave_SLAVE_ADDRESS variable may be defined in environment.sh
-  eval SLAVE_ADDRESS=\$${slave}_SLAVE_ADDRESS
-  if [ -z $SLAVE_ADDRESS ] ; then
-    SLAVE_ADDRESS=$slave
+  # The worker_WORKER_ADDRESS variable may be defined in environment.sh
+  eval WORKER_ADDRESS=\$${worker}_WORKER_ADDRESS
+  if [ -z $WORKER_ADDRESS ] ; then
+    WORKER_ADDRESS=$worker
   fi
 
-  TOEXEC="$REMOTE_CMD -l $SSH_USER $SLAVE_ADDRESS '$CMD'"
+  TOEXEC="$REMOTE_CMD -l $SSH_USER $WORKER_ADDRESS '$CMD'"
   echo "$TOEXEC"
   eval $TOEXEC
 done
 
 if [ $TAILF == "true" ]; then
-  tail -f radargun.log --pid `cat master.pid`
+  tail -f radargun.log --pid `cat main.pid`
 fi
 if [ $WAITF == "true" ]; then
-  wait $MASTER_SH_PID
+  wait $MAIN_SH_PID
   exit $?
 fi
 
