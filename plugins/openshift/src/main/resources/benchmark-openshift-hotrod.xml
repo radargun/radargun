@@ -1,7 +1,7 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}" />
 
    <clusters>
       <cluster>
@@ -15,7 +15,7 @@
          <setup group="openshift" plugin="${productName:openshift}" lazy-init="false">
             <openshift xmlns="urn:radargun:plugins:openshift:3.0"
                             template-file="${template.file:infinispan-server-template.json}"
-                            master-url="https://127.0.0.1:443"
+                            main-url="https://127.0.0.1:443"
                             oauth-token="..."
                             namespace="myproject"
                             cleanup="true">
@@ -54,8 +54,8 @@
       <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:100}" />
 
       <!-- The openshift plugin group has only 1 member but it spins up two Pods
-           in OpenShift so we need to set a specific expect-num-slaves -->
-      <service-start groups="openshift" validate-cluster="true" expect-num-slaves="2"/>
+           in OpenShift so we need to set a specific expect-num-workers -->
+      <service-start groups="openshift" validate-cluster="true" expect-num-workers="2"/>
       <service-start groups="client" validate-cluster="false" />
 
       <jvm-monitor-start />

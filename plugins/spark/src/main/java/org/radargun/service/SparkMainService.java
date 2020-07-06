@@ -11,30 +11,30 @@ import org.radargun.config.Property;
 /**
  * @author Matej Cimbora
  */
-@Service(doc = "Service encapsulating Apache Spark (master node).")
-public class SparkMasterService extends AbstractSparkService {
+@Service(doc = "Service encapsulating Apache Spark (main node).")
+public class SparkMainService extends AbstractSparkService {
 
-   @Property(doc = "Name of the host where master node will be deployed. Default is localhost.")
+   @Property(doc = "Name of the host where main node will be deployed. Default is localhost.")
    protected String host = "localhost";
 
-   @Property(doc = "Port under which master node is to be accessible. Default is 7077.")
+   @Property(doc = "Port under which main node is to be accessible. Default is 7077.")
    protected int port = 7077;
 
    @Init
    public void init() {
-      this.lifecycle = new SparkMasterLifecycle(this);
+      this.lifecycle = new SparkMainLifecycle(this);
    }
 
 
    @Override
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
-      command.add(FileSystems.getDefault().getPath(home, "sbin", "start-master.sh").toString());
+      command.add(FileSystems.getDefault().getPath(home, "sbin", "start-main.sh").toString());
       command.add(" -h " + host + " -p " + port);
       return command;
    }
 
    protected String getPidFileIdent() {
-      return "radargun_master_" + this.port;
+      return "radargun_main_" + this.port;
    }
 }

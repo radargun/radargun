@@ -10,32 +10,32 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.ConfigurationProvider;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.TimeConverter;
 
 /**
- * Stage that starts a CacheWrapper on each slave.
+ * Stage that starts a CacheWrapper on each worker.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "Starts services on specified slaves")
+@Stage(doc = "Starts services on specified workers")
 public class ServiceStartStage extends AbstractServiceStartStage {
 
    @Property(doc = "Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.")
    private boolean validateCluster = true;
 
-   @Property(doc = "If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.")
-   private boolean staggerSlaveStartup = true;
+   @Property(doc = "If set to true, the workers will not be started in one moment but the startup will be delayed. Default is true.")
+   private boolean staggerWorkerStartup = true;
 
-   @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first slave's start is initiated. Default is 5s.")
-   private long delayAfterFirstSlaveStarts = 5000;
+   @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first worker's start is initiated. Default is 5s.")
+   private long delayAfterFirstWorkerStarts = 5000;
 
-   @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms.")
-   private long delayBetweenStartingSlaves = 500;
+   @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th worker. Default is 500 ms.")
+   private long delayBetweenStartingWorkers = 500;
 
-   @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.")
+   @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumWorkers` members. Default is 3 minutes.")
    private long clusterFormationTimeout = 180000;
 
    @Property(doc = "Collect configuration files and properties for the service, and pass those to reporters. Default is true.")
@@ -45,69 +45,69 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          + "validateCluster=true. Default is all members in the group where this stage will be executed. (If no "
          + "groups are configured, then this is equal to all members of the cluster.) If multiple groups are"
          + "specified in the benchmark, then the size of each group will considered separately.")
-   private Integer expectNumSlaves;
+   private Integer expectNumWorkers;
 
-   @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
+   @Property(doc = "Set of workers that should be reachable to the newly spawned workers (see Partitionable feature for details). Default is all workers.")
    private Set<Integer> reachable = null;
 
    @InjectTrait
    private ConfigurationProvider configurationProvider;
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!shouldExecute()) {
-         log.trace("Start request not targeted for this slave, ignoring.");
+         log.trace("Start request not targeted for this worker, ignoring.");
          return successfulResponse();
       } else if (lifecycle == null) {
-         log.warn("Service " + slaveState.getServiceName() + " does not support lifecycle management.");
+         log.warn("Service " + workerState.getServiceName() + " does not support lifecycle management.");
          return successfulResponse();
       } else if (lifecycle.isRunning()) {
-         log.info("Service " + slaveState.getServiceName() + " is already running.");
+         log.info("Service " + workerState.getServiceName() + " is already running.");
          return successfulResponse();
       }
 
       int index = 0;
-      for (Integer slave : getExecutingSlaves()) {
-         if (slave.equals(slaveState.getSlaveIndex())) break;
+      for (Integer worker : getExecutingWorkers()) {
+         if (worker.equals(workerState.getWorkerIndex())) break;
          index++;
       }
       staggerStartup(index);
 
-      log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
-         + ". This slave's index is: " + slaveState.getSlaveIndex());
+      log.info("Ack main's StartCluster stage. Local address is: " + workerState.getLocalAddress()
+         + ". This worker's index is: " + workerState.getWorkerIndex());
 
-      // If no value of expectNumSlaves is supplied, then use the slave's group size as the default
-      if (expectNumSlaves == null) {
-         Set<Integer> group = slaveState.getCluster().getSlaves(slaveState.getGroupName());
-         group.retainAll(getExecutingSlaves());
-         expectNumSlaves = group.size();
+      // If no value of expectNumWorkers is supplied, then use the worker's group size as the default
+      if (expectNumWorkers == null) {
+         Set<Integer> group = workerState.getCluster().getWorkers(workerState.getGroupName());
+         group.retainAll(getExecutingWorkers());
+         expectNumWorkers = group.size();
       }
 
       try {
-         LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
+         LifecycleHelper.start(workerState, validateCluster, expectNumWorkers, clusterFormationTimeout, reachable);
       } catch (RuntimeException e) {
          return errorResponse("Issues while instantiating/starting service", e);
       }
-      log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
+      log.info("Successfully started cache service " + workerState.getServiceName() + " on worker " + workerState.getWorkerIndex());
       if (configurationProvider != null && dumpConfig) {
-         return new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
+         return new ServiceStartAck(workerState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
       } else {
-         return new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+         return new ServiceStartAck(workerState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
       }
    }
 
    private void staggerStartup(int thisNodeIndex) {
-      if (!staggerSlaveStartup) {
+      if (!staggerWorkerStartup) {
          if (log.isTraceEnabled()) {
-            log.trace("Not using slave startup staggering");
+            log.trace("Not using worker startup staggering");
          }
          return;
       }
       if (thisNodeIndex == 0) {
-         log.info("Startup staggering, this is the slave with index 0, not sleeping");
+         log.info("Startup staggering, this is the worker with index 0, not sleeping");
          return;
       }
-      long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
-      log.info(" Startup staggering, this is the slave with index "
+      long toSleep = delayAfterFirstWorkerStarts + thisNodeIndex * delayBetweenStartingWorkers;
+      log.info(" Startup staggering, this is the worker with index "
          + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
       try {
          Thread.sleep(toSleep);
@@ -116,16 +116,16 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       }
    }
 
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       if (dumpConfig) {
          for (DistStageAck ack : acks) {
             if (ack instanceof ServiceStartAck) {
                ServiceStartAck sAck = (ServiceStartAck) ack;
-               masterState.getReport().addNormalizedServiceConfig(sAck.getSlaveIndex(), sAck.gerNormalizedConfigs());
-               masterState.getReport().addOriginalServiceConfig(sAck.getSlaveIndex(), sAck.getOriginalConfigs());
+               mainState.getReport().addNormalizedServiceConfig(sAck.getWorkerIndex(), sAck.gerNormalizedConfigs());
+               mainState.getReport().addOriginalServiceConfig(sAck.getWorkerIndex(), sAck.getOriginalConfigs());
             }
          }
       }
@@ -137,8 +137,8 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       private Map<String, Properties> normalizedConfigs;
       private Map<String, byte[]> originalConfigs;
 
-      private ServiceStartAck(SlaveState slaveState, Map<String, Properties> normalizedConfigs, Map<String, byte[]> originalConfigs) {
-         super(slaveState);
+      private ServiceStartAck(WorkerState workerState, Map<String, Properties> normalizedConfigs, Map<String, byte[]> originalConfigs) {
+         super(workerState);
          this.normalizedConfigs = normalizedConfigs;
          this.originalConfigs = originalConfigs;
       }

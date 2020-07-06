@@ -4,8 +4,8 @@ The openshift.sh script provides functionality for building Docker image for Rad
 given Docker repository, running performance tests within a remote OpenShift instance and downloading results to 
 the local filesystem when the tests finish. All processes run inside OpenShift within a common namespace/project.
 
-The master and slave processes will run in separate Pods in OpenShift. The user can specify the number of slaves that will result
-in creating that many Pods for slaves in OpenShift. There's always a single Pod for the master process. The user can also specify
+The main and worker processes will run in separate Pods in OpenShift. The user can specify the number of workers that will result
+in creating that many Pods for workers in OpenShift. There's always a single Pod for the main process. The user can also specify
 custom JVM options for RadarGun processes.
 
 Follow these steps to build and deploy RadarGun image in OpenShift and run performance tests:
@@ -35,8 +35,8 @@ Follow these steps to build and deploy RadarGun image in OpenShift and run perfo
 
     `./openshift build`
 
-6) Create a subdirectory with configuration files for RadarGun and individual plugins. This directory will be mounted in master
-     and slave pods in OpenShift as /opt/radargun-configs. 
+6) Create a subdirectory with configuration files for RadarGun and individual plugins. This directory will be mounted in main
+     and worker pods in OpenShift as /opt/radargun-configs. 
 
 7) Create RadarGun deployment via template.
 

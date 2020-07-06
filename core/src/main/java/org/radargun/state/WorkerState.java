@@ -4,27 +4,27 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
 
-import org.radargun.RemoteSlaveConnection;
+import org.radargun.RemoteWorkerConnection;
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
-import org.radargun.utils.SlaveConnectionInfo;
+import org.radargun.utils.WorkerConnectionInfo;
 
 /**
- * State residing on slave, passed to each's
- * {@link org.radargun.DistStage#initOnSlave(SlaveState)}
+ * State residing on worker, passed to each's
+ * {@link org.radargun.DistStage#initOnWorker(WorkerState)}
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class SlaveState extends StateBase<ServiceListener> {
+public class WorkerState extends StateBase<ServiceListener> {
 
    private InetAddress localAddress;
-   private int slaveIndex = -1;
+   private int workerIndex = -1;
 
    private String plugin;
    private String serviceName;
    private Cluster.Group group;
 
-   private RemoteSlaveConnection.SlaveAddresses slaveAddresses;
+   private RemoteWorkerConnection.WorkerAddresses workerAddresses;
    private int indexInGroup;
 
    private Map<Class<?>, Object> traits;
@@ -34,23 +34,23 @@ public class SlaveState extends StateBase<ServiceListener> {
       this.localAddress = localAddress;
    }
 
-   public void setSlaveIndex(int slaveIndex) {
-      this.slaveIndex = slaveIndex;
+   public void setWorkerIndex(int workerIndex) {
+      this.workerIndex = workerIndex;
    }
 
    public InetAddress getLocalAddress() {
       return localAddress;
    }
 
-   public int getSlaveIndex() {
-      return slaveIndex;
+   public int getWorkerIndex() {
+      return workerIndex;
    }
 
    @Override
    public void setCluster(Cluster cluster) {
       super.setCluster(cluster);
-      group = cluster.getGroup(slaveIndex);
-      indexInGroup = cluster.getIndexInGroup(slaveIndex);
+      group = cluster.getGroup(workerIndex);
+      indexInGroup = cluster.getIndexInGroup(workerIndex);
    }
 
    public String getGroupName() {
@@ -107,12 +107,12 @@ public class SlaveState extends StateBase<ServiceListener> {
       this.timeline = timeline;
    }
 
-   public void setSlaveAddresses(RemoteSlaveConnection.SlaveAddresses slaveAddresses) {
-      this.slaveAddresses = slaveAddresses;
+   public void setWorkerAddresses(RemoteWorkerConnection.WorkerAddresses workerAddresses) {
+      this.workerAddresses = workerAddresses;
    }
 
-   public SlaveConnectionInfo getSlaveAddresses(Cluster cluster, String groupName, int indexInGroup) {
-      int indexTotal = (Integer) new ArrayList(cluster.getSlaves(groupName)).get(indexInGroup);
-      return slaveAddresses.getSlaveAddresses(indexTotal);
+   public WorkerConnectionInfo getWorkerAddresses(Cluster cluster, String groupName, int indexInGroup) {
+      int indexTotal = (Integer) new ArrayList(cluster.getWorkers(groupName)).get(indexInGroup);
+      return workerAddresses.getWorkerAddresses(indexTotal);
    }
 }

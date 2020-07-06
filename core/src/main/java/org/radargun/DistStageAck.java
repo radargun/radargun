@@ -8,25 +8,25 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.radargun.logging.LogFactory;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 
 /**
- * Asck that is sent from each slave to the master containing the result of the slave's processing for a stage.
+ * Asck that is sent from each worker to the main containing the result of the worker's processing for a stage.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class DistStageAck implements Serializable {
 
-   private final int slaveIndex;
-   private final InetAddress slaveAddress;
+   private final int workerIndex;
+   private final InetAddress workerAddress;
    private boolean isError;
    private String errorMessage;
    private long duration;
    private String remoteExceptionString;
 
-   public DistStageAck(SlaveState slaveState) {
-      slaveIndex = slaveState.getSlaveIndex();
-      slaveAddress = slaveState.getLocalAddress();
+   public DistStageAck(WorkerState workerState) {
+      workerIndex = workerState.getWorkerIndex();
+      workerAddress = workerState.getLocalAddress();
    }
 
    public <T extends DistStageAck> T error(String message) {
@@ -40,8 +40,8 @@ public class DistStageAck implements Serializable {
       return (T) this;
    }
 
-   public int getSlaveIndex() {
-      return slaveIndex;
+   public int getWorkerIndex() {
+      return workerIndex;
    }
 
    public boolean isError() {

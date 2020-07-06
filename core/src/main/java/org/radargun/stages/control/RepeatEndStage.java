@@ -17,8 +17,8 @@ import org.radargun.state.StateBase;
    label = @Label(prefix = "repeat", suffix = "end"))
 public class RepeatEndStage extends RepeatStage {
    @Override
-   public DistStageAck executeOnSlave() {
-      updateState(slaveState);
+   public DistStageAck executeOnWorker() {
+      updateState(workerState);
       return successfulResponse();
    }
 
@@ -34,8 +34,8 @@ public class RepeatEndStage extends RepeatStage {
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      updateState(masterState);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      updateState(mainState);
       return StageResult.SUCCESS;
    }
 }

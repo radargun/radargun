@@ -16,7 +16,7 @@ import java.util.List;
 import org.radargun.ShutDownHook;
 import org.radargun.config.DomConfigParser;
 import org.radargun.config.InitHelper;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.config.Property;
 import org.radargun.config.ReporterConfiguration;
 import org.radargun.logging.Log;
@@ -38,7 +38,7 @@ public class SerializedReporter extends AbstractReporter {
    protected String targetDir = "results" + File.separator + "serialized";
 
    @Override
-   public void run(MasterConfig masterConfig, Collection<Report> reports) {
+   public void run(MainConfig mainConfig, Collection<Report> reports) {
       File dir = new File(targetDir);
       if (!dir.exists()) {
          dir.mkdirs();
@@ -67,7 +67,7 @@ public class SerializedReporter extends AbstractReporter {
          ReporterHelper.registerReporters(args[i]);
       }
 
-      MasterConfig config;
+      MainConfig config;
       try {
          config = DomConfigParser.getConfigParser().parseConfig(benchmark);
       } catch (Exception e) {

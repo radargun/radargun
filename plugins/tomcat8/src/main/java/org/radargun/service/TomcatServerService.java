@@ -106,7 +106,7 @@ public class TomcatServerService extends JavaProcessService {
       cmd.add("-Djava.io.tmpdir=" + catalinaBase + "/temp");
       cmd.add("org.apache.catalina.startup.Bootstrap");
       cmd.add("-config");
-      cmd.add(catalinaBase + "/conf/radargun-tomcat-" + ServiceHelper.getContext().getSlaveIndex() + ".xml");
+      cmd.add(catalinaBase + "/conf/radargun-tomcat-" + ServiceHelper.getContext().getWorkerIndex() + ".xml");
       cmd.add("start");
 
       return cmd;

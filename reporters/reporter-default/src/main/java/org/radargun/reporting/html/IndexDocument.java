@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -29,22 +29,22 @@ public class IndexDocument extends HtmlDocument {
    private static final Log log = LogFactory.getLog(IndexDocument.class);
    private Map<Report, Map<String/*group*/, Set<OriginalConfig>>> configs = new HashMap<>();
    private Map<Report, Map<String/*group*/, Set<String>>> normalizedConfigs = new HashMap<>();
-   private MasterConfig masterConfig;
+   private MainConfig mainConfig;
 
    public IndexDocument(String directory) {
       super(directory, "index.html", "RadarGun benchmark");
    }
 
-   public void writeMasterConfig(MasterConfig masterConfig) {
-      this.masterConfig = masterConfig;
-      String configFile = "master-config.xml";
+   public void writeMainConfig(MainConfig mainConfig) {
+      this.mainConfig = mainConfig;
+      String configFile = "main-config.xml";
       String scenarioFile = "scenario-file.xml";
       try (FileOutputStream mainFileWriter = new FileOutputStream(directory + File.separator + configFile);
            FileOutputStream scenarioWriter = new FileOutputStream(directory + File.separator + scenarioFile)
       ) {
-         mainFileWriter.write(masterConfig.getMasterConfigBytes());
-         if (masterConfig.getScenarioBytes() != null) {
-            scenarioWriter.write(masterConfig.getScenarioBytes());
+         mainFileWriter.write(mainConfig.getMainConfigBytes());
+         if (mainConfig.getScenarioBytes() != null) {
+            scenarioWriter.write(mainConfig.getScenarioBytes());
          }
       } catch (FileNotFoundException e) {
          log.error("Failed to open " + configFile, e);
@@ -58,7 +58,7 @@ public class IndexDocument extends HtmlDocument {
     * @return true if there's an external scenario file imported into the main RG benchmark
     */
    public boolean isExternalScenario() {
-      return masterConfig.getScenarioBytes() != null;
+      return mainConfig.getScenarioBytes() != null;
    }
 
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config) {
@@ -73,17 +73,17 @@ public class IndexDocument extends HtmlDocument {
       }
    }
 
-   private void addToConfigs(Map<String, Set<OriginalConfig>> configs, String group, int slave, String filename, byte[] content) {
+   private void addToConfigs(Map<String, Set<OriginalConfig>> configs, String group, int worker, String filename, byte[] content) {
       boolean found = false;
       for (OriginalConfig config : configs.get(group)) {
          if (config.filename.equals(filename) && Arrays.equals(config.content, content)) {
-            config.slaves.add(slave);
+            config.workers.add(worker);
             found = true;
             break;
          }
       }
       if (!found) {
-         configs.get(group).add(new OriginalConfig(slave, filename, content));
+         configs.get(group).add(new OriginalConfig(worker, filename, content));
       }
    }
 
@@ -97,7 +97,7 @@ public class IndexDocument extends HtmlDocument {
          Map<String, Set<OriginalConfig>> configs = new HashMap<>();
          Map<String, Set<String>> normalizedConfigs = new HashMap<>();
          for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
-            Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
+            Set<Integer> workers = report.getCluster().getWorkers(setup.group);
             if (configs.get(setup.group) == null) {
                configs.put(setup.group, new HashSet<>());
             }
@@ -105,14 +105,14 @@ public class IndexDocument extends HtmlDocument {
                normalizedConfigs.put(setup.group, new HashSet<>());
             }
             for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
-               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
+               if (workers.contains(entry.getKey()) && entry.getValue() != null) {
                   normalizedConfigs.get(setup.group).addAll(entry.getValue().keySet());
                }
             }
             this.normalizedConfigs.put(report, normalizedConfigs);
 
             for (Map.Entry<Integer, Map<String, byte[]>> entry : report.getOriginalServiceConfig().entrySet()) {
-               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
+               if (workers.contains(entry.getKey()) && entry.getValue() != null) {
                   for (Map.Entry<String, byte[]> file : entry.getValue().entrySet()) {
                      addToConfigs(configs, setup.group, entry.getKey(), file.getKey(), file.getValue());
                   }
@@ -150,12 +150,12 @@ public class IndexDocument extends HtmlDocument {
    }
 
    public static class OriginalConfig {
-      private Set<Integer> slaves = new HashSet<>();
+      private Set<Integer> workers = new HashSet<>();
       private String filename;
       private byte[] content;
 
-      public OriginalConfig(int slave, String filename, byte[] content) {
-         slaves.add(slave);
+      public OriginalConfig(int worker, String filename, byte[] content) {
+         workers.add(worker);
          this.filename = filename;
          this.content = content;
       }
@@ -165,8 +165,8 @@ public class IndexDocument extends HtmlDocument {
        * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
        */
 
-      public Set<Integer> getSlaves() {
-         return slaves;
+      public Set<Integer> getWorkers() {
+         return workers;
       }
 
       public String getFilename() {

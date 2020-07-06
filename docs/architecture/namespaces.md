@@ -12,7 +12,7 @@ When XML schemas are generated, these all should end up in distribution director
 
 ### Essential namespaces
 
-The root benchmark namespace is `urn:radargun:benchmark:VERSION`, with `benchmark` as the root element. This contains the `master`, `cluster`, `configuration`, `init`, `scenario`, `destroy`, `cleanup` and `reports` elements. Actually, the `init`, `destroy` and `cleanup` elements extend a type defined in the `urn:radargun:stages:core:VERSION` namespace, that contains all the basic stages not specific to particular service type, e.g. those related to service lifecycle, monitoring etc. Note that cache-like traits living in core in the past have been moved to separate module, *extensions/cache*.
+The root benchmark namespace is `urn:radargun:benchmark:VERSION`, with `benchmark` as the root element. This contains the `main`, `cluster`, `configuration`, `init`, `scenario`, `destroy`, `cleanup` and `reports` elements. Actually, the `init`, `destroy` and `cleanup` elements extend a type defined in the `urn:radargun:stages:core:VERSION` namespace, that contains all the basic stages not specific to particular service type, e.g. those related to service lifecycle, monitoring etc. Note that cache-like traits living in core in the past have been moved to separate module, *extensions/cache*.
 
 When the benchmark does not contain the scenario directly but instead imports another file using `<scenario url="..."<`, the target file should use the `urn:radargun:scenario:VERSION` namespace which has `scenario` as a root element.
 

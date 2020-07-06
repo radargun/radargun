@@ -105,7 +105,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    protected Map<Integer, Long> getCheckedOperations(long operationId) throws StressorException, BreakTxRequest {
       Map<Integer, Long> minCheckedOperations = new HashMap<>();
-      for (int stressorId = 0; stressorId < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getGroupSize(); ++stressorId) {
+      for (int stressorId = 0; stressorId < manager.getGeneralConfiguration().getNumThreads() * manager.getWorkerState().getGroupSize(); ++stressorId) {
          minCheckedOperations.put(stressorId, getCheckedOperation(stressorId, operationId));
       }
       return minCheckedOperations;

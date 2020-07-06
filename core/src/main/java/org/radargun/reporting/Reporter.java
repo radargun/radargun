@@ -2,7 +2,7 @@ package org.radargun.reporting;
 
 import java.util.Collection;
 
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -11,5 +11,5 @@ import org.radargun.config.MasterConfig;
  */
 public interface Reporter {
 
-   boolean run(MasterConfig masterConfig, Collection<Report> reports, int returnCode) throws Exception;
+   boolean run(MainConfig mainConfig, Collection<Report> reports, int returnCode) throws Exception;
 }

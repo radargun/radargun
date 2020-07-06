@@ -192,34 +192,34 @@ public class CoreTraitRepository {
 
    public static class Partitionable implements org.radargun.traits.Partitionable {
 
-      private int slaveIndex = -1;
+      private int workerIndex = -1;
       private Set<Integer> partitionMembers;
       private Set<Integer> initiallyReachable;
 
       @Override
-      public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
-         checkSlaveIndex(slaveIndex);
+      public void setMembersInPartition(int workerIndex, Set<Integer> members) {
+         checkWorkerIndex(workerIndex);
          this.partitionMembers = members;
       }
 
       @Override
-      public void setStartWithReachable(int slaveIndex, Set<Integer> members) {
-         checkSlaveIndex(slaveIndex);
+      public void setStartWithReachable(int workerIndex, Set<Integer> members) {
+         checkWorkerIndex(workerIndex);
          this.initiallyReachable = members;
       }
 
-      private void checkSlaveIndex(int slaveIndex) {
-         if (this.slaveIndex == -1) {
-            this.slaveIndex = slaveIndex;
+      private void checkWorkerIndex(int workerIndex) {
+         if (this.workerIndex == -1) {
+            this.workerIndex = workerIndex;
          } else {
-            if (this.slaveIndex != slaveIndex) {
-               throw new IllegalStateException(String.format("Slave indices are not equal, current - %d, new value - %d", slaveIndex, this.slaveIndex));
+            if (this.workerIndex != workerIndex) {
+               throw new IllegalStateException(String.format("Worker indices are not equal, current - %d, new value - %d", workerIndex, this.workerIndex));
             }
          }
       }
 
-      public int getSlaveIndex() {
-         return slaveIndex;
+      public int getWorkerIndex() {
+         return workerIndex;
       }
 
       public Set<Integer> getPartitionMembers() {

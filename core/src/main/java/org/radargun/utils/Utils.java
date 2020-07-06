@@ -215,11 +215,11 @@ public class Utils {
       return 0;
    }
 
-   public static SlaveConnectionInfo getSlaveConnectionInfo(int slaveIndex) throws SocketException {
+   public static WorkerConnectionInfo getWorkerConnectionInfo(int workerIndex) throws SocketException {
       Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-      SlaveConnectionInfo connection = new SlaveConnectionInfo();
+      WorkerConnectionInfo connection = new WorkerConnectionInfo();
       for (NetworkInterface netint : Collections.list(nets)) {
-         connection.addAddresses(slaveIndex, netint.getName(), Collections.list(netint.getInetAddresses()));
+         connection.addAddresses(workerIndex, netint.getName(), Collections.list(netint.getInetAddresses()));
          Collections.list(netint.getInetAddresses()).stream().forEach(x -> System.out.println(x.getHostAddress()));
       }
       return connection;

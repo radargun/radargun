@@ -15,9 +15,9 @@ import org.radargun.config.Stage;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.helpers.RoleHelper;
-import org.radargun.state.MasterState;
-import org.radargun.state.SlaveState;
+import org.radargun.state.MainState;
 import org.radargun.state.StateBase;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Lifecycle;
 import org.radargun.utils.Utils;
@@ -31,32 +31,32 @@ import org.radargun.utils.Utils;
 public abstract class AbstractDistStage extends AbstractStage implements DistStage {
    protected Log log = LogFactory.getLog(getClass());
 
-   @Property(doc = "Specifies on which slaves this stage should actively run. " +
-      "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
-   public Set<Integer> slaves;
+   @Property(doc = "Specifies on which workers this stage should actively run. "
+         + "The result set is intersection of specified workers, groups and roles. Default is all workers.")
+   public Set<Integer> workers;
 
-   @Property(doc = "Specifies in which groups this stage should actively run. " +
-      "The result set is intersection of specified slaves, groups and roles. Default is all groups.")
+   @Property(doc = "Specifies in which groups this stage should actively run. "
+         + "The result set is intersection of specified workers, groups and roles. Default is all groups.")
    public Set<String> groups;
 
-   @Property(doc = "Specifies on which slaves this stage should actively run, by their roles. " +
-      "The result set is intersection of specified slaves, groups and roles. " +
-      "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
+   @Property(doc = "Specifies on which workers this stage should actively run, by their roles. "
+         + "The result set is intersection of specified workers, groups and roles. " + "Supported roles are "
+         + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
    public Set<RoleHelper.Role> roles;
 
    @InjectTrait
    protected Lifecycle lifecycle;
 
    /**
-    * This field is filled in only on master node, on slave it is set to null
+    * This field is filled in only on main node, on worker it is set to null
     */
-   protected MasterState masterState;
+   protected MainState mainState;
    /**
-    * This field is filled in only on slave node, on master it is set to null
+    * This field is filled in only on worker node, on main it is set to null
     */
-   protected SlaveState slaveState;
+   protected WorkerState workerState;
 
-   protected List<Integer> executingSlaves;
+   protected List<Integer> executingWorkers;
 
    public boolean isServiceRunning() {
       return lifecycle == null || lifecycle.isRunning();
@@ -64,12 +64,12 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
 
    @Override
    public boolean shouldExecute() {
-      boolean execBySlave = slaves == null || slaves.contains(slaveState.getSlaveIndex());
-      boolean execByGroup = groups == null || groups.contains(slaveState.getGroupName());
-      boolean execByRole = roles == null || RoleHelper.hasAnyRole(slaveState, roles);
+      boolean execByWorker = workers == null || workers.contains(workerState.getWorkerIndex());
+      boolean execByGroup = groups == null || groups.contains(workerState.getGroupName());
+      boolean execByRole = roles == null || RoleHelper.hasAnyRole(workerState, roles);
       //Issue 425
       if (groups != null) {
-         StateBase state = masterState != null ? masterState : slaveState;
+         StateBase state = mainState != null ? mainState : workerState;
          if (state.getCluster() == null) {
             throw new IllegalStateException(String.format("Cluster has not been set in %s yet.", state));
          }
@@ -80,52 +80,51 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
             }
          }
       }
-      return execBySlave && execByGroup && execByRole;
+      return execByWorker && execByGroup && execByRole;
    }
 
    /**
-    * @return List of slave indices that are executing this stage
-    *         (unless the slaves/groups was evaluated differently on each slave).
-    *         The order is guaranteed to be same across slaves.
-    *         Assumes cluster has been set in master/slave state.
+    * @return List of worker indices that are executing this stage (unless the workers/groups was
+    *         evaluated differently on each worker). The order is guaranteed to be same across
+    *         workers. Assumes cluster has been set in main/worker state.
     */
-   protected List<Integer> getExecutingSlaves() {
-      // Resolve according to invocation environment (master/slave)
-      StateBase state = masterState != null ? masterState : slaveState;
+   protected List<Integer> getExecutingWorkers() {
+      // Resolve according to invocation environment (main/worker)
+      StateBase state = mainState != null ? mainState : workerState;
       if (state.getCluster() == null) {
          throw new IllegalStateException(String.format("Cluster has not been set in %s yet.", state));
       }
-      if (executingSlaves != null) {
-         return executingSlaves;
+      if (executingWorkers != null) {
+         return executingWorkers;
       }
-      List<Integer> slaves;
-      if (this.slaves == null) {
-         slaves = new ArrayList<>();
+      List<Integer> workers;
+      if (this.workers == null) {
+         workers = new ArrayList<>();
          for (int i = 0; i < state.getClusterSize(); ++i) {
-            slaves.add(i);
+            workers.add(i);
          }
       } else {
-         slaves = new ArrayList<>(this.slaves);
-         Collections.sort(slaves);
+         workers = new ArrayList<>(this.workers);
+         Collections.sort(workers);
       }
       if (groups != null) {
-         for (Iterator<Integer> it = slaves.iterator(); it.hasNext(); ) {
-            int slaveIndex = it.next();
-            if (!groups.contains(state.getCluster().getGroup(slaveIndex).name)) {
+         for (Iterator<Integer> it = workers.iterator(); it.hasNext();) {
+            int workerIndex = it.next();
+            if (!groups.contains(state.getCluster().getGroup(workerIndex).name)) {
                it.remove();
             }
          }
       }
-      // roles are not supported here as we can't determine if the slave has some role remotely
-      return executingSlaves = slaves;
+      // roles are not supported here as we can't determine if the worker has some role remotely
+      return executingWorkers = workers;
    }
 
-   protected int getExecutingSlaveIndex() {
-      return getExecutingSlaves().indexOf(slaveState.getSlaveIndex());
+   protected int getExecutingWorkerIndex() {
+      return getExecutingWorkers().indexOf(workerState.getWorkerIndex());
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       StageResult result = StageResult.SUCCESS;
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
@@ -142,44 +141,47 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    }
 
    protected void logDurationInfo(List<? extends DistStageAck> acks) {
-      if (!log.isInfoEnabled()) return;
+      if (!log.isInfoEnabled())
+         return;
 
       String processingDuration = "Durations [";
       boolean first = true;
       for (DistStageAck ack : acks) {
-         if (first) first = false;
-         else processingDuration += ", ";
-         processingDuration += ack.getSlaveIndex() + " = " + Utils.prettyPrintMillis(ack.getDuration());
+         if (first)
+            first = false;
+         else
+            processingDuration += ", ";
+         processingDuration += ack.getWorkerIndex() + " = " + Utils.prettyPrintMillis(ack.getDuration());
       }
-      log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
+      log.info("Received responses from all " + acks.size() + " workers. " + processingDuration + "]");
    }
 
    @Override
-   public void initOnMaster(MasterState masterState) {
-      this.masterState = masterState;
+   public void initOnMain(MainState mainState) {
+      this.mainState = mainState;
    }
 
    @Override
-   public Map<String, Object> createMasterData() {
+   public Map<String, Object> createMainData() {
       return Collections.EMPTY_MAP;
    }
 
    @Override
-   public void initOnSlave(SlaveState slaveState) {
-      this.slaveState = slaveState;
+   public void initOnWorker(WorkerState workerState) {
+      this.workerState = workerState;
    }
 
    protected DistStageAck errorResponse(String message) {
       log.error(message);
-      return new DistStageAck(slaveState).error(message, null);
+      return new DistStageAck(workerState).error(message, null);
    }
 
    protected DistStageAck errorResponse(String message, Exception e) {
       log.error(message, e);
-      return new DistStageAck(slaveState).error(message, e);
+      return new DistStageAck(workerState).error(message, e);
    }
 
    protected DistStageAck successfulResponse() {
-      return new DistStageAck(slaveState);
+      return new DistStageAck(workerState);
    }
 }

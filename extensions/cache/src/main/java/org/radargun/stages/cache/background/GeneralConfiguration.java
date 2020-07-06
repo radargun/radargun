@@ -34,8 +34,8 @@ public class GeneralConfiguration {
    @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.")
    protected long delayBetweenRequests = 0;
 
-   @Property(doc = "Period after which a slave is considered to be dead. Default is 90 s.", converter = TimeConverter.class)
-   protected long deadSlaveTimeout = 90000;
+   @Property(doc = "Period after which a worker is considered to be dead. Default is 90 s.", converter = TimeConverter.class)
+   protected long deadWorkerTimeout = 90000;
 
    @Property(doc = "By default each thread accesses only its private set of keys. This allows all threads all values. " +
       "Atomic operations are required for this functionality. Default is false.")
@@ -72,8 +72,8 @@ public class GeneralConfiguration {
       return delayBetweenRequests;
    }
 
-   public long getDeadSlaveTimeout() {
-      return deadSlaveTimeout;
+   public long getDeadWorkerTimeout() {
+      return deadWorkerTimeout;
    }
 
    public boolean isSharedKeys() {

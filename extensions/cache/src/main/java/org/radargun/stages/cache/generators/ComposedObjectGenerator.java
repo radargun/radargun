@@ -46,7 +46,7 @@ public class ComposedObjectGenerator implements ValueGenerator {
          clazz = classLoader.loadClass(clazzName);
          ctor = clazz.getConstructor(textObjectClass, numberObjectClass, List.class, List.class);
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.tracef(e, "Could not initialize generator %s", this);
       }
    }

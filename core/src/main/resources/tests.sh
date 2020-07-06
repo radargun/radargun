@@ -16,7 +16,7 @@ RUN_SKIPPED=false
 FAST_OPTS=""
 
 function help_and_exit() {
-   echo "Usage: tests.sh [OPTIONS...] SLAVES..."
+   echo "Usage: tests.sh [OPTIONS...] WORKERS..."
    echo "Options:"
    echo "    -f      Run failed tests."
    echo "    -s      Run skipped tests."
@@ -48,8 +48,8 @@ do
         echo "Warning: unknown argument ${1}"
         help_and_exit
       fi
-      SLAVES="$@"
-      SLAVE_COUNT=$#
+      WORKERS="$@"
+      WORKER_COUNT=$#
       shift $#
       ;;
   esac
@@ -61,7 +61,7 @@ AVAILABLE_PLUGINS=`ls -1 $RADARGUN_HOME/plugins`
 add_fwk_to_classpath
 set_env
 
-CMD_PREFIX="${JAVA} ${JVM_OPTS} -Dslaves=$SLAVE_COUNT -classpath $CP org.radargun.config.DomConfigParser "
+CMD_PREFIX="${JAVA} ${JVM_OPTS} -Dworkers=$WORKER_COUNT -classpath $CP org.radargun.config.DomConfigParser "
 
 if [ $RUN_ALL == "true" ]; then
    TEST_LIST=`ls -1 $RADARGUN_HOME/conf/benchmark-*.xml`
@@ -106,18 +106,18 @@ for CONFIG_FILE in $TEST_LIST; do
    if [ $SKIP == "true" ]; then
       continue
    fi
-   if [ $MAX_CLUSTER_SIZE -gt $SLAVE_COUNT ]; then
-      echo "WARN: skipped test $TEST_NAME since we don't have enough slaves; have $SLAVE_COUNT, need $MAX_CLUSTER_SIZE";
+   if [ $MAX_CLUSTER_SIZE -gt $WORKER_COUNT ]; then
+      echo "WARN: skipped test $TEST_NAME since we don't have enough workers; have $WORKER_COUNT, need $MAX_CLUSTER_SIZE";
       let "SKIPPED+=1"
       echo $CONFIG_FILE > skipped.tests
    else
       mkdir -p results/$TEST_NAME
       rm results/$TEST_NAME/* 2> /dev/null
 
-      TEST_SLAVES=`echo $SLAVES | tr -s '[:space:]' '\n' | head -n $MAX_CLUSTER_SIZE | tr '\n' ' '`
+      TEST_WORKERS=`echo $WORKERS | tr -s '[:space:]' '\n' | head -n $MAX_CLUSTER_SIZE | tr '\n' ' '`
 
-      echo "INFO: running test $TEST_NAME with $MAX_CLUSTER_SIZE slaves: $TEST_SLAVES"
-      if eval "$RADARGUN_HOME/bin/dist.sh --wait -c $CONFIG_FILE $FAST_OPTS -o results/$TEST_NAME $TEST_SLAVES" > /dev/null; then
+      echo "INFO: running test $TEST_NAME with $MAX_CLUSTER_SIZE workers: $TEST_WORKERS"
+      if eval "$RADARGUN_HOME/bin/dist.sh --wait -c $CONFIG_FILE $FAST_OPTS -o results/$TEST_NAME $TEST_WORKERS" > /dev/null; then
          echo "INFO: test $TEST_NAME succeeded"
          let "SUCCESSFUL+=1"
       else

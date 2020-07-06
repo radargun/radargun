@@ -10,7 +10,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.generators.TimestampKeyGenerator.TimestampKey;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
@@ -55,19 +55,19 @@ public class RegisterListenersStage extends AbstractDistStage {
    private SynchronizedStatistics statistics;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       String statsKey = getClass().getName() + ".Stats";
 
-      statistics = (SynchronizedStatistics) slaveState.get(statsKey);
+      statistics = (SynchronizedStatistics) workerState.get(statsKey);
       if (statistics == null) {
          statistics = new SynchronizedStatistics(new BasicOperationStats());
-         slaveState.put(statsKey, statistics);
+         workerState.put(statsKey, statistics);
       } else if (resetStats) {
          statistics.reset();
       }
 
       if (registerListeners) {
-         initListenersOnSlave(slaveState);
+         initListenersOnWorker(workerState);
          registerListeners();
       }
 
@@ -75,12 +75,12 @@ public class RegisterListenersStage extends AbstractDistStage {
          unregisterListeners();
       }
 
-      return new ListenersAck(slaveState, statistics.snapshot(true));
+      return new ListenersAck(workerState, statistics.snapshot(true));
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       Report.Test test = createTest(testName, null);
@@ -89,7 +89,7 @@ public class RegisterListenersStage extends AbstractDistStage {
 
          for (ListenersAck ack : instancesOf(acks, ListenersAck.class)) {
             if (ack.stats != null)
-               test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
+               test.addStatistics(testIteration, ack.getWorkerIndex(), Collections.singletonList(ack.stats));
          }
       }
       return StageResult.SUCCESS;
@@ -100,12 +100,12 @@ public class RegisterListenersStage extends AbstractDistStage {
          log.warn("No test name - results are not recorded");
          return null;
       } else {
-         Report report = masterState.getReport();
+         Report report = mainState.getReport();
          return report.createTest(testName, iterationName, true);
       }
    }
 
-   private void initListenersOnSlave(SlaveState slaveState) {
+   private void initListenersOnWorker(WorkerState workerState) {
       CreatedListener createdListener = new CreatedListener() {
          @Override
          public void created(Object key, Object value) {
@@ -116,7 +116,7 @@ public class RegisterListenersStage extends AbstractDistStage {
             log.trace("Created " + key + " -> " + value);
          }
       };
-      slaveState.put(CREATED.name, createdListener);
+      workerState.put(CREATED.name, createdListener);
 
       EvictedListener evictedListener = new EvictedListener() {
          @Override
@@ -128,7 +128,7 @@ public class RegisterListenersStage extends AbstractDistStage {
             log.trace("Evicted " + key + " -> " + value);
          }
       };
-      slaveState.put(EVICTED.name, evictedListener);
+      workerState.put(EVICTED.name, evictedListener);
 
       RemovedListener removedListener = new RemovedListener() {
          @Override
@@ -140,7 +140,7 @@ public class RegisterListenersStage extends AbstractDistStage {
             log.trace("Removed " + key + " -> " + value);
          }
       };
-      slaveState.put(REMOVED.name, removedListener);
+      workerState.put(REMOVED.name, removedListener);
 
       UpdatedListener updatedListener = new UpdatedListener() {
          @Override
@@ -152,7 +152,7 @@ public class RegisterListenersStage extends AbstractDistStage {
             log.trace("Updated " + key + " -> " + value);
          }
       };
-      slaveState.put(UPDATED.name, updatedListener);
+      workerState.put(UPDATED.name, updatedListener);
 
       ExpiredListener expiredListener = new ExpiredListener() {
          @Override
@@ -164,58 +164,58 @@ public class RegisterListenersStage extends AbstractDistStage {
             log.trace("Expired " + key + " -> " + value);
          }
       };
-      slaveState.put(EXPIRED.name, expiredListener);
+      workerState.put(EXPIRED.name, expiredListener);
    }
 
    public void registerListeners() {
-      CreatedListener createdListener = (CreatedListener) slaveState.get(CREATED.name);
+      CreatedListener createdListener = (CreatedListener) workerState.get(CREATED.name);
       if (createdListener != null && isSupported(Type.CREATED)) {
          listenersTrait.addCreatedListener(null, createdListener, sync);
       }
-      EvictedListener evictedListener = (EvictedListener) slaveState.get(EVICTED.name);
+      EvictedListener evictedListener = (EvictedListener) workerState.get(EVICTED.name);
       if (evictedListener != null && isSupported(Type.EVICTED)) {
          listenersTrait.addEvictedListener(null, evictedListener, sync);
       }
-      RemovedListener removedListener = (RemovedListener) slaveState.get(REMOVED.name);
+      RemovedListener removedListener = (RemovedListener) workerState.get(REMOVED.name);
       if (removedListener != null && isSupported(Type.REMOVED)) {
          listenersTrait.addRemovedListener(null, removedListener, sync);
       }
-      UpdatedListener updatedListener = (UpdatedListener) slaveState.get(UPDATED.name);
+      UpdatedListener updatedListener = (UpdatedListener) workerState.get(UPDATED.name);
       if (updatedListener != null && isSupported(Type.UPDATED)) {
          listenersTrait.addUpdatedListener(null, updatedListener, sync);
       }
-      ExpiredListener expiredListener = (ExpiredListener) slaveState.get(EXPIRED.name);
+      ExpiredListener expiredListener = (ExpiredListener) workerState.get(EXPIRED.name);
       if (expiredListener != null && isSupported(Type.EXPIRED)) {
          listenersTrait.addExpiredListener(null, expiredListener, sync);
       }
    }
 
    public void unregisterListeners() {
-      CreatedListener createdListener = (CreatedListener) slaveState.get(CREATED.name);
+      CreatedListener createdListener = (CreatedListener) workerState.get(CREATED.name);
       if (createdListener != null && isSupported(Type.CREATED)) {
          listenersTrait.removeCreatedListener(null, createdListener, sync);
       }
-      slaveState.remove(CREATED.name);
-      EvictedListener evictedListener = (EvictedListener) slaveState.get(EVICTED.name);
+      workerState.remove(CREATED.name);
+      EvictedListener evictedListener = (EvictedListener) workerState.get(EVICTED.name);
       if (evictedListener != null && isSupported(Type.EVICTED)) {
          listenersTrait.removeEvictedListener(null, evictedListener, sync);
       }
-      slaveState.remove(EVICTED.name);
-      RemovedListener removedListener = (RemovedListener) slaveState.get(REMOVED.name);
+      workerState.remove(EVICTED.name);
+      RemovedListener removedListener = (RemovedListener) workerState.get(REMOVED.name);
       if (removedListener != null && isSupported(Type.REMOVED)) {
          listenersTrait.removeRemovedListener(null, removedListener, sync);
       }
-      slaveState.remove(REMOVED.name);
-      UpdatedListener updatedListener = (UpdatedListener) slaveState.get(UPDATED.name);
+      workerState.remove(REMOVED.name);
+      UpdatedListener updatedListener = (UpdatedListener) workerState.get(UPDATED.name);
       if (updatedListener != null && isSupported(Type.UPDATED)) {
          listenersTrait.removeUpdatedListener(null, updatedListener, sync);
       }
-      slaveState.remove(UPDATED.name);
-      ExpiredListener expiredListener = (ExpiredListener) slaveState.get(EXPIRED.name);
+      workerState.remove(UPDATED.name);
+      ExpiredListener expiredListener = (ExpiredListener) workerState.get(EXPIRED.name);
       if (expiredListener != null && isSupported(Type.EXPIRED)) {
          listenersTrait.removeExpiredListener(null, expiredListener, sync);
       }
-      slaveState.remove(EXPIRED.name);
+      workerState.remove(EXPIRED.name);
    }
 
    private boolean isSupported(Type type) {
@@ -229,8 +229,8 @@ public class RegisterListenersStage extends AbstractDistStage {
 
       public final Statistics stats;
 
-      public ListenersAck(SlaveState slaveState, Statistics stats) {
-         super(slaveState);
+      public ListenersAck(WorkerState workerState, Statistics stats) {
+         super(workerState);
          this.stats = stats;
       }
    }

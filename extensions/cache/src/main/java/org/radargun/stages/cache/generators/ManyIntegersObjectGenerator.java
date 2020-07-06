@@ -49,7 +49,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
          }
          ctor = clazz.getConstructor(params);
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.trace("Could not initialize generator " + this, e);
       }
    }

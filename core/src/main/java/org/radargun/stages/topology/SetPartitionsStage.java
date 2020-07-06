@@ -23,13 +23,13 @@ import org.radargun.traits.Partitionable;
 public class SetPartitionsStage extends AbstractDistStage {
 
    @Property(optional = false, converter = UniqueCheckerConverter.class, doc = "Set of sets of partitions, " +
-      "e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.")
+      "e.g. [0,1],[2] makes two partitions, one with workers 0 and 1 and second with worker 2 alone.")
    private List<Set<Integer>> partitions;
 
    @InjectTrait(dependency = InjectTrait.Dependency.SKIP)
    private Partitionable partitionable;
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!shouldExecute() || !isServiceRunning()) {
          return successfulResponse();
       }
@@ -38,16 +38,16 @@ public class SetPartitionsStage extends AbstractDistStage {
       }
       int myPartitionIndex = -1;
       for (int i = 0; i < partitions.size(); ++i) {
-         if (partitions.get(i).contains(slaveState.getSlaveIndex())) {
+         if (partitions.get(i).contains(workerState.getWorkerIndex())) {
             myPartitionIndex = i;
             break;
          }
       }
       if (myPartitionIndex < 0) {
-         return errorResponse("Slave " + slaveState.getSlaveIndex() + " is not contained in any partition!", null);
+         return errorResponse("Worker " + workerState.getWorkerIndex() + " is not contained in any partition!", null);
       }
       try {
-         partitionable.setMembersInPartition(slaveState.getSlaveIndex(), partitions.get(myPartitionIndex));
+         partitionable.setMembersInPartition(workerState.getWorkerIndex(), partitions.get(myPartitionIndex));
       } catch (Exception e) {
          return errorResponse("Error setting members in partition", e);
       }
@@ -60,11 +60,11 @@ public class SetPartitionsStage extends AbstractDistStage {
          Collection setOfSets = (Collection) super.convert(string, type);
          Set<Object> all = new HashSet<Object>();
          for (Object set : setOfSets) {
-            for (Object slave : (Collection) set) {
-               if (all.contains(slave)) {
-                  throw new IllegalArgumentException("Each slave can be only in one part! Error found for slave " + slave);
+            for (Object worker : (Collection) set) {
+               if (all.contains(worker)) {
+                  throw new IllegalArgumentException("Each worker can be only in one part! Error found for worker " + worker);
                }
-               all.add(slave);
+               all.add(worker);
             }
          }
          return setOfSets;

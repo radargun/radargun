@@ -15,7 +15,7 @@ import org.radargun.state.StateListener;
 import org.radargun.utils.Utils;
 
 /**
- * Base class for holding and maintaining various slave and master state
+ * Base class for holding and maintaining various worker and main state
  * monitors, extending classes have to implement interface extending
  * {@link StateListener}
  * 

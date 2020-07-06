@@ -1,8 +1,8 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <!-- Specifies where should the master open socket  -->
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <!-- Specifies where should the main open socket  -->
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <!-- List of cluster configurations where the benchmark should run-->
    <clusters>

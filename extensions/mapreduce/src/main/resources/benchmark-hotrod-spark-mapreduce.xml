@@ -1,13 +1,13 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <!-- Specifies where should the master open socket -->
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <!-- Specifies where should the main open socket -->
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <!-- List of cluster configurations where the benchmark should run -->
    <clusters>
       <cluster size="5">
-         <group name="master" size="1" />
+         <group name="main" size="1" />
          <group name="worker" size="1" />
          <group name="driver" size="1" />
          <group name="ispn-server" size="1" />
@@ -18,9 +18,9 @@
    <!-- List of configurations of the services -->
    <configurations>
       <config name="Spark">
-         <!-- Configuration for the Spark master group -->
-         <setup group="master" plugin="spark">
-            <master xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_161_HOME}"/>
+         <!-- Configuration for the Spark main group -->
+         <setup group="main" plugin="spark">
+            <main xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_161_HOME}"/>
          </setup>
          <!-- Configuration for the Spark worker group -->
          <setup group="worker" plugin="spark">
@@ -60,7 +60,7 @@
                 xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:mapreduce="urn:radargun:stages:mapreduce:3.0"
                 xmlns="urn:radargun:stages:core:3.0">
-      <service-start groups="master"/>
+      <service-start groups="main"/>
       <service-start groups="worker"/>
       <service-start groups="driver"/>
       <service-start groups="ispn-server"/>

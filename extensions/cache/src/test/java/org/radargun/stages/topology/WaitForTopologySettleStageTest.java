@@ -7,7 +7,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 import org.radargun.DistStageAck;
 import org.radargun.logging.Log;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeService;
@@ -33,22 +33,22 @@ import static org.testng.Assert.assertFalse;
 public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
    @Test(timeOut = 10_000)
-   public void testExecuteOnSlaveTopologyChanges() throws Exception {
-      testExecuteOnSlaveTopologyChanges(EnumSet.of(HistoryType.TOPOLOGY));
+   public void testExecuteOnWorkerTopologyChanges() throws Exception {
+      testExecuteOnWorkerTopologyChanges(EnumSet.of(HistoryType.TOPOLOGY));
    }
 
    @Test(timeOut = 10_000)
-   public void testExecuteOnSlaveRehashChanges() throws Exception {
-      testExecuteOnSlaveTopologyChanges(EnumSet.of(HistoryType.REHASH));
+   public void testExecuteOnWorkerRehashChanges() throws Exception {
+      testExecuteOnWorkerTopologyChanges(EnumSet.of(HistoryType.REHASH));
    }
 
    @Test(timeOut = 10_000)
-   public void testExecuteOnSlaveCacheStatusChanges() throws Exception {
-      testExecuteOnSlaveTopologyChanges(EnumSet.of(HistoryType.CACHE_STATUS));
+   public void testExecuteOnWorkerCacheStatusChanges() throws Exception {
+      testExecuteOnWorkerTopologyChanges(EnumSet.of(HistoryType.CACHE_STATUS));
    }
 
    @Test(timeOut = 10_000)
-   public void testExecuteOnSlaveMembershipChanges() throws NoSuchFieldException, IllegalAccessException {
+   public void testExecuteOnWorkerMembershipChanges() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.noneOf(HistoryType.class), true);
       stage.period = 10l;
       Clustered clustered = mock(Clustered.class);
@@ -66,13 +66,13 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
       PowerMockito.mockStatic(TimeService.class);
       PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(10l).thenReturn(10l).thenReturn(13l);
 
-      DistStageAck distStageAck = stage.executeOnSlave();
+      DistStageAck distStageAck = stage.executeOnWorker();
       assertFalse(distStageAck.isError());
 
       verify(clustered, times(2)).getMembershipHistory();
    }
 
-   private void testExecuteOnSlaveTopologyChanges(EnumSet<TopologyHistory.HistoryType> checkEvents) throws Exception {
+   private void testExecuteOnWorkerTopologyChanges(EnumSet<TopologyHistory.HistoryType> checkEvents) throws Exception {
       WaitForTopologySettleStage stage = initStage(checkEvents, false);
       stage.period = 0l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
@@ -152,7 +152,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
       PowerMockito.mockStatic(TimeService.class);
       PowerMockito.when(TimeService.currentTimeMillis()).thenReturn(10l);
 
-      DistStageAck distStageAck = stage.executeOnSlave();
+      DistStageAck distStageAck = stage.executeOnWorker();
       assertFalse(distStageAck.isError());
 
       if (checkEvents.contains(HistoryType.TOPOLOGY)) {
@@ -166,7 +166,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
       }
    }
 
-   public void testExecuteOnSlaveSingleEvents() throws NoSuchFieldException, IllegalAccessException {
+   public void testExecuteOnWorkerSingleEvents() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.of(HistoryType.CACHE_STATUS), false);
       stage.period = 10l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
@@ -193,7 +193,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
          .thenReturn(0l).thenReturn(5l)
          .thenReturn(15l);
 
-      DistStageAck distStageAck = stage.executeOnSlave();
+      DistStageAck distStageAck = stage.executeOnWorker();
       assertFalse(distStageAck.isError());
 
       verify(topologyHistory, times(2)).getCacheStatusChangeHistory(anyString());
@@ -202,7 +202,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
    private WaitForTopologySettleStage initStage(EnumSet<TopologyHistory.HistoryType> checkEvents,
                                                 boolean checkMembership) throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = spy(new WaitForTopologySettleStage());
-      stage.initOnSlave(mock(SlaveState.class));
+      stage.initOnWorker(mock(WorkerState.class));
 
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       Log log = mock(Log.class);

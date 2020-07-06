@@ -40,7 +40,7 @@ public class QueryBase {
 
    public void init(Queryable queryable, QueryConfiguration query) {
       if (queryable == null) {
-         return; // called from master, ignore
+         return; // called from main, ignore
       }
       builders = new Query.Builder[numQueries];
       for (int i = 0; i < numQueries; ++i) {
@@ -117,16 +117,16 @@ public class QueryBase {
 
    public void checkAndRecordResults(Map<Integer, Data> results, Report.Test test, int iteration) {
       MinMax.Int totalResultSize = new MinMax.Int();
-      Map<Integer, Report.SlaveResult> slaveResultSizes = new HashMap<>();
-      Map<String, Map<Integer, Report.SlaveResult>> exposedResults = new HashMap<>();
+      Map<Integer, Report.WorkerResult> workerResultSizes = new HashMap<>();
+      Map<String, Map<Integer, Report.WorkerResult>> exposedResults = new HashMap<>();
       Map<String, MinMax.Long> exposedAggregations = new HashMap<>();
       for (Map.Entry<Integer, QueryBase.Data> entry : results.entrySet()) {
-         int slaveIndex = entry.getKey();
+         int workerIndex = entry.getKey();
          QueryBase.Data data = entry.getValue();
 
          if (totalResultSize.isSet() && (totalResultSize.min() != data.minResultSize || totalResultSize.max() != data.maxResultSize)) {
-            String message = String.format("The size got from %d -> %d .. %d is not the same as from other slaves -> %d .. %d ",
-               slaveIndex, data.minResultSize, data.maxResultSize, totalResultSize.min(), totalResultSize.max());
+            String message = String.format("The size got from %d -> %d .. %d is not the same as from other workers -> %d .. %d ",
+               workerIndex, data.minResultSize, data.maxResultSize, totalResultSize.min(), totalResultSize.max());
             if (checkSameResult) {
                throw new IllegalStateException(message);
             } else {
@@ -136,11 +136,11 @@ public class QueryBase {
          for (String attribute : exposedAttributes) {
             String value = data.exposedAttributeValues.get(attribute);
             if (value == null) continue;
-            Map<Integer, Report.SlaveResult> slaveResult = exposedResults.get(attribute);
-            if (slaveResult == null) {
-               exposedResults.put(attribute, slaveResult = new HashMap<>());
+            Map<Integer, Report.WorkerResult> workerResult = exposedResults.get(attribute);
+            if (workerResult == null) {
+               exposedResults.put(attribute, workerResult = new HashMap<>());
             }
-            slaveResult.put(slaveIndex, new Report.SlaveResult(value, false));
+            workerResult.put(workerIndex, new Report.WorkerResult(value, false));
             MinMax.Long aggreg = exposedAggregations.get(attribute);
             if (aggreg == null) {
                exposedAggregations.put(attribute, aggreg = new MinMax.Long());
@@ -154,8 +154,8 @@ public class QueryBase {
       }
 
       if (test != null) {
-         test.addResult(iteration, new Report.TestResult("Query result size", slaveResultSizes, totalResultSize.toString(), false));
-         for (Map.Entry<String, Map<Integer, Report.SlaveResult>> entry : exposedResults.entrySet()) {
+         test.addResult(iteration, new Report.TestResult("Query result size", workerResultSizes, totalResultSize.toString(), false));
+         for (Map.Entry<String, Map<Integer, Report.WorkerResult>> entry : exposedResults.entrySet()) {
             test.addResult(iteration, new Report.TestResult("Exposed: " + entry.getKey(),
                entry.getValue(), exposedAggregations.get(entry.getKey()).toString(), false));
          }

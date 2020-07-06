@@ -26,16 +26,16 @@ public class SingleTXStageTest {
       lifecycle0.start();
       Lifecycle lifecycle1 = stageRunner.getTraitImpl(Lifecycle.class, 1);
       lifecycle1.start();
-      Set<Integer> commitSlaves = new HashSet<>();
-      commitSlaves.add(0);
+      Set<Integer> commitWorkers = new HashSet<>();
+      commitWorkers.add(0);
       Set<Integer> commitThreads = new HashSet<>();
       commitThreads.add(0);
       SingleTXLoadStage singleTXLoadStage1 = new SingleTXLoadStage();
-      singleTXLoadStage1.commitSlave = commitSlaves;
+      singleTXLoadStage1.commitWorker = commitWorkers;
       singleTXLoadStage1.commitThread = commitThreads;
       singleTXLoadStage1.threads = 2;
       SingleTXLoadStage singleTXLoadStage2 = new SingleTXLoadStage();
-      singleTXLoadStage2.commitSlave = commitSlaves;
+      singleTXLoadStage2.commitWorker = commitWorkers;
       singleTXLoadStage2.commitThread = commitThreads;
       singleTXLoadStage2.threads = 2;
 
@@ -45,19 +45,19 @@ public class SingleTXStageTest {
 
       Assert.assertEquals(cache.size(), 0);
 
-      List<DistStageAck> acks = stageRunner.executeOnSlave(new SingleTXLoadStage[] {singleTXLoadStage1, singleTXLoadStage2}, new int[] {0, 1});
+      List<DistStageAck> acks = stageRunner.executeOnWorker(new SingleTXLoadStage[] {singleTXLoadStage1, singleTXLoadStage2}, new int[] {0, 1});
 
       Assert.assertEquals(cache.size(), 20);
-      Assert.assertEquals(stageRunner.processAckOnMaster(singleTXLoadStage1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(singleTXLoadStage1, acks), StageResult.SUCCESS);
 
       SingleTXCheckStage singleTXCheckStage1 = new SingleTXCheckStage();
-      singleTXCheckStage1.commitSlave = commitSlaves;
+      singleTXCheckStage1.commitWorker = commitWorkers;
       singleTXCheckStage1.commitThread = commitThreads;
       SingleTXCheckStage singleTXCheckStage2 = new SingleTXCheckStage();
-      singleTXCheckStage2.commitSlave = commitSlaves;
+      singleTXCheckStage2.commitWorker = commitWorkers;
       singleTXCheckStage2.commitThread = commitThreads;
 
-      acks = stageRunner.executeOnSlave(new SingleTXCheckStage[] {singleTXCheckStage1, singleTXCheckStage2}, new int[] {0, 1});
-      Assert.assertEquals(stageRunner.processAckOnMaster(singleTXLoadStage1, acks), StageResult.SUCCESS);
+      acks = stageRunner.executeOnWorker(new SingleTXCheckStage[] {singleTXCheckStage1, singleTXCheckStage2}, new int[] {0, 1});
+      Assert.assertEquals(stageRunner.processAckOnMain(singleTXLoadStage1, acks), StageResult.SUCCESS);
    }
 }

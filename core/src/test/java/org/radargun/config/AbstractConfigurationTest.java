@@ -7,7 +7,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.radargun.Directories;
-import org.radargun.LaunchMaster;
+import org.radargun.LaunchMain;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.control.RepeatBeginStage;
@@ -36,7 +36,7 @@ import static org.testng.Assert.*;
 @SuppressStaticInitializationFor({"org.radargun.Directories"})
 public class AbstractConfigurationTest extends PowerMockTestCase {
    protected static Log log = LogFactory.getLog(AbstractConfigurationTest.class);
-   protected MasterConfig masterConfig;
+   protected MainConfig mainConfig;
    protected List<String> resources = new ArrayList<>();
 
    protected String getBenchmark() {
@@ -63,13 +63,13 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
       DomConfigParser configParser = new DomConfigParser();//Mockito.mock(DomConfigParser.class, CALLS_REAL_METHODS);
       resources.add(getBenchmark());
       copyResources();
-      String[] masterArgs = {"--config", getBenchmark()};
-      String config = LaunchMaster.getConfigOrExit(masterArgs);
+      String[] mainArgs = {"--config", getBenchmark()};
+      String config = LaunchMain.getConfigOrExit(mainArgs);
 
       log.info("Configuration file is: " + config);
       log.info("Current directory is " + cwd);
 
-      masterConfig = configParser.parseConfig(config);
+      mainConfig = configParser.parseConfig(config);
    }
 
    private File tempDir(String prefix) throws IOException {
@@ -93,7 +93,7 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     * Tests correct parsing of configuration
     */
    public void testConfiguration() {
-      List<Configuration> configurations = masterConfig.getConfigurations();
+      List<Configuration> configurations = mainConfig.getConfigurations();
 
       assertEquals(configurations.size(), 2);
 
@@ -134,8 +134,8 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     * Tests correct parsing of configuration
     */
    public void testHost() {
-      String host = masterConfig.getHost();
-      int port = masterConfig.getPort();
+      String host = mainConfig.getHost();
+      int port = mainConfig.getPort();
       assertEquals(host, "127.0.0.1");
       assertEquals(port, 2103);
    }
@@ -144,7 +144,7 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     * Tests correct parsing of plugins configuration
     */
    public void testPlugins() {
-      Set<String> plugins = masterConfig.getPlugins();
+      Set<String> plugins = mainConfig.getPlugins();
 
       assertEquals(plugins.size(), 2);
 
@@ -156,21 +156,21 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     * Tests correct parsing of clusters configuration
     */
    public void testClusters() {
-      List<Cluster> clusters = masterConfig.getClusters();
+      List<Cluster> clusters = mainConfig.getClusters();
 
       assertEquals(clusters.size(), 2);
 
       assertEquals(clusters.get(0).toString(), "Cluster[default=2]");
       assertEquals(clusters.get(1).toString(), "Cluster[default=3]");
 
-      assertEquals(masterConfig.getMaxClusterSize(), 3);
+      assertEquals(mainConfig.getMaxClusterSize(), 3);
    }
 
    /**
     * Tests correct parsing of scenario configuration
     */
    public void testScenario() {
-      Scenario scenario = masterConfig.getScenario();
+      Scenario scenario = mainConfig.getScenario();
       assertEquals(scenario.getStageCount(), 12);
       List<Scenario.StageDescription> stages = scenario.getStages();
 
@@ -211,7 +211,7 @@ public class AbstractConfigurationTest extends PowerMockTestCase {
     * Tests correct parsing of report configuration
     */
    public void testReport() {
-      List<ReporterConfiguration> reporters = masterConfig.getReporters();
+      List<ReporterConfiguration> reporters = mainConfig.getReporters();
 
       assertEquals(reporters.size(), 3);
       assertEquals(reporters.get(0).type, "csv");

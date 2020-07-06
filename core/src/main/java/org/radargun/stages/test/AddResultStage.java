@@ -6,13 +6,13 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
-import org.radargun.stages.AbstractMasterStage;
+import org.radargun.stages.AbstractMainStage;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Adds custom result to given test")
-public class AddResultStage extends AbstractMasterStage {
+public class AddResultStage extends AbstractMainStage {
    @Property(doc = "Name of the test.", optional = false)
    protected String testName;
 
@@ -27,7 +27,7 @@ public class AddResultStage extends AbstractMasterStage {
 
    @Override
    public StageResult execute() throws Exception {
-      Report.Test test = masterState.getReport().getTest(testName);
+      Report.Test test = mainState.getReport().getTest(testName);
       if (test == null) {
          log.errorf("Test %s does not exist.");
          return StageResult.FAIL;

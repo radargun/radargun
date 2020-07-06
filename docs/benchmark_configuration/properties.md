@@ -8,7 +8,7 @@ Properties and evaluations
 
 There are several properties available for configuration file to use. All properties are accessed by using `$`, a dollar sign, and providing property name inside braces - `${PROPERTY_NAME}`. Default value for a property can be set by adding the `:` colon and default value between property name and the last brace -  `${PROPERTY_NAME:DEFAULT_VALUE}`.
   
-Most properties are resolved during execution on slave (as opposed to initial parsing on master) and many of them refer to current status on that slave as per their individual comments below. 
+Most properties are resolved during execution on worker (as opposed to initial parsing on main) and many of them refer to current status on that worker as per their individual comments below. 
   
 Custom properties can also be specified trough the `define` stage in the [scenario](./scenario.html).
 
@@ -35,8 +35,8 @@ Following properties are available:
 * **group.size**		- size of the current group
 * **plugin.name**		- name of current plugin
 * **config.name**		- name of the current configuration
-* **slave.index**		- index of current slave (slaves are indexed from 0)
-* **process.id**		- ID of the slave process
+* **worker.index**		- index of current worker (workers are indexed from 0)
+* **process.id**		- ID of the worker process
 * **repeat.counter**		- internal itteration counter of enclosing repeat element (only in case there is a only one and name is not set)
 * **repeat.REPEAT_NAME.counter**	- internal itteration counter of named enclosing repeat element
 

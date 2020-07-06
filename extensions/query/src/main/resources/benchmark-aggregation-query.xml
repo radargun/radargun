@@ -1,6 +1,6 @@
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+    <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}" />
 
     <clusters>
         <scale from="1" to="1">

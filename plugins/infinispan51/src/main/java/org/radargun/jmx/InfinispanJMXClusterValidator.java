@@ -117,9 +117,9 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
    private long jmxConnectionTimeout;
 
    @Override
-   public void init(List<InetSocketAddress> slaveAddresses, long jmxConnectionTimeout, String prop1, String prop2,
+   public void init(List<InetSocketAddress> workerAddresses, long jmxConnectionTimeout, String prop1, String prop2,
                     String prop3) {
-      this.endpoints = slaveAddresses;
+      this.endpoints = workerAddresses;
       this.jmxConnectionTimeout = jmxConnectionTimeout;
       channelObjectName = prop1;
       gmsProtocolObjectName = prop2;

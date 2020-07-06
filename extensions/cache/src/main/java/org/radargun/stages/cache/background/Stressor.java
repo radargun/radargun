@@ -29,7 +29,7 @@ class Stressor extends Thread {
    public Stressor(BackgroundOpsManager manager, Logic logic, int id) {
       super(manager.getName() + "Stressor-" + id);
       GeneralConfiguration config = manager.getGeneralConfiguration();
-      this.id = manager.getSlaveState().getIndexInGroup() * config.getNumThreads() + id;
+      this.id = manager.getWorkerState().getIndexInGroup() * config.getNumThreads() + id;
       this.logic = logic;
       this.delayBetweenRequests = config.getDelayBetweenRequests();
       logic.setStressor(this);

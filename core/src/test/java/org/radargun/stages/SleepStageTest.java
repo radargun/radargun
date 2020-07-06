@@ -18,7 +18,7 @@ public class SleepStageTest {
       sleepStage.time = 1000;
 
       long start = TimeService.currentTimeMillis();
-      StageResult stageResult = stageRunner.executeMasterStage(sleepStage);
+      StageResult stageResult = stageRunner.executeMainStage(sleepStage);
       long end = TimeService.currentTimeMillis();
 
       Assert.assertTrue(end - start >= 1000);

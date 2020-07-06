@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.Lifecycle;
 import org.radargun.util.CacheStageRunner;
 import org.radargun.util.CacheTraitRepository;
@@ -26,37 +26,37 @@ public class RegisterListenersStageTest {
       RegisterListenersStage registerListenersStage = new RegisterListenersStage();
       registerListenersStage.registerListeners = true;
 
-      SlaveState slaveState = stageRunner.getSlaveState();
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.CREATED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
+      WorkerState workerState = stageRunner.getWorkerState();
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.CREATED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(registerListenersStage, 0));
+      acks.add(stageRunner.executeOnWorker(registerListenersStage, 0));
 
-      Assert.assertNotNull(slaveState.get(CacheTraitRepository.CacheListeners.CREATED.name));
-      Assert.assertNotNull(slaveState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
-      Assert.assertNotNull(slaveState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
-      Assert.assertNotNull(slaveState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
-      Assert.assertNotNull(slaveState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
-      Assert.assertEquals(stageRunner.processAckOnMaster(registerListenersStage, acks), StageResult.SUCCESS);
+      Assert.assertNotNull(workerState.get(CacheTraitRepository.CacheListeners.CREATED.name));
+      Assert.assertNotNull(workerState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
+      Assert.assertNotNull(workerState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
+      Assert.assertNotNull(workerState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
+      Assert.assertNotNull(workerState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
+      Assert.assertEquals(stageRunner.processAckOnMain(registerListenersStage, acks), StageResult.SUCCESS);
 
       registerListenersStage.registerListeners = false;
       registerListenersStage.unregisterListeners = true;
 
       acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(registerListenersStage, 0));
+      acks.add(stageRunner.executeOnWorker(registerListenersStage, 0));
 
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.CREATED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
-      Assert.assertNull(slaveState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
-      Assert.assertEquals(stageRunner.processAckOnMaster(registerListenersStage, acks), StageResult.SUCCESS);
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.CREATED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.UPDATED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.REMOVED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.EVICTED.name));
+      Assert.assertNull(workerState.get(CacheTraitRepository.CacheListeners.EXPIRED.name));
+      Assert.assertEquals(stageRunner.processAckOnMain(registerListenersStage, acks), StageResult.SUCCESS);
 
    }
 }

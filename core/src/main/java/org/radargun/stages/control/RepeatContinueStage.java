@@ -14,12 +14,12 @@ import org.radargun.config.Stage;
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is added at the end of each repeat.")
 public class RepeatContinueStage extends RepeatStage {
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       return successfulResponse();
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       return StageResult.CONTINUE;
    }
 }

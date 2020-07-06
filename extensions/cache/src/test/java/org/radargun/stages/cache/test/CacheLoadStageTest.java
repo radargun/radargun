@@ -25,12 +25,12 @@ public class CacheLoadStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
       LoadStage cacheLoadStage = new LoadStage();
-      acks.add(stageRunner.executeOnSlave(cacheLoadStage, 0));
+      acks.add(stageRunner.executeOnWorker(cacheLoadStage, 0));
       BasicOperations basicOperations = stageRunner.getTraitImpl(BasicOperations.class);
       CacheTraitRepository.BasicOperationsCache cache = (CacheTraitRepository.BasicOperationsCache) basicOperations.getCache(null);
 
       Assert.assertNotNull(cache);
       Assert.assertEquals(cache.size(), 100);
-      Assert.assertEquals(stageRunner.processAckOnMaster(cacheLoadStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(cacheLoadStage, acks), StageResult.SUCCESS);
    }
 }

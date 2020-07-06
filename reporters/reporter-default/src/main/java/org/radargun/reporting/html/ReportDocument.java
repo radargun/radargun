@@ -253,9 +253,9 @@ public abstract class ReportDocument extends HtmlDocument {
       return nanos / TimeUnit.MILLISECONDS.toNanos(1);
    }
 
-   public int getMaxThreads(List<Aggregation> aggregations, final int slaveIndex) {
+   public int getMaxThreads(List<Aggregation> aggregations, final int workerIndex) {
       return aggregations.stream().map(aggregation -> {
-         List<Statistics> statistics = aggregation.iteration.getStatistics(slaveIndex);
+         List<Statistics> statistics = aggregation.iteration.getStatistics(workerIndex);
          return statistics == null ? 0 : statistics.size();
       }).max(Integer::max).orElse(0);
    }

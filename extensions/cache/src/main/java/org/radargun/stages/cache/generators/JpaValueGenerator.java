@@ -35,7 +35,7 @@ public class JpaValueGenerator implements ValueGenerator {
          }
          ctor = clazz.getConstructor(Object.class, int.class, Random.class);
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.trace("Could not initialize generator " + this, e);
       }
    }

@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.radargun.config.Cluster;
 
 /**
- * Support class for master and slave states.
+ * Support class for main and worker states.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */

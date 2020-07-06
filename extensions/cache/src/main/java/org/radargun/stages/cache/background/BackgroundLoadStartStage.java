@@ -17,9 +17,9 @@ public class BackgroundLoadStartStage extends LoadStage {
    @Override
    protected List<Loader> startLoaders() {
       List<Loader> newLoaders = super.startLoaders();
-      List<Thread> previousLoaders = (List<Thread>) slaveState.get(BACKGROUND_LOADERS);
+      List<Thread> previousLoaders = (List<Thread>) workerState.get(BACKGROUND_LOADERS);
       if (previousLoaders == null) {
-         slaveState.put(BACKGROUND_LOADERS, newLoaders);
+         workerState.put(BACKGROUND_LOADERS, newLoaders);
       } else {
          previousLoaders.addAll(newLoaders);
       }

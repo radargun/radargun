@@ -5,17 +5,17 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.MasterState;
+import org.radargun.state.MainState;
 import org.radargun.sysmonitor.AbstractMonitors;
 import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
 import org.radargun.sysmonitor.InternalsMonitor;
-import org.radargun.sysmonitor.MasterMonitors;
+import org.radargun.sysmonitor.MainMonitors;
 import org.radargun.sysmonitor.MemoryUsageMonitor;
 import org.radargun.sysmonitor.NetworkBytesMonitor;
 import org.radargun.sysmonitor.OpenFilesMonitor;
 import org.radargun.sysmonitor.RssMonitor;
-import org.radargun.sysmonitor.SystemSlaveMonitor;
+import org.radargun.sysmonitor.SystemWorkerMonitor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
@@ -24,12 +24,12 @@ import org.radargun.utils.TimeConverter;
 
 /**
  *
- * Starts collecting JVM statistics locally on master and each slave node.
- * {@link SystemSlaveMonitor}
+ * Starts collecting JVM statistics locally on main and each worker node.
+ * {@link SystemWorkerMonitor}
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-@Stage(doc = "Starts collecting statistics locally on master and each slave node.", deprecatedName = "jvm-monitor-start")
+@Stage(doc = "Starts collecting statistics locally on main and each worker node.", deprecatedName = "jvm-monitor-start")
 public class MonitorStartStage extends AbstractDistStage {
 
    @Property(doc = "Specifies the network interface where statistics are gathered. "
@@ -46,28 +46,28 @@ public class MonitorStartStage extends AbstractDistStage {
    private InternalsExposition internalsExposition;
 
    @Override
-   public void initOnMaster(MasterState masterState) {
-      super.initOnMaster(masterState);
-      MasterMonitors masterMonitors = masterState.get(MasterMonitors.MONITORS) == null ? new MasterMonitors(masterState, period)
-            : (MasterMonitors) masterState.get(MasterMonitors.MONITORS);
+   public void initOnMain(MainState mainState) {
+      super.initOnMain(mainState);
+      MainMonitors mainMonitors = mainState.get(MainMonitors.MONITORS) == null ? new MainMonitors(mainState, period)
+            : (MainMonitors) mainState.get(MainMonitors.MONITORS);
 
-      addMonitors(masterMonitors, masterState.getTimeline());
+      addMonitors(mainMonitors, mainState.getTimeline());
       
-      masterMonitors.start();
+      mainMonitors.start();
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
-      SystemSlaveMonitor slaveMonitors = slaveState.get(SystemSlaveMonitor.MONITORS) == null ? new SystemSlaveMonitor(slaveState, period)
-            : (SystemSlaveMonitor) slaveState.get(SystemSlaveMonitor.MONITORS);
+   public DistStageAck executeOnWorker() {
+      SystemWorkerMonitor workerMonitors = workerState.get(SystemWorkerMonitor.MONITORS) == null ? new SystemWorkerMonitor(workerState, period)
+            : (SystemWorkerMonitor) workerState.get(SystemWorkerMonitor.MONITORS);
 
-      addMonitors(slaveMonitors, slaveState.getTimeline());
+      addMonitors(workerMonitors, workerState.getTimeline());
 
       if (internalsExposition != null) {
-         slaveMonitors.addMonitor(new InternalsMonitor(internalsExposition, slaveState.getTimeline()));
+         workerMonitors.addMonitor(new InternalsMonitor(internalsExposition, workerState.getTimeline()));
       }
 
-      slaveMonitors.start();
+      workerMonitors.start();
       return successfulResponse();
    }
 

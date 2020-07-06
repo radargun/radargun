@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.radargun.Directories;
-import org.radargun.Slave;
+import org.radargun.Worker;
 import org.radargun.config.Evaluator;
 import org.radargun.config.VmArgs;
 import org.radargun.logging.LogFactory;
@@ -37,7 +37,7 @@ public final class RestartHelper {
       }
    }
 
-   public static void spawnSlave(int slaveIndex, UUID nextUuid, String plugin, VmArgs vmArgs, HashMap<String, String> envs) throws IOException {
+   public static void spawnWorker(int workerIndex, UUID nextUuid, String plugin, VmArgs vmArgs, HashMap<String, String> envs) throws IOException {
       ProcessBuilder processBuilder = new ProcessBuilder();
       processBuilder.inheritIO();
       StringBuilder classpathBuilder = new StringBuilder();
@@ -52,7 +52,7 @@ public final class RestartHelper {
             }
          }
          if (!pluginParam.getConfigFiles().isEmpty()) {
-            tempConfigDir = Files.createTempDirectory("radargun-" + plugin + "-" + slaveIndex);
+            tempConfigDir = Files.createTempDirectory("radargun-" + plugin + "-" + workerIndex);
             classpathBuilder.append(File.pathSeparatorChar).append(tempConfigDir.toAbsolutePath());
             for (String configFile : pluginParam.getConfigFiles()) {
                File file = new File(configFile);
@@ -74,7 +74,7 @@ public final class RestartHelper {
       // we need to run intermediate process that waits until this process ends
       command.add(javaExecutable)
          .add("-cp").add(Directories.LIB_DIR.toString() + "/*").add(RestartHelper.class.getName())
-         .add(createLockedTempFile(slaveIndex));
+         .add(createLockedTempFile(workerIndex));
       command.add(javaExecutable);
       List<String> defaultVmArgs = ArgsHolder.getDefaultVmArgs();
       command.addAll(vmArgs.getVmArgs(defaultVmArgs));
@@ -86,9 +86,9 @@ public final class RestartHelper {
          command.add("-Dlog4j.configurationFile=file://" + Directories.ROOT_DIR + "/conf/log4j2.xml");
       }
       command.add("-cp").add(classpathBuilder.toString());
-      command.add(Slave.class.getName());
-      command.add(ArgsHolder.MASTER).add(ArgsHolder.getMasterHost() + ":" + ArgsHolder.getMasterPort());
-      command.add(ArgsHolder.SLAVE_INDEX).add(String.valueOf(slaveIndex));
+      command.add(Worker.class.getName());
+      command.add(ArgsHolder.MAIN).add(ArgsHolder.getMainHost() + ":" + ArgsHolder.getMainPort());
+      command.add(ArgsHolder.WORKER_INDEX).add(String.valueOf(workerIndex));
       command.add(ArgsHolder.UUID).add(nextUuid.toString());
       command.add(ArgsHolder.CURRENT_PLUGIN).add(plugin);
       if (tempConfigDir != null) {
@@ -114,8 +114,8 @@ public final class RestartHelper {
       processBuilder.start();
    }
 
-   private static String createLockedTempFile(int slaveIndex) throws IOException {
-      File tempFile = File.createTempFile("restart-" + slaveIndex, ".tmp");
+   private static String createLockedTempFile(int workerIndex) throws IOException {
+      File tempFile = File.createTempFile("restart-" + workerIndex, ".tmp");
       new RandomAccessFile(tempFile, "rw").getChannel().lock();
       return tempFile.getAbsolutePath();
    }

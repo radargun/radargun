@@ -37,7 +37,7 @@ public abstract class TextObjectGenerator implements ValueGenerator {
          ctor = clazz.getConstructor(String.class);
          getText = clazz.getMethod("getText");
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.trace("Could not initialize generator " + this, e);
       }
    }

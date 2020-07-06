@@ -33,7 +33,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    private static Log log = LogFactory.getLog(DomConfigParser.class);
    private static final String ATTR_XMLNS = "xmlns";
 
-   public MasterConfig parseConfig(String config) throws Exception {
+   public MainConfig parseConfig(String config) throws Exception {
       Document document;
       try {
          document = createDocumentBuilder().parse(config);
@@ -47,19 +47,19 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       NodeList childNodes = root.getChildNodes();
       int index = 0;
       index = nextElement(childNodes, index);
-      MasterConfig masterConfig;
-      if (ELEMENT_MASTER.equals(childNodes.item(index).getLocalName())) {
-         masterConfig = parseMaster((Element) childNodes.item(index));
+      MainConfig mainConfig;
+      if (ELEMENT_MAIN.equals(childNodes.item(index).getLocalName())) {
+         mainConfig = parseMain((Element) childNodes.item(index));
          index = nextElement(childNodes, index + 1);
       } else {
-         masterConfig = new MasterConfig(0, null);
+         mainConfig = new MainConfig(0, null);
       }
       Map<String, byte[]> configurations = new HashMap<>();
       Utils.loadConfigFile(config, configurations);
-      masterConfig.setMasterConfigBytes(configurations.get(config));
-      parseClusters(masterConfig, (Element) childNodes.item(index));
+      mainConfig.setMainConfigBytes(configurations.get(config));
+      parseClusters(mainConfig, (Element) childNodes.item(index));
       index = nextElement(childNodes, index + 1);
-      parseConfigurations(masterConfig, (Element) childNodes.item(index));
+      parseConfigurations(mainConfig, (Element) childNodes.item(index));
       index = nextElement(childNodes, index + 1);
 
       Scenario scenario = new Scenario();
@@ -76,13 +76,13 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          String url = ((Element) childNodes.item(index)).getAttribute(ATTR_URL);
          scenarioElement = loadScenario(url);
          Utils.loadConfigFile(url, configurations);
-         masterConfig.setScenarioBytes(configurations.get(url));
+         mainConfig.setScenarioBytes(configurations.get(url));
       } else {
          scenarioElement = (Element) childNodes.item(index);
       }
 
       parseScenario(scenario, scenarioElement);
-      masterConfig.setScenario(scenario);
+      mainConfig.setScenario(scenario);
 
       index = nextElement(childNodes, index + 1);
 
@@ -104,10 +104,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Element reportElement = (Element) childNodes.item(index);
       if (reportElement != null && ELEMENT_REPORTS.equals(reportElement.getLocalName())) {
-         parseReporting(masterConfig, reportElement);
+         parseReporting(mainConfig, reportElement);
       }
 
-      return masterConfig;
+      return mainConfig;
    }
 
    protected DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
@@ -180,19 +180,19 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       return value;
    }
 
-   private MasterConfig parseMaster(Element masterElement) {
-      assertName(ELEMENT_MASTER, masterElement);
-      String bindAddress = getAttribute(masterElement, ATTR_BIND_ADDRESS, "localhost");
-      String portString = getAttribute(masterElement, ATTR_PORT, "-1");
-      return new MasterConfig(Integer.parseInt(portString), bindAddress);
+   private MainConfig parseMain(Element mainElement) {
+      assertName(ELEMENT_MAIN, mainElement);
+      String bindAddress = getAttribute(mainElement, ATTR_BIND_ADDRESS, "localhost");
+      String portString = getAttribute(mainElement, ATTR_PORT, "-1");
+      return new MainConfig(Integer.parseInt(portString), bindAddress);
    }
 
-   private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
+   private void parseClusters(MainConfig mainConfig, Element clustersElement) {
       if (!ELEMENT_CLUSTERS.equals(clustersElement.getLocalName())) {
          throw unexpected(clustersElement.getLocalName(), new String[] {ELEMENT_CLUSTERS});
       }
-      if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
-         throw new IllegalArgumentException("Master not configured for distributed scenario!");
+      if (mainConfig.getPort() == 0 || mainConfig.getHost() == null) {
+         throw new IllegalArgumentException("Main not configured for distributed scenario!");
       }
       String clusterSizeBackup = System.getProperty(Properties.PROPERTY_CLUSTER_SIZE);
       NodeList clusters = clustersElement.getChildNodes();
@@ -202,7 +202,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          if (ELEMENT_CLUSTER.equals(childElement.getLocalName())) {
             int size = Integer.parseInt(getAttribute(childElement, ATTR_SIZE, "0"));
             System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(size));
-            addCluster(masterConfig, childElement, size);
+            addCluster(mainConfig, childElement, size);
          } else if (ELEMENT_SCALE.equals(childElement.getLocalName())) {
             int initSize = Integer.parseInt(getAttribute(childElement, ATTR_FROM));
             int maxSize = Integer.parseInt(getAttribute(childElement, ATTR_TO));
@@ -215,7 +215,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                   if (!(scaledElements.item(j) instanceof Element)) continue;
                   Element clusterElement = (Element) scaledElements.item(j);
                   assertName(ELEMENT_CLUSTER, clusterElement);
-                  addCluster(masterConfig, clusterElement, size);
+                  addCluster(mainConfig, clusterElement, size);
                }
             }
          } else {
@@ -227,7 +227,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, clusterSizeBackup);
    }
 
-   private void addCluster(MasterConfig masterConfig, Element clusterElement, int size) {
+   private void addCluster(MainConfig mainConfig, Element clusterElement, int size) {
       Cluster cluster = new Cluster();
       NodeList groups = clusterElement.getChildNodes();
       for (int j = 0; j < groups.getLength(); ++j) {
@@ -245,10 +245,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             throw new IllegalArgumentException("Total size for cluster is not the one specified as size! " + cluster);
          }
       }
-      masterConfig.addCluster(cluster);
+      mainConfig.addCluster(cluster);
    }
 
-   private void parseConfigurations(MasterConfig masterConfig, Element configsElement) {
+   private void parseConfigurations(MainConfig mainConfig, Element configsElement) {
       assertName(ELEMENT_CONFIGURATIONS, configsElement);
       NodeList configs = configsElement.getChildNodes();
       for (int i = 0; i < configs.getLength(); ++i) {
@@ -287,7 +287,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                }
                config.addSetup(base, group, plugin, service, propertyDefinitions, vmArgs, envs, Boolean.parseBoolean(lazyInit));
             }
-            masterConfig.addConfig(config);
+            mainConfig.addConfig(config);
          } else if (ELEMENT_TEMPLATE.equals(configElement.getLocalName())) {
             String name = getAttribute(configElement, ATTR_NAME);
             String base = getAttribute(configElement, ATTR_BASE, null);
@@ -308,7 +308,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                   throw notExternal(setupChildElement);
                }
             }
-            masterConfig.addTemplate(name, base, propertyDefinitions, vmArgs, envs);
+            mainConfig.addTemplate(name, base, propertyDefinitions, vmArgs, envs);
          } else {
             throw unexpected(configElement.getLocalName(), new String[] { ELEMENT_CONFIG, ELEMENT_TEMPLATE });
          }
@@ -424,7 +424,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       return definition;
    }
 
-   private void parseReporting(MasterConfig masterConfig, Element reportsElement) {
+   private void parseReporting(MainConfig mainConfig, Element reportsElement) {
       assertName(ELEMENT_REPORTS, reportsElement);
       NodeList childNodes = reportsElement.getChildNodes();
       for (int i = 0; i < childNodes.getLength(); i++) {
@@ -467,7 +467,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                report.addProperty(property.getKey(), property.getValue());
             }
          }
-         masterConfig.addReporter(reporter);
+         mainConfig.addReporter(reporter);
       }
    }
 
@@ -538,7 +538,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          System.err.println("Usage: DomConfigParser config-file method");
          ShutDownHook.exit(1);
       }
-      MasterConfig config = null;
+      MainConfig config = null;
       try {
          config = getConfigParser().parseConfig(args[0]);
       } catch (Exception e) {

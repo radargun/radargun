@@ -26,10 +26,10 @@ public class ParallelStartStopStageTest {
       Assert.assertFalse(lifecycle.isRunning());
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(parallelStartStopStage, 0));
+      acks.add(stageRunner.executeOnWorker(parallelStartStopStage, 0));
 
       Assert.assertTrue(lifecycle.isRunning());
-      Assert.assertEquals(stageRunner.processAckOnMaster(parallelStartStopStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(parallelStartStopStage, acks), StageResult.SUCCESS);
    }
 
    public void smokeTestStop() throws Exception {
@@ -42,9 +42,9 @@ public class ParallelStartStopStageTest {
       Assert.assertTrue(lifecycle.isRunning());
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(parallelStartStopStage, 0));
+      acks.add(stageRunner.executeOnWorker(parallelStartStopStage, 0));
 
       Assert.assertFalse(lifecycle.isRunning());
-      Assert.assertEquals(stageRunner.processAckOnMaster(parallelStartStopStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(parallelStartStopStage, acks), StageResult.SUCCESS);
    }
 }

@@ -7,17 +7,17 @@ import java.util.Map;
 public class ServiceContext implements Serializable {
    private String currentGroup;
    private String currentPlugin;
-   private int currentSlaveIndex;
+   private int currentWorkerIndex;
    private Map<String, Object> currentProperties = new HashMap<>();
 
-   public ServiceContext(String group, String plugin, int slaveIndex) {
+   public ServiceContext(String group, String plugin, int workerIndex) {
       currentGroup = group;
       currentPlugin = plugin;
-      currentSlaveIndex = slaveIndex;
+      currentWorkerIndex = workerIndex;
    }
 
    public String getPrefix() {
-      return currentGroup + "." + currentSlaveIndex;
+      return currentGroup + "." + currentWorkerIndex;
    }
 
    public String getGroup() {
@@ -28,8 +28,8 @@ public class ServiceContext implements Serializable {
       return currentPlugin;
    }
 
-   public int getSlaveIndex() {
-      return currentSlaveIndex;
+   public int getWorkerIndex() {
+      return currentWorkerIndex;
    }
 
    public void setProperties(Map<String, Object> props) {

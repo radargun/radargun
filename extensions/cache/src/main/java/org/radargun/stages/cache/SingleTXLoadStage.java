@@ -14,11 +14,11 @@ import org.radargun.traits.Transactional;
 import org.radargun.utils.TimeConverter;
 
 /**
- * Performs single transaction in multiple threads on multiple slaves.
+ * Performs single transaction in multiple threads on multiple workers.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.")
+@Stage(doc = "Performs single transaction with requests on key0 .. keyN in multiple threads on multiple workers.")
 public class SingleTXLoadStage extends AbstractDistStage {
 
    @Property(converter = TimeConverter.class, doc = "The enforced duration of the transaction. If > 0 the threads " +
@@ -28,8 +28,8 @@ public class SingleTXLoadStage extends AbstractDistStage {
    @Property(doc = "Number of threads that should execute the transaction. Default is 1.")
    public int threads = 1;
 
-   @Property(doc = "Indices of slaves which should commit the transaction (others will rollback). Default is all commit.")
-   public Set<Integer> commitSlave; // null == all commit
+   @Property(doc = "Indices of workers which should commit the transaction (others will rollback). Default is all commit.")
+   public Set<Integer> commitWorker; // null == all commit
 
    @Property(doc = "Indices of threads which should commit the transaction (others will rollback). Default is all commit.")
    public Set<Integer> commitThread; // null == all commit
@@ -47,7 +47,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
    private Transactional transactional;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!shouldExecute()) {
          return successfulResponse();
       }
@@ -76,7 +76,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
       public Exception exception;
 
       public ClientThread(int id) {
-         super("ClientThread-" + slaveState.getSlaveIndex() + "-" + id);
+         super("ClientThread-" + workerState.getWorkerIndex() + "-" + id);
          this.id = id;
       }
 
@@ -91,7 +91,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                if (!delete) {
                   try {
                      log.trace("Inserting key");
-                     cache.put("txKey" + i, "txValue" + i + "@" + slaveState.getSlaveIndex() + "-" + id);
+                     cache.put("txKey" + i, "txValue" + i + "@" + workerState.getWorkerIndex() + "-" + id);
                      log.trace("Key inserted");
                   } catch (Exception e) {
                      log.error("Failed to insert key txKey" + i, e);
@@ -115,7 +115,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                   }
                }
             }
-            boolean successfull = (commitSlave == null || commitSlave.contains(slaveState.getSlaveIndex())) && (commitThread == null || commitThread.contains(id));
+            boolean successfull = (commitWorker == null || commitWorker.contains(workerState.getWorkerIndex())) && (commitThread == null || commitThread.contains(id));
             if (successfull) {
                tx.commit();
                log.trace("Committed transaction");

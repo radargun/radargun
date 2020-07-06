@@ -15,7 +15,7 @@ import org.radargun.utils.Utils;
 
 /**
  * This stage is the last stage that gets {@link org.radargun.traits.Trait Traits} injected
- * and which is ran in the {@link org.radargun.Slave.ScenarioRunner} thread.
+ * and which is ran in the {@link org.radargun.Worker.ScenarioRunner} thread.
  * It should destroy the service - afterwards, no more references to service should be held.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -30,21 +30,21 @@ public class ScenarioDestroyStage extends InternalDistStage {
    protected Lifecycle lifecycle;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       log.info("Scenario finished, destroying...");
       log.info("Memory before cleanup: \n" + Utils.getMemoryInfo());
       try {
          if (lifecycle != null && lifecycle.isRunning()) {
-            LifecycleHelper.stop(slaveState, true, false, gracefulStopTimeout);
+            LifecycleHelper.stop(workerState, true, false, gracefulStopTimeout);
             log.info("Service successfully stopped.");
          } else {
-            log.info("No service deployed on this slave, nothing to do.");
+            log.info("No service deployed on this worker, nothing to do.");
          }
       } catch (Exception e) {
-         return errorResponse("Problems shutting down the slave", e);
+         return errorResponse("Problems shutting down the worker", e);
       } finally {
          log.trace("Calling destroy hooks");
-         for (ServiceListener listener : slaveState.getListeners()) {
+         for (ServiceListener listener : workerState.getListeners()) {
             listener.serviceDestroyed();
          }
       }
@@ -52,7 +52,7 @@ public class ScenarioDestroyStage extends InternalDistStage {
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       StageResult result = StageResult.SUCCESS;
       for (DistStageAck ack : acks) {
          if (ack.isError()) {

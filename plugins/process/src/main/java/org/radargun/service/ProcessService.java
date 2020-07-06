@@ -141,7 +141,7 @@ public class ProcessService {
       try {
          URL resource = getClass().getResource("/" + evaluatedFile);
          filesystemFile = FileSystems.getDefault().getPath(evaluatedFile);
-         Path target = FileSystems.getDefault().getPath(home, appendArray(confDir, "radargun-" + ServiceHelper.getContext().getSlaveIndex() + ".xml"));
+         Path target = FileSystems.getDefault().getPath(home, appendArray(confDir, "radargun-" + ServiceHelper.getContext().getWorkerIndex() + ".xml"));
          if (resource != null) {
             try (InputStream is = resource.openStream()) {
                log.info("Found " + evaluatedFile + " as a resource");

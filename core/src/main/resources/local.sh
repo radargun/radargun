@@ -46,4 +46,4 @@ fi
 
 add_fwk_to_classpath
 set_env
-${JAVA} ${JVM_OPTS} -classpath $CP org.radargun.LaunchMaster --config ${CONFIG}
+${JAVA} ${JVM_OPTS} -classpath $CP org.radargun.LaunchMain --config ${CONFIG}

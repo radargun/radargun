@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.util.CoreStageRunner;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -18,18 +18,18 @@ public class DefineStageTest {
 
    public void smokeTest() throws Exception {
       CoreStageRunner stageRunner = new CoreStageRunner(1);
-      SlaveState slaveState = stageRunner.getSlaveState();
+      WorkerState workerState = stageRunner.getWorkerState();
 
-      Assert.assertNull(slaveState.get("test"));
+      Assert.assertNull(workerState.get("test"));
 
       DefineStage defineStage = new DefineStage();
       defineStage.var = "test";
       defineStage.value = "value";
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(defineStage, 0));
+      acks.add(stageRunner.executeOnWorker(defineStage, 0));
 
-      Assert.assertEquals(slaveState.get("test"), "value");
-      Assert.assertEquals(stageRunner.processAckOnMaster(defineStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(workerState.get("test"), "value");
+      Assert.assertEquals(stageRunner.processAckOnMain(defineStage, acks), StageResult.SUCCESS);
    }
 }

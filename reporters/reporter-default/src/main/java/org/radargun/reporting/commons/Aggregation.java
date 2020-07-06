@@ -56,15 +56,15 @@ public class Aggregation {
 
    private double getRequestsAverage(String operation) {
       long requests = 0;
-      int slaveStatsCount = 0;
+      int workerStatsCount = 0;
       for (Statistics ns : nodeStats) {
          if (ns == null) continue;
          DefaultOutcome defaultOutcome = ns.getRepresentation(operation, DefaultOutcome.class);
          if (defaultOutcome != null) {
             requests += defaultOutcome.requests;
-            slaveStatsCount++;
+            workerStatsCount++;
          }
       }
-      return slaveStatsCount > 0 ? requests / slaveStatsCount : 0;
+      return workerStatsCount > 0 ? requests / workerStatsCount : 0;
    }
 }

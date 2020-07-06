@@ -15,7 +15,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.Request;
@@ -37,7 +37,7 @@ public class StreamStage extends AbstractDistStage {
 
    @Property(doc = "Boolean value that determines if the "
       + "final results of the stream are written to the log of the "
-      + "first slave node. The default is false.")
+      + "first worker node. The default is false.")
    private boolean printResult = false;
 
    @Property(doc = "The number of times to execute the stream task. The default is 10.")
@@ -46,7 +46,7 @@ public class StreamStage extends AbstractDistStage {
    @Property(doc = "Name of the cache where stream task should be executed. Default is the default cache.")
    private String cacheName;
 
-   @Property(doc = "The name of the key in the MasterState object that returns the total number of "
+   @Property(doc = "The name of the key in the MainState object that returns the total number of "
       + "bytes processed by the stream task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
@@ -74,30 +74,30 @@ public class StreamStage extends AbstractDistStage {
    private Object streamTaskResult;
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError())
          return result;
 
-      Report report = masterState.getReport();
+      Report report = mainState.getReport();
       Report.Test test = report.createTest(testName, null, true);
       int testIteration = test.getIterations().size();
 
-      Map<Integer, Report.SlaveResult> numberOfResultKeysResult = new HashMap<>();
-      Map<Integer, Report.SlaveResult> durationsResult = new HashMap<>();
+      Map<Integer, Report.WorkerResult> numberOfResultKeysResult = new HashMap<>();
+      Map<Integer, Report.WorkerResult> durationsResult = new HashMap<>();
 
       for (StreamStageAck ack : instancesOf(acks, StreamStageAck.class)) {
          if (ack.stats != null) {
             DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationStats(Streamable.STREAMABLE.name);
 
-            opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
-            test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
-            durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
-            test.addResult(testIteration, new Report.TestResult("Stream task durations on slave" + ack.getSlaveIndex(), durationsResult, "", false));
+            opStats.setTotalBytes((Long) mainState.get(totalBytesKey));
+            test.addStatistics(testIteration, ack.getWorkerIndex(), Collections.singletonList(ack.stats));
+            durationsResult.put(ack.getWorkerIndex(), new Report.WorkerResult(opStats.getResponseTimes(), false));
+            test.addResult(testIteration, new Report.TestResult("Stream task durations on worker" + ack.getWorkerIndex(), durationsResult, "", false));
          }
          if (ack.numberOfResultKeys != null) {
-            numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
-            test.addResult(testIteration, new Report.TestResult("Key count in stream result map on slave" + ack.getSlaveIndex(),
+            numberOfResultKeysResult.put(ack.getWorkerIndex(), new Report.WorkerResult(ack.numberOfResultKeys, false));
+            test.addResult(testIteration, new Report.TestResult("Key count in stream result map on worker" + ack.getWorkerIndex(),
                numberOfResultKeysResult, "", false));
          }
       }
@@ -105,7 +105,7 @@ public class StreamStage extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return errorResponse("Service is not runnning", null);
       }
@@ -135,7 +135,7 @@ public class StreamStage extends AbstractDistStage {
       }
       stats.end();
 
-      log.info("Executed stream stage on slave");
+      log.info("Executed stream stage on worker");
       return result;
    }
 
@@ -153,7 +153,7 @@ public class StreamStage extends AbstractDistStage {
 
       configureStreamTask();
 
-      StreamStageAck ack = new StreamStageAck(slaveState);
+      StreamStageAck ack = new StreamStageAck(workerState);
       Request request = stats.startRequest();
       try {
 
@@ -212,8 +212,8 @@ public class StreamStage extends AbstractDistStage {
       private Statistics stats;
       private String numberOfResultKeys;
 
-      private StreamStageAck(SlaveState slaveState) {
-         super(slaveState);
+      private StreamStageAck(WorkerState workerState) {
+         super(workerState);
       }
 
       public void setStats(Statistics stats) {

@@ -29,8 +29,8 @@ public class ClusterValidationStageTest {
       BasicOperations basicOperations = stageRunner.getTraitImpl(BasicOperations.class);
       stageRunner.replaceTraitImpl(BasicOperations.class, basicOperations, 1);
 
-      List<DistStageAck> acks = stageRunner.executeOnSlave(new ClusterValidationStage[] {clusterValidationStage1, clusterValidationStage2}, new int[] {0, 1});
+      List<DistStageAck> acks = stageRunner.executeOnWorker(new ClusterValidationStage[] {clusterValidationStage1, clusterValidationStage2}, new int[] {0, 1});
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(clusterValidationStage1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(clusterValidationStage1, acks), StageResult.SUCCESS);
    }
 }

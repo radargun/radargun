@@ -36,7 +36,7 @@
          </ul>
    </#if>
    <h2>Configurations</h2>
-      RadarGun benchmark file: <a href="master-config.xml">link</a> <br/>
+      RadarGun benchmark file: <a href="main-config.xml">link</a> <br/>
       <#assign isExternalScenario = indexDocument.isExternalScenario() />
       <#if isExternalScenario>
          Scenario loaded from: <a href="scenario-file.xml">link</a>
@@ -47,7 +47,7 @@
    <ul>
       <#list reporter.reports as report>
          <li>
-            <b>${report.configuration.name}</b> on cluster with ${report.cluster.size} slaves: ${report.cluster}. <br/>
+            <b>${report.configuration.name}</b> on cluster with ${report.cluster.size} workers: ${report.cluster}. <br/>
                Setups: <br/>
             <ul>
                <#list report.configuration.setups as setup>

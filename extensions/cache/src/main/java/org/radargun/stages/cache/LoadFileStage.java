@@ -14,7 +14,7 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.TimeService;
@@ -22,7 +22,7 @@ import org.radargun.utils.Utils;
 
 /**
  * Loads the contents of the specified file into the cache using the specified sized values. All
- * slaves are used to read from the file and write keys to the cache.
+ * workers are used to read from the file and write keys to the cache.
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
@@ -49,8 +49,8 @@ public class LoadFileStage extends AbstractDistStage {
    private BasicOperations basicOperations;
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       long fileSize = new File(filePath).length();
@@ -59,7 +59,7 @@ public class LoadFileStage extends AbstractDistStage {
       log.info("Value size is '" + valueSize + "' which will produce " + (int) Math.ceil((double) fileSize / valueSize)
          + " keys");
       for (ResultAck ack : instancesOf(acks, ResultAck.class)) {
-         log.info("Slave " + ack.getSlaveIndex() + " wrote " + ack.putCount
+         log.info("Worker " + ack.getWorkerIndex() + " wrote " + ack.putCount
             + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
       }
       log.info("--------------------");
@@ -67,9 +67,9 @@ public class LoadFileStage extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
-      int totalWriters = slaveState.getClusterSize();
-      long fileOffset = valueSize * slaveState.getSlaveIndex(); // index starts at 0
+   public DistStageAck executeOnWorker() {
+      int totalWriters = workerState.getClusterSize();
+      long fileOffset = valueSize * workerState.getWorkerIndex(); // index starts at 0
 
       RandomAccessFile file = null;
       FileChannel fileChannel = null;
@@ -85,7 +85,7 @@ public class LoadFileStage extends AbstractDistStage {
          BasicOperations.Cache cache = basicOperations.getCache(bucket);
          while (true) {
             long initPos = fileChannel.position();
-            String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + Long.toString(initPos);
+            String key = Integer.toString(workerState.getWorkerIndex()) + "-" + Long.toString(initPos);
             int bytesRead = fileChannel.read(buffer);
 
             if (bytesRead != -1) {
@@ -112,7 +112,7 @@ public class LoadFileStage extends AbstractDistStage {
                   cache.put(key, buffer.array());
                }
                if (printWriteStatistics) {
-                  log.info("Put on slave-" + slaveState.getSlaveIndex() + " took "
+                  log.info("Put on worker-" + workerState.getWorkerIndex() + " took "
                      + Utils.prettyPrintTime(TimeService.nanoTime() - start, TimeUnit.NANOSECONDS));
                }
                putCount++;
@@ -124,7 +124,7 @@ public class LoadFileStage extends AbstractDistStage {
                break;
             }
          }
-         return new ResultAck(slaveState, putCount, totalBytesRead);
+         return new ResultAck(workerState, putCount, totalBytesRead);
       } catch (FileNotFoundException e) {
          return errorResponse("File not find at path: " + filePath, e);
       } catch (Exception e) {
@@ -144,8 +144,8 @@ public class LoadFileStage extends AbstractDistStage {
       final long putCount;
       final long totalBytesRead;
 
-      private ResultAck(SlaveState slaveState, long putCount, long totalBytesRead) {
-         super(slaveState);
+      private ResultAck(WorkerState workerState, long putCount, long totalBytesRead) {
+         super(workerState);
          this.putCount = putCount;
          this.totalBytesRead = totalBytesRead;
       }

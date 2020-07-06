@@ -26,7 +26,7 @@ class BackgroundStressorLogic extends AbstractLogic {
    private final ConditionalOperations.Cache nonTxConditionalCache;
    private final long keyRangeStart;
    private final long keyRangeEnd;
-   private final List<Range> deadSlavesRanges;
+   private final List<Range> deadWorkersRanges;
    private final boolean loadOnly;
    private final boolean putWithReplace;
    private final Random rand = new Random();
@@ -38,7 +38,7 @@ class BackgroundStressorLogic extends AbstractLogic {
    private RequestSet transactionalRequests;
    private ValueGenerator valueGenerator;
 
-   BackgroundStressorLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
+   BackgroundStressorLogic(BackgroundOpsManager manager, Range range, List<Range> deadWorkersRanges, boolean loaded) {
       super(manager);
       this.manager = manager;
       this.nonTxBasicCache = manager.getBasicCache();
@@ -49,7 +49,7 @@ class BackgroundStressorLogic extends AbstractLogic {
       }
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
-      this.deadSlavesRanges = deadSlavesRanges;
+      this.deadWorkersRanges = deadWorkersRanges;
       this.loadOnly = manager.getBackgroundStressorLogicConfiguration().isLoadOnly();
       this.putWithReplace = manager.getBackgroundStressorLogicConfiguration().isPutWithReplace();
       this.valueGenerator = manager.getBackgroundStressorLogicConfiguration().getValueGenerator();
@@ -61,9 +61,9 @@ class BackgroundStressorLogic extends AbstractLogic {
    public void loadData() {
       log.trace("Loading key range [" + keyRangeStart + ", " + keyRangeEnd + "]");
       loadKeyRange(keyRangeStart, keyRangeEnd);
-      if (deadSlavesRanges != null) {
-         for (Range range : deadSlavesRanges) {
-            log.trace("Loading key range for dead slave: [" + range.getStart() + ", " + range.getEnd() + "]");
+      if (deadWorkersRanges != null) {
+         for (Range range : deadWorkersRanges) {
+            log.trace("Loading key range for dead worker: [" + range.getStart() + ", " + range.getEnd() + "]");
             loadKeyRange(range.getStart(), range.getEnd());
          }
       }

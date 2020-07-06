@@ -54,7 +54,7 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
       // nada
    }
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!log.isTraceEnabled()) {
          log.warn("Trace is not enabled, nothing to do.");
          return successfulResponse();

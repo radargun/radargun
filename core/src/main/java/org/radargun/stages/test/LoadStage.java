@@ -20,7 +20,7 @@ public abstract class LoadStage extends AbstractDistStage {
    @Property(doc = "Number of loaded entries after which a log entry should be written. Default is 10000.")
    protected long logPeriod = 10000;
 
-   @Property(doc = "The number of threads that should load the entries on one slave. Default is 10.")
+   @Property(doc = "The number of threads that should load the entries on one worker. Default is 10.")
    protected int numThreads = 10;
 
    @Property(doc = "Seed used for initialization of random generators - with same seed (and other arguments)," +
@@ -52,7 +52,7 @@ public abstract class LoadStage extends AbstractDistStage {
    }
 
    protected List<Loader> startLoaders() {
-      int threadBase = getExecutingSlaveIndex() * numThreads;
+      int threadBase = getExecutingWorkerIndex() * numThreads;
       List<Loader> loaders = new ArrayList<>();
       for (int i = 0; i < numThreads; ++i) {
          Loader loader = createLoader(threadBase, i);
@@ -62,9 +62,9 @@ public abstract class LoadStage extends AbstractDistStage {
       return loaders;
    }
 
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         log.info("Not running test on this slave as service is not running.");
+         log.info("Not running test on this worker as service is not running.");
          return successfulResponse();
       }
       prepare();
@@ -110,7 +110,7 @@ public abstract class LoadStage extends AbstractDistStage {
 
       protected Loader(int index) {
          super("Loader-" + index);
-         threadIndex = slaveState.getSlaveIndex() * numThreads + index;
+         threadIndex = workerState.getWorkerIndex() * numThreads + index;
          random = seed == null ? new Random() : new Random(seed + threadIndex);
       }
 

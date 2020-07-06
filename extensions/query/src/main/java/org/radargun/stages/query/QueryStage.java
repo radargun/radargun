@@ -13,7 +13,7 @@ import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestStage;
 import org.radargun.stages.test.TransactionMode;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
@@ -51,17 +51,17 @@ public class QueryStage extends TestStage {
    @Override
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       QueryBase.Data data = base.createQueryData(internalsExposition);
-      return new QueryAck(slaveState, gatherResults(stressors, new StatisticsResultRetriever()), data);
+      return new QueryAck(workerState, gatherResults(stressors, new StatisticsResultRetriever()), data);
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       Map<Integer, QueryBase.Data> results = acks.stream().filter(QueryAck.class::isInstance).collect(
-            Collectors.toMap(ack -> ack.getSlaveIndex(), ack -> ((QueryAck) ack).data));
-      Report.Test test = getTest(true); // the test was already created in super.processAckOnMaster
+            Collectors.toMap(ack -> ack.getWorkerIndex(), ack -> ((QueryAck) ack).data));
+      Report.Test test = getTest(true); // the test was already created in super.processAckOnMain
 
       base.checkAndRecordResults(results, test, getTestIteration());
       return result;
@@ -70,8 +70,8 @@ public class QueryStage extends TestStage {
    protected static class QueryAck extends StatisticsAck {
       private final QueryBase.Data data;
 
-      public QueryAck(SlaveState slaveState, List<Statistics> statistics, QueryBase.Data data) {
-         super(slaveState, statistics, null);
+      public QueryAck(WorkerState workerState, List<Statistics> statistics, QueryBase.Data data) {
+         super(workerState, statistics, null);
          this.data = data;
       }
    }

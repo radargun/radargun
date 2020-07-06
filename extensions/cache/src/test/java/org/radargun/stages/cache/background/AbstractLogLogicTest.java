@@ -4,7 +4,7 @@ import org.mockito.Mockito;
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.util.CacheTestUtils;
 import org.radargun.util.CacheTraitRepository;
@@ -128,7 +128,7 @@ public class AbstractLogLogicTest {
 
       Cluster cluster = new Cluster();
       cluster.addGroup("group", 2);
-      logic.manager.getSlaveState().setCluster(cluster);
+      logic.manager.getWorkerState().setCluster(cluster);
 
       cache.put(LogChecker.checkerKey(0, logic.stressor.id), new LogChecker.LastOperation(10, 123));
       cache.put(LogChecker.checkerKey(1, logic.stressor.id), new LogChecker.LastOperation(15, 123));
@@ -142,7 +142,7 @@ public class AbstractLogLogicTest {
 
       Cluster cluster = new Cluster();
       cluster.addGroup("group", 2);
-      logic.manager.getSlaveState().setCluster(cluster);
+      logic.manager.getWorkerState().setCluster(cluster);
 
       assertEquals(logic.getCheckedOperation(logic.stressor.id, 20), Long.MIN_VALUE);
    }
@@ -157,7 +157,7 @@ public class AbstractLogLogicTest {
 
       Cluster cluster = new Cluster();
       cluster.addGroup("group", 2);
-      logic.manager.getSlaveState().setCluster(cluster);
+      logic.manager.getWorkerState().setCluster(cluster);
 
       cache.put(LogChecker.checkerKey(0, logic.stressor.id), new LogChecker.LastOperation(10, 123));
       cache.put(LogChecker.checkerKey(1, logic.stressor.id), new LogChecker.LastOperation(15, 123));
@@ -182,7 +182,7 @@ public class AbstractLogLogicTest {
 
       Cluster cluster = new Cluster();
       cluster.addGroup("group", 2);
-      logic.manager.getSlaveState().setCluster(cluster);
+      logic.manager.getWorkerState().setCluster(cluster);
 
       cache.put(LogChecker.checkerKey(0, logic.stressor.id), new LogChecker.LastOperation(10, 123));
       cache.put(LogChecker.checkerKey(1, logic.stressor.id), new LogChecker.LastOperation(15, 123));
@@ -195,8 +195,8 @@ public class AbstractLogLogicTest {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
       llc.enabled = true;
-      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(new SlaveState(), "test");
-      manager.getSlaveState().setSlaveIndex(0);
+      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(new WorkerState(), "test");
+      manager.getWorkerState().setWorkerIndex(0);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "backgroundStressorLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);

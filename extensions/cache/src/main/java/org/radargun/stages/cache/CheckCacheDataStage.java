@@ -20,7 +20,7 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Debugable;
@@ -36,8 +36,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Property(optional = false, doc = "Number of entries with key in form specified by the last used key generator, in the cache.")
    public long numEntries;
 
-   @Property(doc = "Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.")
-   public long firstEntryOffsetSlaveIndex = 0;
+   @Property(doc = "Index of key of the first entry. This number will be multiplied by workerIndex. Default is 0. Has precedence over 'first-entry-offset'.")
+   public long firstEntryOffsetWorkerIndex = 0;
 
    @Property(doc = "Index of key of the first entry.")
    public long firstEntryOffset = 0;
@@ -52,7 +52,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
    public int entrySize;
 
    @Property(doc = "Entries that do not have the expected form but occur in the cluster. This string specifies " +
-      "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
+      "a polynomial in number of workers: 1,2,3 with 4 workers would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
       "Defaults to 0.")
    public String extraEntries;
 
@@ -66,9 +66,9 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Property(doc = "If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.")
    public boolean sizeOnly = false;
 
-   @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for number of entries in " +
+   @Property(doc = "Hint how many workers are currently alive - if set to > 0 then the query for number of entries in " +
       "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
-   public int liveSlavesHint = -1;
+   public int liveWorkersHint = -1;
 
    @Property(doc = "If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.")
    public boolean deleted = false;
@@ -92,11 +92,11 @@ public class CheckCacheDataStage extends AbstractDistStage {
       complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = new CacheSelector.Default();
 
-   @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.",
+   @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from worker state.",
       complexConverter = KeyGenerator.ComplexConverter.class)
    public KeyGenerator keyGenerator = null;
 
-   @Property(doc = "Generator of values. By default the generator is retrieved from slave state.",
+   @Property(doc = "Generator of values. By default the generator is retrieved from worker state.",
       complexConverter = ValueGenerator.ComplexConverter.class)
    public ValueGenerator valueGenerator = null;
 
@@ -123,20 +123,20 @@ public class CheckCacheDataStage extends AbstractDistStage {
    protected Debugable.Cache debugableCache;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         // this slave is dead and does not participate on check
+         // this worker is dead and does not participate on check
          return successfulResponse();
       }
       if (!sizeOnly) {
          if (keyGenerator == null) {
-            keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+            keyGenerator = (KeyGenerator) workerState.get(KeyGenerator.KEY_GENERATOR);
             if (keyGenerator == null) {
                throw new IllegalStateException("Key generator was not specified and no key generator was used before.");
             }
          }
          if (valueGenerator == null) {
-            valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
+            valueGenerator = (ValueGenerator) workerState.get(ValueGenerator.VALUE_GENERATOR);
             if (valueGenerator == null) {
                throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
             }
@@ -154,7 +154,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          try {
             if (checkThreads <= 1) {
                long entriesToCheck = numEntries;
-               long initValue = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+               long initValue = firstEntryOffsetWorkerIndex > 0 ? firstEntryOffsetWorkerIndex * workerState.getWorkerIndex() : firstEntryOffset;
                for (long i = initValue; entriesToCheck > 0; i += stepEntryCount) {
                   long checkAmount = Math.min(checkEntryCount, entriesToCheck);
                   for (long j = 0; j < checkAmount; ++j) {
@@ -184,22 +184,22 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
          if (!isDeleted()) {
             if (result.found != getExpectedNumEntries()) {
-               return new InfoAck(slaveState, result).error("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
+               return new InfoAck(workerState, result).error("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
             }
          } else {
             if (result.found > 0) {
-               return new InfoAck(slaveState, result).error("Found " + result.found + " entries while these should be deleted.");
+               return new InfoAck(workerState, result).error("Found " + result.found + " entries while these should be deleted.");
             }
          }
       }
       CacheInformation.Cache info = cacheInformation.getCache(getCacheName());
-      if (liveSlavesHint > 0) {
+      if (liveWorkersHint > 0) {
          // try to wait until data are properly replicated
          long extraEntries = getExtraEntries();
          long commonEntries = isDeleted() ? 0 : numEntries;
-         long myExpectedOwnedSize = (commonEntries + extraEntries) / liveSlavesHint;
+         long myExpectedOwnedSize = (commonEntries + extraEntries) / liveWorkersHint;
          int numOwners = info.getNumReplicas();
-         long myExpectedLocalSize = myExpectedOwnedSize * (numOwners < 0 ? -numOwners * slaveState.getClusterSize() : numOwners);
+         long myExpectedLocalSize = myExpectedOwnedSize * (numOwners < 0 ? -numOwners * workerState.getClusterSize() : numOwners);
          for (int attempt = 0; attempt < 5; ++attempt) {
             long owned = info.getOwnedSize();
             long local = info.getLocallyStoredSize();
@@ -219,7 +219,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
             }
          }
       }
-      return new InfoAck(slaveState, info.getOwnedSize(), info.getLocallyStoredSize(), info.getTotalSize(), info.getStructuredSize(), info.getNumReplicas());
+      return new InfoAck(workerState, info.getOwnedSize(), info.getLocallyStoredSize(), info.getTotalSize(), info.getStructuredSize(), info.getNumReplicas());
    }
 
    private String getCacheName() {
@@ -227,7 +227,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       if (cacheSelector != null) {
          selector = cacheSelector;
       } else {
-         selector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+         selector = (CacheSelector) workerState.get(CacheSelector.CACHE_SELECTOR);
       }
       return selector == null ? null : selector.getCacheName(-1);
    }
@@ -245,7 +245,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          try {
             CheckResult result = new CheckResult();
             long entriesToCheck = to - from;
-            long addend = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+            long addend = firstEntryOffsetWorkerIndex > 0 ? firstEntryOffsetWorkerIndex * workerState.getWorkerIndex() : firstEntryOffset;
             for (long i = from * (stepEntryCount / checkEntryCount) + addend; entriesToCheck > 0; i += stepEntryCount) {
                long checkAmount = Math.min(checkEntryCount, entriesToCheck);
                for (long j = 0; j < checkAmount; ++j) {
@@ -327,8 +327,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (result.isError()) return result;
 
       long sumOwnedSize = 0, sumLocalSize = 0;
@@ -340,22 +340,22 @@ public class CheckCacheDataStage extends AbstractDistStage {
             continue;
          }
          InfoAck info = (InfoAck) ack;
-         log.debugf("Slave %d has owned size %d, local size %d and total size %d", ack.getSlaveIndex(), info.ownedSize, info.localSize, info.totalSize);
+         log.debugf("Worker %d has owned size %d, local size %d and total size %d", ack.getWorkerIndex(), info.ownedSize, info.localSize, info.totalSize);
          sumLocalSize += info.localSize;
          sumOwnedSize += info.ownedSize;
          if (info.totalSize >= 0) {
             if (totalSize == null) totalSize = info.totalSize;
             else if (totalSize != info.totalSize) {
-               log.errorf("Slave %d reports total size %d but other slave reported %d", ack.getSlaveIndex(), info.totalSize, totalSize);
+               log.errorf("Worker %d reports total size %d but other worker reported %d", ack.getWorkerIndex(), info.totalSize, totalSize);
                result = errorResult();
             }
          } else if (totalSize != null) {
-            log.errorf("Slave %d does not report any total size but other slave reported %d", ack.getSlaveIndex(), totalSize);
+            log.errorf("Worker %d does not report any total size but other worker reported %d", ack.getWorkerIndex(), totalSize);
             result = errorResult();
          }
          if (numReplicas == null) numReplicas = info.numReplicas;
          else if (numReplicas != info.numReplicas) {
-            log.errorf("Slave %d reports %d replicas but other slave reported %d replicas", ack.getSlaveIndex(), info.numReplicas, numReplicas);
+            log.errorf("Worker %d reports %d replicas but other worker reported %d replicas", ack.getWorkerIndex(), info.numReplicas, numReplicas);
             result = errorResult();
          }
          long sumSubpartSize = 0;
@@ -366,21 +366,21 @@ public class CheckCacheDataStage extends AbstractDistStage {
             sumSubpartSize += subpart.getValue();
             Map<Integer, Long> otherSubparts = subparts.get(subpart.getKey());
             if (otherSubparts == null) {
-               subparts.put(subpart.getKey(), new HashMap<>(Collections.singletonMap(info.getSlaveIndex(), subpart.getValue())));
+               subparts.put(subpart.getKey(), new HashMap<>(Collections.singletonMap(info.getWorkerIndex(), subpart.getValue())));
             } else if (checkSubpartsEqual) {
                for (Map.Entry<Integer, Long> os : otherSubparts.entrySet()) {
                   if (Long.compare(subpart.getValue(), os.getValue()) != 0) {
-                     log.errorf("Slave %d reports %s = %d but slave %d reported size %d",
-                        info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
+                     log.errorf("Worker %d reports %s = %d but worker %d reported size %d",
+                        info.getWorkerIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
                      result = errorResult();
                   }
                }
-               otherSubparts.put(info.getSlaveIndex(), subpart.getValue());
+               otherSubparts.put(info.getWorkerIndex(), subpart.getValue());
             }
          }
          if (checkSubpartsSumLocal && sumSubpartSize != info.localSize) {
-            log.errorf("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
-               info.getSlaveIndex(), sumSubpartSize, info.localSize);
+            log.errorf("On worker %d sum of subparts sizes (%d) is not the same as local size (%d)",
+               info.getWorkerIndex(), sumSubpartSize, info.localSize);
             result = errorResult();
          }
       }
@@ -399,7 +399,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          long commonEntries = isDeleted() ? 0 : numEntries;
          long expectedOwnedSize = extraEntries + commonEntries;
          if (sumLocalSize >= 0) {
-            long expectedLocalSize = expectedOwnedSize * (numReplicas < 0 ? -numReplicas * masterState.getClusterSize() : numReplicas);
+            long expectedLocalSize = expectedOwnedSize * (numReplicas < 0 ? -numReplicas * mainState.getClusterSize() : numReplicas);
             if (expectedLocalSize != sumLocalSize) {
                log.errorf("The cache should contain %d entries (including backups, %d replicas) but contains %d entries.", expectedLocalSize, numReplicas, sumLocalSize);
                result = errorResult();
@@ -440,7 +440,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          for (String entries : extraEntries.split(",")) {
             long count = Long.parseLong(entries);
             sum += count * multiplicator;
-            multiplicator *= slaveState.getClusterSize();
+            multiplicator *= workerState.getClusterSize();
          }
       } catch (NumberFormatException e) {
          log.error("Cannot parse " + extraEntries);
@@ -458,8 +458,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
       final int numReplicas;
       final CheckResult checkResult;
 
-      public InfoAck(SlaveState slaveState, long ownedSize, long localSize, long totalSize, Map<?, Long> structuredSize, int numReplicas) {
-         super(slaveState);
+      public InfoAck(WorkerState workerState, long ownedSize, long localSize, long totalSize, Map<?, Long> structuredSize, int numReplicas) {
+         super(workerState);
          this.ownedSize = ownedSize;
          this.localSize = localSize;
          this.totalSize = totalSize;
@@ -468,8 +468,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
          checkResult = null;
       }
 
-      public InfoAck(SlaveState slaveState, CheckResult checkResult) {
-         super(slaveState);
+      public InfoAck(WorkerState workerState, CheckResult checkResult) {
+         super(workerState);
          this.checkResult = checkResult;
          ownedSize = localSize = totalSize = -1;
          structuredSize = null;

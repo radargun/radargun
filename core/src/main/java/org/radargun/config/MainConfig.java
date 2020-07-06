@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Comntains master's configuration elements.
+ * Comntains main's configuration elements.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class MasterConfig {
-   private byte[] masterConfigBytes;
+public class MainConfig {
+   private byte[] mainConfigBytes;
    private byte[] scenarioBytes;
    private final int port;
    private final String host;
@@ -24,7 +24,7 @@ public class MasterConfig {
    private Scenario scenario;
    private List<ReporterConfiguration> reporters = new ArrayList<ReporterConfiguration>();
 
-   public MasterConfig(int port, String host) {
+   public MainConfig(int port, String host) {
       this.port = port;
       this.host = host;
    }
@@ -98,12 +98,12 @@ public class MasterConfig {
       return plugins;
    }
 
-   public void setMasterConfigBytes(byte[] configBytes) {
-      this.masterConfigBytes = configBytes;
+   public void setMainConfigBytes(byte[] configBytes) {
+      this.mainConfigBytes = configBytes;
    }
 
-   public byte[] getMasterConfigBytes() {
-      return masterConfigBytes;
+   public byte[] getMainConfigBytes() {
+      return mainConfigBytes;
    }
 
    public void setScenarioBytes(byte[] scenarioBytes) {

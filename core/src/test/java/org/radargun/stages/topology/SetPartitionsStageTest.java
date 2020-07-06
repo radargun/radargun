@@ -28,27 +28,27 @@ public class SetPartitionsStageTest {
       lifecycle.start();
       SetPartitionsStage setPartitionsStage = new SetPartitionsStage();
       List<Set<Integer>> partitions = new ArrayList<>(1);
-      Set<Integer> slaveIds0 = new HashSet<>();
-      slaveIds0.add(0);
-      slaveIds0.add(1);
-      partitions.add(slaveIds0);
-      Set<Integer> slaveIds1 = new HashSet<>();
-      slaveIds1.add(2);
-      partitions.add(slaveIds1);
+      Set<Integer> workerIds0 = new HashSet<>();
+      workerIds0.add(0);
+      workerIds0.add(1);
+      partitions.add(workerIds0);
+      Set<Integer> workerIds1 = new HashSet<>();
+      workerIds1.add(2);
+      partitions.add(workerIds1);
       Utils.setField(SetPartitionsStage.class, "partitions", setPartitionsStage, partitions);
 
       CoreTraitRepository.Partitionable partitionable = (CoreTraitRepository.Partitionable) stageRunner.getTraitImpl(Partitionable.class);
-      Assert.assertEquals(partitionable.getSlaveIndex(), -1);
+      Assert.assertEquals(partitionable.getWorkerIndex(), -1);
       Assert.assertEquals(partitionable.getPartitionMembers(), null);
       Assert.assertEquals(partitionable.getInitiallyReachable(), null);
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(setPartitionsStage, 0));
+      acks.add(stageRunner.executeOnWorker(setPartitionsStage, 0));
 
-      Assert.assertEquals(partitionable.getSlaveIndex(), 0);
-      Assert.assertEquals(partitionable.getPartitionMembers(), slaveIds0);
+      Assert.assertEquals(partitionable.getWorkerIndex(), 0);
+      Assert.assertEquals(partitionable.getPartitionMembers(), workerIds0);
       Assert.assertEquals(partitionable.getInitiallyReachable(), null);
-      Assert.assertEquals(stageRunner.processAckOnMaster(setPartitionsStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(setPartitionsStage, acks), StageResult.SUCCESS);
    }
 }

@@ -19,7 +19,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 
 /**
- * Presents {@link Timeline timelines} from all slaves and master.
+ * Presents {@link Timeline timelines} from all workers and main.
  * Uses {@link TimelineChart} to generate image files.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -102,8 +102,8 @@ public class TimelineDocument extends HtmlDocument {
       return String.format("timeline_%s_%d_range.png", configName, valueCategoryId);
    }
 
-   public String getValueChartFile(int valueCategoryId, int slaveIndex) {
-      return String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, slaveIndex);
+   public String getValueChartFile(int valueCategoryId, int workerIndex) {
+      return String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, workerIndex);
    }
 
    public Map<Timeline.Category, Integer> getValueCategoriesOfType(String categoryType) {
@@ -131,8 +131,8 @@ public class TimelineDocument extends HtmlDocument {
          for (Timeline timeline : timelines) {
             List<Timeline.Value> categoryValues = timeline.getValues(valueCategory);
             final List<Timeline.Value> values = categoryValues != null ? categoryValues : Collections.EMPTY_LIST;
-            final int slaveIndex = timeline.slaveIndex;
-            final String valueChartFile = getValueChartFile(valueCategoryId, slaveIndex);
+            final int workerIndex = timeline.workerIndex;
+            final String valueChartFile = getValueChartFile(valueCategoryId, workerIndex);
 
             chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
                @Override
@@ -141,7 +141,7 @@ public class TimelineDocument extends HtmlDocument {
                   TimelineChart chart = new TimelineChart();
                   chart.setDimensions(configuration.width, configuration.height);
 
-                  chart.setEvents(values, slaveIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);
+                  chart.setEvents(values, workerIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);
 
 
                   chart.saveChart(directory + File.separator + valueChartFile);
@@ -160,7 +160,7 @@ public class TimelineDocument extends HtmlDocument {
       }
 
       for (Timeline timeline : timelines) {
-         final int slaveIndex = timeline.slaveIndex;
+         final int workerIndex = timeline.workerIndex;
          for (String ec : timeline.getEventCategories()) {
             final String eventCategory = ec;
             final List<Timeline.MarkerEvent> events = timeline.getEvents(eventCategory);
@@ -171,9 +171,9 @@ public class TimelineDocument extends HtmlDocument {
                public Void call() throws Exception {
                   TimelineChart chart = new TimelineChart();
                   chart.setDimensions(configuration.width, configuration.height);
-                  chart.setEvents(events, slaveIndex, startTimestamp, endTimestamp, 0, 0);
+                  chart.setEvents(events, workerIndex, startTimestamp, endTimestamp, 0, 0);
 
-                  String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategories.get(eventCategory), slaveIndex);
+                  String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategories.get(eventCategory), workerIndex);
                   chart.saveChart(directory + File.separator + chartFile);
                   return null;
                }
@@ -236,12 +236,12 @@ public class TimelineDocument extends HtmlDocument {
       return endTimestamp;
    }
 
-   public String generateEventChartFile(int eventCategoryId, int slaveIndex) {
-      return String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, slaveIndex);
+   public String generateEventChartFile(int eventCategoryId, int workerIndex) {
+      return String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, workerIndex);
    }
 
    public String getCheckboxColor(Timeline timeline) {
-      return String.format("#%06X", TimelineChart.getColorForIndex(timeline.slaveIndex));
+      return String.format("#%06X", TimelineChart.getColorForIndex(timeline.workerIndex));
    }
 
    public static class Configuration {

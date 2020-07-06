@@ -1,16 +1,18 @@
 package org.radargun.sysmonitor;
 
 import org.radargun.state.ServiceListener;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.Lifecycle;
 
 /**
- * Retrieves system statistics from slave nodes.
+ * Retrieves probe statistics from worker nodes.
+ *
+ * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
-public class SystemSlaveMonitor extends AbstractMonitors<SlaveState, ServiceListener> implements ServiceListener {
-   public static final String MONITORS = SystemSlaveMonitor.class.getName();
+public class ProbeWorkerMonitor extends AbstractMonitors<WorkerState, ServiceListener> implements ServiceListener {
+   public static final String MONITORS = ProbeWorkerMonitor.class.getName();
 
-   public SystemSlaveMonitor(SlaveState state, long period) {
+   public ProbeWorkerMonitor(WorkerState state, long period) {
       super(state, period);
    }
 

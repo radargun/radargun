@@ -4,48 +4,48 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.radargun.state.MasterState;
-import org.radargun.state.SlaveState;
+import org.radargun.state.MainState;
+import org.radargun.state.WorkerState;
 
 /**
- * Defines an stage that will be run on both master and slaves.
+ * Defines an stage that will be run on both main and workers.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public interface DistStage extends Stage, Serializable {
 
    /**
-    * Initialize the stage on master node.
-    * @param masterState
+    * Initialize the stage on main node.
+    * @param mainState
     */
-   void initOnMaster(MasterState masterState);
+   void initOnMain(MainState mainState);
 
    /**
-    * Creates custom data that should be passed to the slave and inserted into its state before
+    * Creates custom data that should be passed to the worker and inserted into its state before
     * the stage is resolved. Those values can be used both for property resolution (the values
-    * can be then stringified) or retrieved through {@link SlaveState#get(String)} later during
-    * {@link #executeOnSlave()}.
+    * can be then stringified) or retrieved through {@link WorkerState#get(String)} later during
+    * {@link #executeOnWorker()}.
     * @return Map of variable names to objects.
     */
-   Map<String, Object> createMasterData();
+   Map<String, Object> createMainData();
 
    /**
-    * Initialize the stage on slave node. The stage must not use injected traits in this method.
-    * @param slaveState
+    * Initialize the stage on worker node. The stage must not use injected traits in this method.
+    * @param workerState
     */
-   void initOnSlave(SlaveState slaveState);
+   void initOnWorker(WorkerState workerState);
 
    /**
-    * Do whatever on the slave. This will only be called after {@link #initOnSlave(org.radargun.state.SlaveState)} is called.
-    * @return an response that will be serialized and send back to the master.
+    * Do whatever on the worker. This will only be called after {@link #initOnWorker(org.radargun.state.WorkerState)} is called.
+    * @return an response that will be serialized and send back to the main.
     */
-   DistStageAck executeOnSlave();
+   DistStageAck executeOnWorker();
 
    /**
-    * After all slaves replied through {@link #executeOnSlave()}, this method will be called on the master.
+    * After all workers replied through {@link #executeOnWorker()}, this method will be called on the main.
     * @return returning false will cause the benchmark to stop.
     */
-   StageResult processAckOnMaster(List<DistStageAck> acks);
+   StageResult processAckOnMain(List<DistStageAck> acks);
 
    //TODO: remove the call from stages
 

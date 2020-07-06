@@ -10,7 +10,7 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.ServiceListener;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.CacheListeners;
@@ -30,7 +30,7 @@ import org.radargun.utils.TimeService;
  */
 public class BackgroundOpsManager implements ServiceListener {
    /**
-    * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
+    * Key to WorkerState to retrieve BackgroundOpsManager instance and to MainState to retrieve results.
     */
    private static final String PREFIX = "BackgroundOps.";
    public static final String DEFAULT = "Default";
@@ -43,7 +43,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private LogLogicConfiguration logLogicConfiguration;
 
    private String name;
-   private SlaveState slaveState;
+   private WorkerState workerState;
    private boolean loaded = false;
    private StressorRecordPool stressorRecordPool;
    private FailureManager failureManager;
@@ -60,47 +60,47 @@ public class BackgroundOpsManager implements ServiceListener {
    private BackgroundOpsManager() {
    }
 
-   public static BackgroundOpsManager getInstance(SlaveState slaveState, String name) {
-      return (BackgroundOpsManager) slaveState.get(PREFIX + name);
+   public static BackgroundOpsManager getInstance(WorkerState workerState, String name) {
+      return (BackgroundOpsManager) workerState.get(PREFIX + name);
    }
 
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, String name) {
-      BackgroundOpsManager instance = getInstance(slaveState, name);
+   public static BackgroundOpsManager getOrCreateInstance(WorkerState workerState, String name) {
+      BackgroundOpsManager instance = getInstance(workerState, name);
       if (instance == null) {
          instance = new BackgroundOpsManager();
          instance.name = name;
-         instance.slaveState = slaveState;
+         instance.workerState = workerState;
          instance.failureManager = new FailureManager(instance);
          instance.threadManager = new ThreadManager(instance);
-         slaveState.put(PREFIX + name, instance);
-         slaveState.addListener(instance);
-         List<BackgroundOpsManager> list = (List<BackgroundOpsManager>) slaveState.get(ALL);
+         workerState.put(PREFIX + name, instance);
+         workerState.addListener(instance);
+         List<BackgroundOpsManager> list = (List<BackgroundOpsManager>) workerState.get(ALL);
          if (list == null) {
-            slaveState.put(ALL, list = new ArrayList<>());
+            workerState.put(ALL, list = new ArrayList<>());
          }
          list.add(instance);
       }
       return instance;
    }
 
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, String name,
+   public static BackgroundOpsManager getOrCreateInstance(WorkerState workerState, String name,
                                                           GeneralConfiguration generalConfiguration,
                                                           BackgroundStressorLogicConfiguration backgroundStressorLogicConfiguration,
                                                           LogLogicConfiguration logLogicConfiguration) {
-      BackgroundOpsManager instance = getOrCreateInstance(slaveState, name);
+      BackgroundOpsManager instance = getOrCreateInstance(workerState, name);
       instance.generalConfiguration = generalConfiguration;
       instance.backgroundStressorLogicConfiguration = backgroundStressorLogicConfiguration;
       instance.logLogicConfiguration = logLogicConfiguration;
       instance.threadManager.initConfiguration();
 
-      instance.lifecycle = slaveState.getTrait(Lifecycle.class);
-      instance.listeners = slaveState.getTrait(CacheListeners.class);
+      instance.lifecycle = workerState.getTrait(Lifecycle.class);
+      instance.listeners = workerState.getTrait(CacheListeners.class);
       instance.loadCaches();
       return instance;
    }
 
-   public static List<BackgroundOpsManager> getAllInstances(SlaveState slaveState) {
-      List<BackgroundOpsManager> instances = (List<BackgroundOpsManager>) slaveState.get(ALL);
+   public static List<BackgroundOpsManager> getAllInstances(WorkerState workerState) {
+      List<BackgroundOpsManager> instances = (List<BackgroundOpsManager>) workerState.get(ALL);
       return instances != null ? instances : Collections.EMPTY_LIST;
    }
 
@@ -109,20 +109,20 @@ public class BackgroundOpsManager implements ServiceListener {
          log.warn("Can't load caches, service is not running");
          return;
       }
-      basicCache = slaveState.getTrait(BasicOperations.class).getCache(generalConfiguration.cacheName);
-      ConditionalOperations conditionalOperations = slaveState.getTrait(ConditionalOperations.class);
+      basicCache = workerState.getTrait(BasicOperations.class).getCache(generalConfiguration.cacheName);
+      ConditionalOperations conditionalOperations = workerState.getTrait(ConditionalOperations.class);
       conditionalCache = conditionalOperations == null ? null : conditionalOperations.getCache(generalConfiguration.cacheName);
-      Debugable debugable = slaveState.getTrait(Debugable.class);
+      Debugable debugable = workerState.getTrait(Debugable.class);
       debugableCache = debugable == null ? null : debugable.getCache(generalConfiguration.cacheName);
       if (generalConfiguration.transactionSize > 0) {
-         transactional = slaveState.getTrait(Transactional.class);
+         transactional = workerState.getTrait(Transactional.class);
          if (transactional == null) {
             throw new IllegalArgumentException("Transactions are set on but the service does not provide transactions");
          } else if (transactional.getConfiguration(generalConfiguration.cacheName) == Transactional.Configuration.NON_TRANSACTIONAL) {
             throw new IllegalArgumentException("Transactions are set on but the cache is not configured as transactional");
          }
       }
-      CacheInformation cacheInformation = slaveState.getTrait(CacheInformation.class);
+      CacheInformation cacheInformation = workerState.getTrait(CacheInformation.class);
       cacheInfo = cacheInformation == null ? null : cacheInformation.getCache(generalConfiguration.cacheName);
    }
 
@@ -142,29 +142,29 @@ public class BackgroundOpsManager implements ServiceListener {
             throw new IllegalArgumentException("The logic cannot use shared keys");
          }
       } else {
-         // TODO: we may have broken totalThreads for logic with dead slaves preloading
-         int totalThreads = numThreads * slaveState.getGroupSize();
-         Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getIndexInGroup() + index).shift(generalConfiguration.keyIdOffset);
+         // TODO: we may have broken totalThreads for logic with dead workers preloading
+         int totalThreads = numThreads * workerState.getGroupSize();
+         Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * workerState.getIndexInGroup() + index).shift(generalConfiguration.keyIdOffset);
 
          if (logLogicConfiguration.enabled) {
-            int threadId = numThreads * slaveState.getIndexInGroup() + index;
+            int threadId = numThreads * workerState.getIndexInGroup() + index;
             log.tracef("Stressor %d has range %s", threadId, range);
             return new PrivateLogLogic(this, range);
          } else {
             // TODO: remove preloading from background stressors at all, use load-data instead
-            List<Integer> deadSlaves = backgroundStressorLogicConfiguration.loadDataForDeadSlaves;
+            List<Integer> deadWorkers = backgroundStressorLogicConfiguration.loadDataForDeadWorkers;
             List<List<Range>> rangesForThreads = null;
-            int liveId = slaveState.getSlaveIndex();
-            if (!loaded && deadSlaves != null && !deadSlaves.isEmpty()) {
-               List<Range> deadSlavesKeyRanges = new ArrayList<Range>(deadSlaves.size() * numThreads);
-               for (int deadSlave : deadSlaves) {
-                  // key ranges for the current dead slave
+            int liveId = workerState.getWorkerIndex();
+            if (!loaded && deadWorkers != null && !deadWorkers.isEmpty()) {
+               List<Range> deadWorkersKeyRanges = new ArrayList<Range>(deadWorkers.size() * numThreads);
+               for (int deadWorker : deadWorkers) {
+                  // key ranges for the current dead worker
                   for (int deadThread = 0; deadThread < numThreads; ++deadThread) {
-                     deadSlavesKeyRanges.add(Range.divideRange(generalConfiguration.numEntries, totalThreads, deadSlave * numThreads + deadThread));
+                     deadWorkersKeyRanges.add(Range.divideRange(generalConfiguration.numEntries, totalThreads, deadWorker * numThreads + deadThread));
                   }
-                  if (deadSlave < slaveState.getSlaveIndex()) liveId--;
+                  if (deadWorker < workerState.getWorkerIndex()) liveId--;
                }
-               rangesForThreads = Range.balance(deadSlavesKeyRanges, (slaveState.getClusterSize() - deadSlaves.size()) * numThreads);
+               rangesForThreads = Range.balance(deadWorkersKeyRanges, (workerState.getClusterSize() - deadWorkers.size()) * numThreads);
             }
             List<Range> deadRanges = rangesForThreads == null ? null : rangesForThreads.get(index + numThreads * liveId);
             return new BackgroundStressorLogic(this, range, deadRanges, loaded);
@@ -186,7 +186,7 @@ public class BackgroundOpsManager implements ServiceListener {
          }
          return;
       }
-      int totalThreads = slaveState.getGroupSize() * generalConfiguration.numThreads;
+      int totalThreads = workerState.getGroupSize() * generalConfiguration.numThreads;
       List<StressorRecord> stressorRecords = new ArrayList<>();
       // Initialize stressor records
       if (generalConfiguration.sharedKeys) {
@@ -215,10 +215,10 @@ public class BackgroundOpsManager implements ServiceListener {
    }
 
    public KeyGenerator getKeyGenerator() {
-      KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+      KeyGenerator keyGenerator = (KeyGenerator) workerState.get(KeyGenerator.KEY_GENERATOR);
       if (keyGenerator == null) {
          keyGenerator = new StringKeyGenerator();
-         slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+         workerState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       }
       return keyGenerator;
    }
@@ -264,15 +264,15 @@ public class BackgroundOpsManager implements ServiceListener {
       return failureManager.getError(failuresOnly);
    }
 
-   public boolean isSlaveAlive(int slaveId) {
+   public boolean isWorkerAlive(int workerId) {
       Long keepAliveTimestamp = null;
       try {
-         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + slaveId);
+         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + workerId);
       } catch (Exception e) {
          log.error("Failed to retrieve the keep alive timestamp", e);
          return true;
       }
-      return keepAliveTimestamp != null && keepAliveTimestamp > TimeService.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
+      return keepAliveTimestamp != null && keepAliveTimestamp > TimeService.currentTimeMillis() - generalConfiguration.deadWorkerTimeout;
    }
 
    public Transactional.Transaction newTransaction() {
@@ -303,8 +303,8 @@ public class BackgroundOpsManager implements ServiceListener {
       this.loaded = loaded;
    }
 
-   public SlaveState getSlaveState() {
-      return slaveState;
+   public WorkerState getWorkerState() {
+      return workerState;
    }
 
    public GeneralConfiguration getGeneralConfiguration() {
@@ -345,8 +345,8 @@ public class BackgroundOpsManager implements ServiceListener {
    // TODO:
    // a) clear listener on the BasicOperations trait
    // b) deal with the fact that the clear can be executed
-   public static void beforeCacheClear(SlaveState slaveState) {
-      List<BackgroundOpsManager> instances = getAllInstances(slaveState);
+   public static void beforeCacheClear(WorkerState workerState) {
+      List<BackgroundOpsManager> instances = getAllInstances(workerState);
       for (BackgroundOpsManager instance : instances) {
          instance.setLoaded(false);
       }

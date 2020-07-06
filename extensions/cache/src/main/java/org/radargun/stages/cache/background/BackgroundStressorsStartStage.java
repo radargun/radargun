@@ -9,7 +9,7 @@ import org.radargun.stages.helpers.CacheSelector;
 
 /**
  *
- * Create BackgroundStressors and store them to SlaveState. Optionally start stressor or stat threads.
+ * Create BackgroundStressors and store them to WorkerState. Optionally start stressor or stat threads.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -30,11 +30,11 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
    protected LogLogicConfiguration logLogicConfiguration = new LogLogicConfiguration();
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       validateConfiguration();
-      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
+      workerState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, name,
+         BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(workerState, name,
             generalConfiguration, backgroundStressorLogicConfiguration, logLogicConfiguration);
 
          log.info("Starting stressor threads " + name);
@@ -49,10 +49,10 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
    }
 
    private void validateConfiguration() {
-      if (generalConfiguration.numEntries < generalConfiguration.numThreads * slaveState.getGroupSize()) {
+      if (generalConfiguration.numEntries < generalConfiguration.numThreads * workerState.getGroupSize()) {
          throw new IllegalArgumentException(String.format("'numEntries' needs to be greater than or equal to the product" +
                " of 'numThreads' and group size'. Required minimum '%d', was: '%d'.", generalConfiguration.numEntries,
-            generalConfiguration.numThreads * slaveState.getGroupSize()));
+            generalConfiguration.numThreads * workerState.getGroupSize()));
       }
    }
 }

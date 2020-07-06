@@ -30,9 +30,9 @@ public class CacheClearStageTest {
       ClearStage cacheClearStage = new ClearStage();
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(cacheClearStage, 0));
+      acks.add(stageRunner.executeOnWorker(cacheClearStage, 0));
 
       Assert.assertEquals(cache.size(), 0);
-      Assert.assertEquals(stageRunner.processAckOnMaster(cacheClearStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(cacheClearStage, acks), StageResult.SUCCESS);
    }
 }

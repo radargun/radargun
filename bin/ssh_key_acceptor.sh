@@ -2,12 +2,12 @@
 
 echo ""
 echo "=== RadarGun ==="
-echo " This script is to be used on environments where slave nodes are provisioned via PXE boot"
-echo " and a master provides this PXE image and also acts as a DHCP server.  This script should"
-echo " *only* be run on the master, to SSH into each slave and 'accept' its SSH key."
+echo " This script is to be used on environments where worker nodes are provisioned via PXE boot"
+echo " and a main provides this PXE image and also acts as a DHCP server.  This script should"
+echo " *only* be run on the main, to SSH into each worker and 'accept' its SSH key."
 echo ""
 
-SLAVE_PREFIX=slave
+WORKER_PREFIX=worker
 SSH_USER=$USER
 KEEP=false
 ASYNC=false
@@ -15,12 +15,12 @@ VERBOSE=false
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ ssh_key_acceptor.sh [-p SLAVE_PREFIX] [-u ssh user] [-keep] [-async] [-v] -n num_slaves '
+  echo '  $ ssh_key_acceptor.sh [-p WORKER_PREFIX] [-u ssh user] [-keep] [-async] [-v] -n num_workers '
   echo ""
-  echo "   -p     Provides a prefix to all slave names entered in /etc/hosts"
-  echo "          Defaults to '$SLAVE_PREFIX'"
+  echo "   -p     Provides a prefix to all worker names entered in /etc/hosts"
+  echo "          Defaults to '$WORKER_PREFIX'"
   echo ""
-  echo "   -u     SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
+  echo "   -u     SSH user to use when SSH'ing across to the workers.  Defaults to current user."
   echo ""
   echo "   -keep  If this flag is passed in, then the user's '.ssh/known_hosts' file is NOT nuked"
   echo ""
@@ -28,7 +28,7 @@ help_and_exit() {
   echo ""
   echo "   -v     Be verbose"
   echo ""
-  echo "   -n     Number of slaves.  This is REQUIRED."
+  echo "   -n     Number of workers.  This is REQUIRED."
   echo ""
   echo "   -h     Displays this help screen"
   echo ""
@@ -43,7 +43,7 @@ do
       VERBOSE=true
       ;;
     "-p")
-      SLAVE_PREFIX=$2
+      WORKER_PREFIX=$2
       shift 
       ;;
     "-u")
@@ -54,7 +54,7 @@ do
       KEEP=true
       ;;
     "-n")
-      NUM_SLAVES=$2
+      NUM_WORKERS=$2
       shift
       ;;
     "-async")
@@ -68,17 +68,17 @@ do
 done
 
 
-if [ -z $NUM_SLAVES ] ; then
-  echo "FATAL: need to provide the number of slaves to connect to."
+if [ -z $NUM_WORKERS ] ; then
+  echo "FATAL: need to provide the number of workers to connect to."
   exit 1
 fi
 
 if [ "$VERBOSE" = "true" ] 
 then
-  echo "Slave prefix: $SLAVE_PREFIX"
+  echo "Worker prefix: $WORKER_PREFIX"
   echo "SSH user: $SSH_USER"
   echo "Keep known_hosts file? $KEEP"
-  echo "Number of slave nodes: $NUM_SLAVES"
+  echo "Number of worker nodes: $NUM_WORKERS"
   echo "Async? $ASYNC" 
 fi
 
@@ -94,13 +94,13 @@ fi
 CMD="pwd"
 
 loop=1
-while [ $loop -le $NUM_SLAVES ] ; do
-  echo "  ... processing $SLAVE_PREFIX$loop ..."
+while [ $loop -le $NUM_WORKERS ] ; do
+  echo "  ... processing $WORKER_PREFIX$loop ..."
   if [ "$ASYNC" = "true" ]
   then
-    $sshcmd -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" >> /dev/null &
+    $sshcmd -q -o "StrictHostKeyChecking false" $SSH_USER@$WORKER_PREFIX$loop "$CMD" >> /dev/null &
   else
-    $sshcmd -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" >> /dev/null
+    $sshcmd -q -o "StrictHostKeyChecking false" $SSH_USER@$WORKER_PREFIX$loop "$CMD" >> /dev/null
   fi
   let "loop+=1"
 done

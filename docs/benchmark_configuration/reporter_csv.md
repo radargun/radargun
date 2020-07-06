@@ -8,7 +8,7 @@ CSV reporter is used to store benchmark data into .csv files, usually for furthe
 
 #### Properties
 * **targetDir**		- Directory into which will be report files written. Default is `results/csv`.
-* **ignore**		- List of indexes of slaves whose results will be ignored. Default is none.
+* **ignore**		- List of indexes of workers whose results will be ignored. Default is none.
 * **separator**		- Separator of columns in the CSV file. Default is ','
 * **computeTotal**	- Compute aggregated statistics from all nodes. Default is true
 * **percentiles**	- List of percentiles to compute response times at. Default is 95% and 99%.

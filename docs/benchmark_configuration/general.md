@@ -20,23 +20,23 @@ One of the most important purposes of RadarGun is to support benchmarking of dis
 
 ### Architecture
 
-In order to be able to benchmark distributed caches RadarGun is using a master/slave architecture in which the RadarGun control node (*Master*) coordinates multiple cluster nodes (*Slaves*). Each slave runs as an independent process, that handles one of the nodes of the benchmarked cluster. The Master has the following responsibilities:
+In order to be able to benchmark distributed caches RadarGun is using a main/worker architecture in which the RadarGun control node (*Main*) coordinates multiple cluster nodes (*Workers*). Each worker runs as an independent process, that handles one of the nodes of the benchmarked cluster. The Main has the following responsibilities:
 
-* parse the configuration (see *Configuration* section bellow), and based on that give work to slaves
-* the unit of work the master gives to slaves is named *stage*, here are the stages that might constitute an benchmark run:
+* parse the configuration (see *Configuration* section bellow), and based on that give work to workers
+* the unit of work the main gives to workers is named *stage*, here are the stages that might constitute an benchmark run:
 
-    * ServiceStartStage - master broadcasts this stage to all slaves. Each slave will start an distributed cache node, and, after it it started acknowledge to the master. Once master has acknowledgment from all slaves it will move to the next stage.
-    * ClusterValidationStage - now that all the nodes are started, the master will ask all the slaves to verify that they are part of the cluster. Each slave verifies and acknowledge to the master. Once master has acknowledgment from all slaves it will move to the next stage.
-    * BasicOperationsTest, warmup - when the slaves receive this stage, they will execute an set of read and write operations on each node of the cluster. The purpose of this is to to simulate a production environment by allowing the hot spot to kick in.
+    * ServiceStartStage - main broadcasts this stage to all workers. Each worker will start an distributed cache node, and, after it it started acknowledge to the main. Once main has acknowledgment from all workers it will move to the next stage.
+    * ClusterValidationStage - now that all the nodes are started, the main will ask all the workers to verify that they are part of the cluster. Each worker verifies and acknowledge to the main. Once main has acknowledgment from all workers it will move to the next stage.
+    * BasicOperationsTest, warmup - when the workers receive this stage, they will execute an set of read and write operations on each node of the cluster. The purpose of this is to to simulate a production environment by allowing the hot spot to kick in.
     * BasicOperationsTest - this is the actual test that will be monitored for performance. 
                
-* after broadcasting a stage to *all* slaves, the master will block until *all* slaves acknowledge the stage execution was finished, then move on to the next stage. If an error appears at any point (e.g. one of the nodes doesn't pass ClusterValidation stage) then the benchmark will be terminated.
+* after broadcasting a stage to *all* workers, the main will block until *all* workers acknowledge the stage execution was finished, then move on to the next stage. If an error appears at any point (e.g. one of the nodes doesn't pass ClusterValidation stage) then the benchmark will be terminated.
 
 For a complete reference of the architecture behind RadarGun please refer to the [Design documentation]({{page.path_to_root}}architecture/design_documentation.html)
 
 ### Configuration
 
-Here is where you can find the complete example (see `conf/benchmark-dist.xml`). This section will take each individual element and detail it. An important aspect is the fact that the configuration is only defined on the master, and it defines the way in which the master coordinates the slaves.
+Here is where you can find the complete example (see `conf/benchmark-dist.xml`). This section will take each individual element and detail it. An important aspect is the fact that the configuration is only defined on the main, and it defines the way in which the main coordinates the workers.
 
 *Root element*
 
@@ -46,13 +46,13 @@ Here is where you can find the complete example (see `conf/benchmark-dist.xml`).
 
 During compilation RadarGun generates schema (XSD) with documented properties for all stages in the distributed benchmark. With this you can be sure that the properties in schema are always in sync with source code. Schema files can be located in `schema` directory of RadarGun distribution.
 
-*Master element*
+*Main element*
 
 {% highlight xml %}
-    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+    <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 {% endhighlight %}
 
-Master will open its sever socket at that address (host/port) and wait for connections from slaves. "${master.address:127.0.0.1}" syntax can be read: if there is a system property named "master.address" then use that one; otherwise default to "127.0.0.1". This way of specifying values can be used for all XML attributes.
+Main will open its sever socket at that address (host/port) and wait for connections from workers. "${main.address:127.0.0.1}" syntax can be read: if there is a system property named "main.address" then use that one; otherwise default to "127.0.0.1". This way of specifying values can be used for all XML attributes.
 
 [**Clusters element**](./clusters.html)
 
@@ -85,7 +85,7 @@ This section contains definition of clusters, which specify number nodes that th
 
 In this section we specify configurations we want to benchmark - our example uses two products: infinispan52 and infinispan60. The scenario will be run against every (config, cluster size) combo: infinispan52 configured with "dist-sync.xml" file will be run on a cluster of 2, then 3 nodes. Once this is finished, RadarGun will run the next infinispan60 configuration (dist-sync.xml) on 2 and 3 nodes. There's no restriction on the number of configured products or configurations.
 
-> There is however memory limit on the amount of data gathered during benchmarking, some demanding benchmarks might require adjusting JVM memory parameters for Master node  
+> There is however memory limit on the amount of data gathered during benchmarking, some demanding benchmarks might require adjusting JVM memory parameters for Main node  
 
 [**Scenario element**](./scenario.html)
 
@@ -152,14 +152,14 @@ In this last section report generation is configured. Use `csv` reporter if you 
 
 The sequence in which RadarGun should be started is the following:
 
-* start the master. Once started, the master will block until all the slaves connected to it. The number of slaves expected to connect is equal to `to` attribute, from the `scale` element, or `size` attribute of `cluster` element if you don't use scaling.
-* start `to/size` (see above) slaves
-* after all the slaves are started and connected to the master, the benchmark will start as described in the *Architecture* section
-* after the master is started and all the slaves are connected, it is not possible to add/remove/replace slaves
-* if one of the slave process fails unexpectedly, then master will shutdown itself and all slaves
-* if the master is killed, all slaves shut down. This might take a while, depending on the length of the task the slave was executing at the time
+* start the main. Once started, the main will block until all the workers connected to it. The number of workers expected to connect is equal to `to` attribute, from the `scale` element, or `size` attribute of `cluster` element if you don't use scaling.
+* start `to/size` (see above) workers
+* after all the workers are started and connected to the main, the benchmark will start as described in the *Architecture* section
+* after the main is started and all the workers are connected, it is not possible to add/remove/replace workers
+* if one of the worker process fails unexpectedly, then main will shutdown itself and all workers
+* if the main is killed, all workers shut down. This might take a while, depending on the length of the task the worker was executing at the time
 
-RadarGun comes with a number of scripts that help starting the master and the nodes. They are present in the distribution: 
+RadarGun comes with a number of scripts that help starting the main and the nodes. They are present in the distribution: 
 
 * see [Building Binaries]({{page.path_to_root}}getting_started/building_binaries.html) for obtaining a distribution and about its content 
 * and [Using scripts]({{page.path_to_root}}getting_started/using_the_scripts.html) for information on what each scripts does and how it should be launched 

@@ -24,8 +24,8 @@ public class ReindexStageTest {
       ReindexStage reindexStage = new ReindexStage();
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(reindexStage, 0));
+      acks.add(stageRunner.executeOnWorker(reindexStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(reindexStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(reindexStage, acks), StageResult.SUCCESS);
    }
 }

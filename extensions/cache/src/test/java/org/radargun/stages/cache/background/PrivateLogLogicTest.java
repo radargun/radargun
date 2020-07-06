@@ -3,7 +3,7 @@ package org.radargun.stages.cache.background;
 import org.mockito.Mockito;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
 import org.radargun.util.CacheTestUtils;
@@ -390,9 +390,9 @@ public class PrivateLogLogicTest {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
       llc.enabled = true;
-      SlaveState slaveState = new SlaveState();
-      slaveState.put(KeyGenerator.KEY_GENERATOR, new CacheTestUtils.SimpleStringKeyGenerator());
-      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
+      WorkerState workerState = new WorkerState();
+      workerState.put(KeyGenerator.KEY_GENERATOR, new CacheTestUtils.SimpleStringKeyGenerator());
+      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(workerState, "test");
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "backgroundStressorLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);

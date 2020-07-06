@@ -34,21 +34,21 @@ public class BackgroundStressorsGeneralTest {
       Lifecycle lifecycle2 = stageRunner.getTraitImpl(Lifecycle.class, 1);
       lifecycle1.start();
       lifecycle2.start();
-      BackgroundStressorsStartStage backgroundStressorsStartStageSlave1 = new BackgroundStressorsStartStage();
-      BackgroundStressorsStartStage backgroundStressorsStartStageSlave2 = new BackgroundStressorsStartStage();
+      BackgroundStressorsStartStage backgroundStressorsStartStageWorker1 = new BackgroundStressorsStartStage();
+      BackgroundStressorsStartStage backgroundStressorsStartStageWorker2 = new BackgroundStressorsStartStage();
 
       LogLogicConfiguration logLogicConfiguration = new LogLogicConfiguration();
       logLogicConfiguration.enabled = true;
-      backgroundStressorsStartStageSlave1.logLogicConfiguration = logLogicConfiguration;
-      backgroundStressorsStartStageSlave2.logLogicConfiguration = logLogicConfiguration;
+      backgroundStressorsStartStageWorker1.logLogicConfiguration = logLogicConfiguration;
+      backgroundStressorsStartStageWorker2.logLogicConfiguration = logLogicConfiguration;
 
       GeneralConfiguration generalConfiguration = new GeneralConfiguration();
       generalConfiguration.puts = 2;
       generalConfiguration.removes = 1;
       generalConfiguration.gets = 0;
       generalConfiguration.sharedKeys = sharedKeys;
-      backgroundStressorsStartStageSlave1.generalConfiguration = generalConfiguration;
-      backgroundStressorsStartStageSlave2.generalConfiguration = generalConfiguration;
+      backgroundStressorsStartStageWorker1.generalConfiguration = generalConfiguration;
+      backgroundStressorsStartStageWorker2.generalConfiguration = generalConfiguration;
 
       BasicOperations basicOperations = stageRunner.getTraitImpl(BasicOperations.class);
       stageRunner.replaceTraitImpl(BasicOperations.class, basicOperations, 1);
@@ -59,10 +59,10 @@ public class BackgroundStressorsGeneralTest {
       Assert.assertEquals(cache.size(), 0);
 
       List<DistStageAck> acks = new ArrayList<>(2);
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsStartStageSlave1, 0));
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsStartStageSlave2, 1));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsStartStageWorker1, 0));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsStartStageWorker2, 1));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(backgroundStressorsStartStageSlave1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(backgroundStressorsStartStageWorker1, acks), StageResult.SUCCESS);
 
       Utils.sleep(3000);
 
@@ -74,10 +74,10 @@ public class BackgroundStressorsGeneralTest {
       backgroundStressorsCheckStage2.waitUntilChecked = true;
 
       acks = new ArrayList<>(2);
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsCheckStage1, 0));
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsCheckStage2, 1));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsCheckStage1, 0));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsCheckStage2, 1));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(backgroundStressorsCheckStage1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(backgroundStressorsCheckStage1, acks), StageResult.SUCCESS);
 
       BackgroundStressorsCheckStage backgroundStressorsCheckStage3 = new BackgroundStressorsCheckStage();
       BackgroundStressorsCheckStage backgroundStressorsCheckStage4 = new BackgroundStressorsCheckStage();
@@ -85,10 +85,10 @@ public class BackgroundStressorsGeneralTest {
       backgroundStressorsCheckStage4.resumeAfterChecked = true;
 
       acks = new ArrayList<>(2);
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsCheckStage3, 0));
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsCheckStage4, 1));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsCheckStage3, 0));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsCheckStage4, 1));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(backgroundStressorsCheckStage3, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(backgroundStressorsCheckStage3, acks), StageResult.SUCCESS);
 
       Utils.sleep(1000);
 
@@ -96,10 +96,10 @@ public class BackgroundStressorsGeneralTest {
       BackgroundStressorsStopStage backgroundStressorsStopStage2 = new BackgroundStressorsStopStage();
 
       acks = new ArrayList<>(2);
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsStopStage1, 0));
-      acks.add(stageRunner.executeOnSlave(backgroundStressorsStopStage2, 1));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsStopStage1, 0));
+      acks.add(stageRunner.executeOnWorker(backgroundStressorsStopStage2, 1));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(backgroundStressorsStopStage1, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(backgroundStressorsStopStage1, acks), StageResult.SUCCESS);
 
    }
 }

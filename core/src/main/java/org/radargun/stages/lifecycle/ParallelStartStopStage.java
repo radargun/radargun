@@ -19,36 +19,36 @@ import org.radargun.utils.TimeConverter;
 @Stage(doc = "The stage start and stops some nodes concurrently (without waiting for each other).")
 public class ParallelStartStopStage extends AbstractServiceStartStage {
 
-   @Property(doc = "Set of slaves which should be stopped in this stage. Default is empty.")
+   @Property(doc = "Set of workers which should be stopped in this stage. Default is empty.")
    public Collection<Integer> stop = new ArrayList<Integer>();
 
-   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are stopped. Default is 0.")
+   @Property(converter = TimeConverter.class, doc = "Delay before the workers are stopped. Default is 0.")
    public long stopDelay = 0;
 
    @Property(doc = "If set to false, the node crash should be simulated. By default node should be shutdown gracefully.")
    public boolean graceful = true;
 
-   @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
+   @Property(doc = "Set of workers which should be started in this stage. Default is empty.")
    public Collection<Integer> start = new ArrayList<Integer>();
 
    @Property(doc = "Set of roles which should be stopped in this stage. Default is empty.")
    public Set<RoleHelper.Role> stopRoles = new HashSet<>();
 
-   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are started. Default is 0.")
+   @Property(converter = TimeConverter.class, doc = "Delay before the workers are started. Default is 0.")
    public long startDelay = 0;
 
-   @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be " +
-      "reachable from the new node. Default is all slaves.")
+   @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of workers that should be " +
+      "reachable from the new node. Default is all workers.")
    public Set<Integer> reachable = null;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (lifecycle == null) {
-         log.warn("No lifecycle for service " + slaveState.getServiceName());
+         log.warn("No lifecycle for service " + workerState.getServiceName());
          return successfulResponse();
       }
-      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasAnyRole(slaveState, stopRoles);
-      boolean startMe = start.contains(slaveState.getSlaveIndex());
+      boolean stopMe = stop.contains(workerState.getWorkerIndex()) || RoleHelper.hasAnyRole(workerState, stopRoles);
+      boolean startMe = start.contains(workerState.getWorkerIndex());
       if (!(stopMe || startMe)) {
          log.info("Nothing to kill or start...");
       }
@@ -56,7 +56,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
          if (startMe) {
             if (lifecycle.isRunning()) {
                if (!stopMe) {
-                  log.info("Wrapper already set on this slave, not starting it again.");
+                  log.info("Wrapper already set on this worker, not starting it again.");
                   startMe = false;
                   return successfulResponse();
                }
@@ -69,7 +69,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
                   }
                }
                try {
-                  LifecycleHelper.start(slaveState, false, null, 0, reachable);
+                  LifecycleHelper.start(workerState, false, null, 0, reachable);
                } catch (RuntimeException e) {
                   return errorResponse("Issues while instantiating/starting cache wrapper", e);
                }
@@ -90,7 +90,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
                   log.error("Killing delay was interrupted.", e);
                }
                try {
-                  LifecycleHelper.stop(slaveState, graceful, false);
+                  LifecycleHelper.stop(workerState, graceful, false);
                } catch (RuntimeException e) {
                   return errorResponse("Failed to kill the service", e);
                }

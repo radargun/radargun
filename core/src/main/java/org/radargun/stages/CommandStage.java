@@ -14,7 +14,7 @@ import org.radargun.utils.ArgsConverter;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Stage that allows you to execute generic command on the slave machine.")
+@Stage(doc = "Stage that allows you to execute generic command on the worker machine.")
 public class CommandStage extends AbstractDistStage {
    @Property(doc = "Command that should be executed. No default, but must be provided unless 'var' is set.")
    private String cmd;
@@ -51,16 +51,16 @@ public class CommandStage extends AbstractDistStage {
 
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
          Process process;
          if (cmd != null) {
             process = startProcess();
             if (var != null) {
-               slaveState.put(var, process);
+               workerState.put(var, process);
             }
          } else if (var != null) {
-            process = (Process) slaveState.get(var);
+            process = (Process) workerState.get(var);
             if (process == null) {
                return errorResponse("Could not find any process identified with '" + var + "'");
             }
@@ -73,7 +73,7 @@ public class CommandStage extends AbstractDistStage {
          if (waitForExit) {
             int exitValue = process.waitFor();
             if (var != null) {
-               slaveState.remove(var);
+               workerState.remove(var);
             }
             if (exitValues.contains(exitValue)) return successfulResponse();
             else return errorResponse("Command finished with exit value " + exitValue);

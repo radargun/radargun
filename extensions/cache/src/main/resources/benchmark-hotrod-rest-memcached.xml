@@ -1,8 +1,8 @@
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
-   <!-- Specifies where should the master open socket  -->
-   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+   <!-- Specifies where should the main open socket  -->
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
 
    <!-- List of cluster configurations where the benchmark should run-->
    <clusters>
@@ -17,7 +17,7 @@
       <config name="Infinispan 8.0 - HotRod">
          <!-- Configuration for the server group -->
          <setup group="server" plugin="infinispan80">
-            <!-- Properties are evaluated on each slave individually, therefore you can
+            <!-- Properties are evaluated on each worker individually, therefore you can
                  e.g. specify different bind address for each server in args -->
             <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
                <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
@@ -87,7 +87,7 @@
 
       <cache:load groups="client" num-entries="10000"/>
 
-      <!-- Warmup executed only on the slave 1 = client -->
+      <!-- Warmup executed only on the worker 1 = client -->
 
       <cache:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10" duration="${warmup.duration:60s}">
          <cache:key-selector>
@@ -95,8 +95,8 @@
          </cache:key-selector>
       </cache:basic-operations-test>
 
-      <!-- Stress test executed only on the slave 1 = client -->
-      <cache:basic-operations-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
+      <!-- Stress test executed only on the worker 1 = client -->
+      <cache:basic-operations-test workers="1" duration="${test.duration:60s}" num-threads-per-node="10">
          <cache:key-selector>
             <cache:concurrent-keys num-entries-per-thread="1000" />
          </cache:key-selector>

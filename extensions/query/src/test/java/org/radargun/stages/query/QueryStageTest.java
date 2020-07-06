@@ -68,8 +68,8 @@ public class QueryStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(queryStage, 0));
+      acks.add(stageRunner.executeOnWorker(queryStage, 0));
 
-      Assert.assertEquals(stageRunner.processAckOnMaster(queryStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(queryStage, acks), StageResult.SUCCESS);
    }
 }

@@ -9,45 +9,45 @@ export RADARGUN_HOME
 . `dirname $0`/includes.sh
 
 CONFIG=${RADARGUN_HOME}/conf/benchmark-dist.xml
-SLAVE_COUNT_ARG=""
+WORKER_COUNT_ARG=""
 TAILF=false
-RADARGUN_MASTER_PID=""
+RADARGUN_MAIN_PID=""
 DEBUG=""
 DEBUG_SUSPEND="n"
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
 WAIT=false
-OUT_FILE=stdout_master.out
+OUT_FILE=stdout_main.out
 
-master_pid() {
-   RADARGUN_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
+main_pid() {
+   RADARGUN_MAIN_PID=`ps -ef | grep "org.radargun.LaunchMain" | grep -v "grep" | awk '{print $2}'`
    return 
 }
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-d [host:]port] [-J "-Dopt1 -Dopt2"] [-status] [-stop]'
+  wrappedecho '  $ main.sh [-c CONFIG] [-s WORKER_COUNT] [-d [host:]port] [-J "-Dopt1 -Dopt2"] [-status] [-stop]'
   wrappedecho ""
   wrappedecho "   -c              Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
   wrappedecho ""
-  wrappedecho "   -s              Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
+  wrappedecho "   -s              Number of workers.  Defaults to maxSize attribute in framework configuration XML file."
   wrappedecho ""
-  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the main node's log file."
   wrappedecho ""
   wrappedecho "   -o, --out-file  File where stdout and stderr should be redirected to."
   wrappedecho ""
-  wrappedecho "   -m              MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
+  wrappedecho "   -m              MAIN host[:port]. An optional override to override the host/port defaults that the main listens on."
   wrappedecho ""
-  wrappedecho "   -d              Debug master on given port."
+  wrappedecho "   -d              Debug main on given port."
   wrappedecho ""
   wrappedecho "   --debug-suspend Wait for the debugger to connect."
   wrappedecho ""
   wrappedecho "   -J              Add custom Java options."
   wrappedecho ""
-  wrappedecho "   -status         Prints infromation on master's status: running or not."
+  wrappedecho "   -status         Prints infromation on main's status: running or not."
   wrappedecho ""
-  wrappedecho "   -stop           Forces the master to stop running."
+  wrappedecho "   -stop           Forces the main to stop running."
   wrappedecho ""
   wrappedecho "   -w, --wait      Waits until the process finishes and passes the return value."
   wrappedecho ""
@@ -69,33 +69,33 @@ while ! [ -z $1 ]
 do
   case "$1" in
     "-status")
-      master_pid;
-      if [ -z "${RADARGUN_MASTER_PID}" ]
+      main_pid;
+      if [ -z "${RADARGUN_MAIN_PID}" ]
       then
-        echo "Master not running." 
+        echo "Main not running." 
       else
-        echo "Master is running, pid is ${RADARGUN_MASTER_PID}."
+        echo "Main is running, pid is ${RADARGUN_MAIN_PID}."
       fi 
       exit 0
       ;;
      "-stop")
-      master_pid;
-      if [ -z "${RADARGUN_MASTER_PID}" ]
+      main_pid;
+      if [ -z "${RADARGUN_MAIN_PID}" ]
       then
-        echo "Master not running." 
+        echo "Main not running." 
       else
-        kill -15 ${RADARGUN_MASTER_PID}
+        kill -15 ${RADARGUN_MAIN_PID}
         if [ $? ]
         then 
-          echo "Successfully stopped master (pid=${RADARGUN_MASTER_PID})"
+          echo "Successfully stopped main (pid=${RADARGUN_MAIN_PID})"
         else 
-          echo "Problems stopping master(pid=${RADARGUN_MASTER_PID})";
+          echo "Problems stopping main(pid=${RADARGUN_MAIN_PID})";
         fi  
       fi 
       exit 0
       ;;
      "-s")
-      SLAVE_COUNT_ARG="-Dslaves=$2 "
+      WORKER_COUNT_ARG="-Dworkers=$2 "
       shift
       ;;
     "-c")
@@ -103,7 +103,7 @@ do
       shift
       ;;
     "-m")
-      MASTER=$2
+      MAIN=$2
       shift
       ;;
     "-t")
@@ -150,19 +150,19 @@ do
   shift
 done
 
-welcome "This script is used to launch the master process, which coordinates tests run on slaves."
+welcome "This script is used to launch the main process, which coordinates tests run on workers."
 
 add_fwk_to_classpath
 set_env
 
 D_VARS="-Djava.net.preferIPv4Stack=true"
 
-if [ "x${MASTER}" != "x" ]; then
-  get_port ${MASTER}
-  get_host ${MASTER}
-  D_VARS="${D_VARS} -Dmaster.address=${HOST}"
+if [ "x${MAIN}" != "x" ]; then
+  get_port ${MAIN}
+  get_host ${MAIN}
+  D_VARS="${D_VARS} -Dmain.address=${HOST}"
   if [ "x${PORT}" != "x" ]; then
-    D_VARS="${D_VARS} -Dmaster.port=${PORT}"
+    D_VARS="${D_VARS} -Dmain.port=${PORT}"
   fi
 fi
 
@@ -170,7 +170,7 @@ if [ "x${DEBUG}" != "x" ]; then
   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND},address=${DEBUG}"
 fi
 
-RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster --config ${CONFIG} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} ${REPORTER_PATHS}"
+RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $WORKER_COUNT_ARG org.radargun.LaunchMain --config ${CONFIG} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} ${REPORTER_PATHS}"
 if [ -z $OUT_FILE ]; then
   echo ${RUN_CMD}
   ${RUN_CMD} &
@@ -178,20 +178,20 @@ else
   echo ${RUN_CMD} > ${OUT_FILE}
   ${RUN_CMD} >> ${OUT_FILE} 2>&1 &
 fi
-export RADARGUN_MASTER_PID=$!
+export RADARGUN_MAIN_PID=$!
 HOST_NAME=`hostname`
-echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
-echo $RADARGUN_MASTER_PID > master.pid
+echo "Main's PID is $RADARGUN_MAIN_PID running on ${HOST_NAME}"
+echo $RADARGUN_MAIN_PID > main.pid
 if [ $TAILF == "true" ]
 then
   touch ${OUT_FILE}
-  tail_log ${OUT_FILE} "Master process is being shutdown|All reporters have been executed, exiting|Master process: unexpected shutdown\!" org.radargun.LaunchMaster
+  tail_log ${OUT_FILE} "Main process is being shutdown|All reporters have been executed, exiting|Main process: unexpected shutdown\!" org.radargun.LaunchMain
 fi
 
 if [ $WAIT == "true" ]
 then
-  wait $RADARGUN_MASTER_PID
+  wait $RADARGUN_MAIN_PID
   EXIT_VALUE=$?
-  echo "Master $RADARGUN_MASTER_PID finished with value $EXIT_VALUE"
+  echo "Main $RADARGUN_MAIN_PID finished with value $EXIT_VALUE"
   exit $EXIT_VALUE
 fi

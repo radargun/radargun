@@ -12,7 +12,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.state.ServiceListener;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.TimeService;
@@ -50,21 +50,21 @@ public final class BackgroundStatisticsManager implements ServiceListener {
    /**
     * Returns {@link org.radargun.stages.cache.background.BackgroundStatisticsManager} instance.
     * Creates {@link org.radargun.stages.cache.background.BackgroundOpsManager} internally, if not
-    * found in slave state.
+    * found in worker state.
     */
-   public static BackgroundStatisticsManager getOrCreateInstance(SlaveState slaveState, String name,
+   public static BackgroundStatisticsManager getOrCreateInstance(WorkerState workerState, String name,
                                                                  long statsIterationDuration) {
-      BackgroundStatisticsManager statisticsManager = getInstance(slaveState, name);
+      BackgroundStatisticsManager statisticsManager = getInstance(workerState, name);
       if (statisticsManager == null) {
-         statisticsManager = new BackgroundStatisticsManager(BackgroundOpsManager.getOrCreateInstance(slaveState, name),
+         statisticsManager = new BackgroundStatisticsManager(BackgroundOpsManager.getOrCreateInstance(workerState, name),
                statsIterationDuration);
-         slaveState.put(PREFIX + name, statisticsManager);
+         workerState.put(PREFIX + name, statisticsManager);
       }
       return statisticsManager;
    }
 
-   public static BackgroundStatisticsManager getInstance(SlaveState slaveState, String name) {
-      return (BackgroundStatisticsManager) slaveState.get(PREFIX + name);
+   public static BackgroundStatisticsManager getInstance(WorkerState workerState, String name) {
+      return (BackgroundStatisticsManager) workerState.get(PREFIX + name);
    }
 
    public synchronized List<IterationStats> getStats() {
@@ -138,7 +138,7 @@ public final class BackgroundStatisticsManager implements ServiceListener {
             stats = Arrays.asList(threads).stream().filter(t -> t != null).map(t -> t.getStatsSnapshot(true))
                   .collect(Collectors.toList());
          }
-         Timeline timeline = backgroundOpsManager.getSlaveState().getTimeline();
+         Timeline timeline = backgroundOpsManager.getWorkerState().getTimeline();
          long now = TimeService.currentTimeMillis();
          long cacheSize = sizeThread.getAndResetSize();
          timeline.addValue(Timeline.Category.customCategory(CACHE_SIZE), new Timeline.Value(now, cacheSize));

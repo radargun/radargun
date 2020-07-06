@@ -38,22 +38,22 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
    protected boolean stop = false;
 
    @Override
-   public DistStageAck executeOnSlave() {
-      ScheduledFuture<?> future = (ScheduledFuture<?>) slaveState.get(FUTURE);
+   public DistStageAck executeOnWorker() {
+      ScheduledFuture<?> future = (ScheduledFuture<?>) workerState.get(FUTURE);
       if (stop) {
          if (future == null) {
             return errorResponse("Heap dumps have not been scheduled!");
          }
          future.cancel(false);
-         slaveState.remove(FUTURE);
+         workerState.remove(FUTURE);
 
-         Cleanup cleanup = (Cleanup) slaveState.get(CLEANUP);
+         Cleanup cleanup = (Cleanup) workerState.get(CLEANUP);
          if (cleanup == null) {
             return errorResponse("Cleanup procedure was not found!");
          }
          cleanup.serviceDestroyed();
-         slaveState.removeListener(cleanup);
-         slaveState.remove(CLEANUP);
+         workerState.removeListener(cleanup);
+         workerState.remove(CLEANUP);
       } else {
          if (future != null) {
             return errorResponse("Periodic heap dumps are already running!");
@@ -72,7 +72,7 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
             @Override
             public void run() {
                try {
-                  File heapDumpFile = new File(PeriodicHeapDumpStage.this.dir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
+                  File heapDumpFile = new File(PeriodicHeapDumpStage.this.dir, workerState.getConfigName() + "." + workerState.getWorkerIndex()
                      + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".hprof");
                   log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
                   Utils.dumpHeap(heapDumpFile.getAbsolutePath());
@@ -83,11 +83,11 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
 
             }
          }, initialDelay, period, TimeUnit.MILLISECONDS);
-         slaveState.put(FUTURE, future);
+         workerState.put(FUTURE, future);
 
          Cleanup cleanup = new Cleanup(executor);
-         slaveState.addListener(cleanup);
-         slaveState.put(CLEANUP, cleanup);
+         workerState.addListener(cleanup);
+         workerState.put(CLEANUP, cleanup);
       }
       return successfulResponse();
    }

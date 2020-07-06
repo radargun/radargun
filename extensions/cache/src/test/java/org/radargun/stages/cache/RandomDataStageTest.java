@@ -57,9 +57,9 @@ public class RandomDataStageTest {
       Assert.assertEquals(cache.size(), 0);
 
       List<DistStageAck> acks = new ArrayList<>(1);
-      acks.add(stageRunner.executeOnSlave(randomDataStage, 0));
+      acks.add(stageRunner.executeOnWorker(randomDataStage, 0));
 
       Assert.assertEquals(cache.size(), 100);
-      Assert.assertEquals(stageRunner.processAckOnMaster(randomDataStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(randomDataStage, acks), StageResult.SUCCESS);
    }
 }

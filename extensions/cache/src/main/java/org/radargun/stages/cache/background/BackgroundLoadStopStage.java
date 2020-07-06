@@ -24,8 +24,8 @@ public class BackgroundLoadStopStage extends AbstractDistStage {
    private long timeoutDuration = 0;
 
    @Override
-   public DistStageAck executeOnSlave() {
-      List<Thread> loaders = (List<Thread>) slaveState.get(BACKGROUND_LOADERS);
+   public DistStageAck executeOnWorker() {
+      List<Thread> loaders = (List<Thread>) workerState.get(BACKGROUND_LOADERS);
       if (loaders != null) {
          long remaining = timeoutDuration;
          for (Thread loader : loaders) {
@@ -48,7 +48,7 @@ public class BackgroundLoadStopStage extends AbstractDistStage {
             }
          }
       }
-      slaveState.remove(BACKGROUND_LOADERS);
+      workerState.remove(BACKGROUND_LOADERS);
       return successfulResponse();
    }
 }

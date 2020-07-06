@@ -28,7 +28,7 @@ public class CustomKeyGenerator implements KeyGenerator {
          clazz = Class.forName(clazzName);
          ctor = clazz.getConstructor(long.class);
       } catch (Exception e) {
-         // trace as this can happen on master node
+         // trace as this can happen on main node
          log.trace("Could not initialize generator " + this, e);
       }
    }

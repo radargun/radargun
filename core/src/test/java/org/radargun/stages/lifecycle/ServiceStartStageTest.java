@@ -23,9 +23,9 @@ public class ServiceStartStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
       ServiceStartStage serviceStartStage = new ServiceStartStage();
-      acks.add(stageRunner.executeOnSlave(serviceStartStage));
+      acks.add(stageRunner.executeOnWorker(serviceStartStage));
 
       Assert.assertTrue(lifecycle.isRunning());
-      Assert.assertEquals(stageRunner.processAckOnMaster(serviceStartStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(serviceStartStage, acks), StageResult.SUCCESS);
    }
 }

@@ -18,8 +18,8 @@ public class CpuBurnStage extends AbstractDistStage {
    public boolean stop = false;
 
    @Override
-   public DistStageAck executeOnSlave() {
-      State state = (State) slaveState.remove(CpuBurnStage.class.getName());
+   public DistStageAck executeOnWorker() {
+      State state = (State) workerState.remove(CpuBurnStage.class.getName());
       if (stop) {
          if (state != null) {
             state.stop();
@@ -35,7 +35,7 @@ public class CpuBurnStage extends AbstractDistStage {
          if (numThreads <= 0) {
             return errorResponse("Cannot use num-threads <= 0!");
          }
-         slaveState.put(CpuBurnStage.class.getName(), new State(numThreads));
+         workerState.put(CpuBurnStage.class.getName(), new State(numThreads));
       }
       return successfulResponse();
    }
@@ -54,7 +54,7 @@ public class CpuBurnStage extends AbstractDistStage {
             }, "CpuBurner-" + i);
             threads[i].start();
          }
-         slaveState.addListener(this);
+         workerState.addListener(this);
       }
 
       public void stop() {
@@ -67,7 +67,7 @@ public class CpuBurnStage extends AbstractDistStage {
                Thread.currentThread().interrupt();
             }
          }
-         slaveState.removeListener(this);
+         workerState.removeListener(this);
       }
 
       @Override

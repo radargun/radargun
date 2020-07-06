@@ -3,7 +3,7 @@ package org.radargun;
 import java.io.File;
 
 import org.radargun.config.ConfigParser;
-import org.radargun.config.MasterConfig;
+import org.radargun.config.MainConfig;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.ArgsHolder;
@@ -11,11 +11,11 @@ import org.radargun.utils.ArgsHolder;
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public final class LaunchMaster {
+public final class LaunchMain {
 
-   private static Log log = LogFactory.getLog(LaunchMaster.class);
+   private static Log log = LogFactory.getLog(LaunchMain.class);
 
-   private LaunchMaster() {}
+   private LaunchMain() {}
 
    public static void main(String[] args) {
 
@@ -29,21 +29,21 @@ public final class LaunchMaster {
 
       try {
          ConfigParser configParser = ConfigParser.getConfigParser();
-         MasterConfig masterConfig = configParser.parseConfig(config);
-         masterConfig.applyTemplates();
-         Master master = new Master(masterConfig);
-         master.run();
+         MainConfig mainConfig = configParser.parseConfig(config);
+         mainConfig.applyTemplates();
+         Main main = new Main(mainConfig);
+         main.run();
       } catch (Exception e) {
-         log.error("Master failed", e);
+         log.error("Main failed", e);
          e.printStackTrace();
          ShutDownHook.exit(127);
       }
    }
 
    public static String getConfigOrExit(String[] args) {
-      ArgsHolder.init(args, ArgsHolder.ArgType.LAUNCH_MASTER);
+      ArgsHolder.init(args, ArgsHolder.ArgType.LAUNCH_MAIN);
       if (ArgsHolder.getConfigFile() == null) {
-         ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.LAUNCH_MASTER);
+         ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.LAUNCH_MAIN);
       }
       return ArgsHolder.getConfigFile();
    }

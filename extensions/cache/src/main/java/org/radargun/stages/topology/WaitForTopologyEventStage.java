@@ -39,23 +39,23 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
    @Property(doc = "How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.", converter = TimeConverter.class)
    public long timeout = 600000;
 
-   @Property(doc = "The minimum number of slaves that participated in this event. Default is 0.")
+   @Property(doc = "The minimum number of workers that participated in this event. Default is 0.")
    public int minMembers = 0;
 
-   @Property(doc = "The maximum number of slaves that participated in this event. Default is indefinite.")
+   @Property(doc = "The maximum number of workers that participated in this event. Default is indefinite.")
    public int maxMembers = Integer.MAX_VALUE;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private TopologyHistory topologyHistory;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return successfulResponse();
       }
       List<TopologyHistory.Event> history = getEventHistory(topologyHistory);
       if (wait) {
-         TopologyHistory.Event setEvent = (TopologyHistory.Event) slaveState.get(String.valueOf(type));
+         TopologyHistory.Event setEvent = (TopologyHistory.Event) workerState.get(String.valueOf(type));
          long startWaiting = TimeService.currentTimeMillis();
 
          wait_loop:
@@ -104,7 +104,7 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
          }
       }
       if (set) {
-         slaveState.put(String.valueOf(type), history.isEmpty() ? null : history.get(history.size() - 1));
+         workerState.put(String.valueOf(type), history.isEmpty() ? null : history.get(history.size() - 1));
       }
       return successfulResponse();
    }

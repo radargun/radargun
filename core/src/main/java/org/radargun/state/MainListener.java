@@ -1,11 +1,11 @@
 package org.radargun.state;
 
 /**
- * Listener called on master node
+ * Listener called on main node
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface MasterListener extends StateListener {
+public interface MainListener extends StateListener {
 
    /**
     * Fired before each configuration is executed on clusters

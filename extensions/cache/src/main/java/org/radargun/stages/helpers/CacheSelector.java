@@ -24,7 +24,7 @@ public abstract class CacheSelector implements Serializable {
    }
 
    @DefinitionElement(name = "thread", doc = "Each thread will use cache 'cache_/threadIndex/' where /threadIndex/ is 0-based index of thread " +
-      "(6th thread on 2nd slave with 10 threads should have thread index 15)")
+      "(6th thread on 2nd worker with 10 threads should have thread index 15)")
    public static class Thread extends CacheSelector {
       @Override
       public String getCacheName(int threadIndex) {

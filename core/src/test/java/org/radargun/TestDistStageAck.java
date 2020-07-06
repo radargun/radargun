@@ -1,6 +1,6 @@
 package org.radargun;
 
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.testng.annotations.Test;
 
 /**
@@ -20,7 +20,7 @@ public class TestDistStageAck {
       exception1.initCause(exception);
       exception.initCause(exception1);
 
-      DistStageAck distStageAck = new DistStageAck(new SlaveState());
+      DistStageAck distStageAck = new DistStageAck(new WorkerState());
       distStageAck.setRemoteException(exception);
    }
 }

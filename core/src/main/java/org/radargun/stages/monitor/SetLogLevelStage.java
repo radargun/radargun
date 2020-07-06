@@ -31,7 +31,7 @@ public class SetLogLevelStage extends AbstractDistStage {
    private static Map<String, Stack<Level>> stacks = new HashMap<String, Stack<Level>>();
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       try {
          Stack<Level> stack = stacks.get(pkg);
          if (stack == null) {

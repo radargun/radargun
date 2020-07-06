@@ -19,16 +19,16 @@ public class DefineStage extends AbstractDistStage {
    public String value;
 
    @Override
-   public DistStageAck executeOnSlave() {
-      slaveState.put(var, value);
+   public DistStageAck executeOnWorker() {
+      workerState.put(var, value);
       return successfulResponse();
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       if (!result.isError()) {
-         masterState.put(var, value);
+         mainState.put(var, value);
       }
       return result;
    }

@@ -8,7 +8,7 @@ Building binaries
 
 Following tools are required to build RadarGun from sources
 
-* git >= 1.6.5, needed for obtaining the source code.  Alternatively, a ZIPped archive of the sources can be [used instead](https://github.com/radargun/radargun/zipball/master).
+* git >= 1.6.5, needed for obtaining the source code.  Alternatively, a ZIPped archive of the sources can be [used instead](https://github.com/radargun/radargun/zipball/main).
 * A [Java Development Kit](http://www.oracle.com/technetwork/java/javase/downloads/index.html) version 1.8 or above is required.
 * [Apache Maven](http://maven.apache.org) >= 3.0, needed for downloading dependencies and building the source code
 
@@ -54,7 +54,7 @@ This operation might take a few minutes, as it will download the dependencies ne
 
     *-All plugin folders contain lib and conf folder
 
-* The `bin` directory contains scripts for launching the master, the slaves and some other utility scripts.  This directory also contains scripts to run RadarGun in local mode. For details on how to run a distributed benchmark see [Benchmark configuration]({{page.path_to_root}}benchmark_configuration/general.html) and [Using scripts]({{page.path_to_root}}getting_started/using_the_scripts.html).
+* The `bin` directory contains scripts for launching the main, the workers and some other utility scripts.  This directory also contains scripts to run RadarGun in local mode. For details on how to run a distributed benchmark see [Benchmark configuration]({{page.path_to_root}}benchmark_configuration/general.html) and [Using scripts]({{page.path_to_root}}getting_started/using_the_scripts.html).
 
 * The `conf` directory contains example [configuration files](./example_configurations.html) for various benchmarks, log4j configuration and test-data folder with various benchmark-specific data sets
 

@@ -26,7 +26,7 @@ import redis.embedded.util.OS;
  *
  * To cluster multiple redis instances, you need to call a redis-trib.rb ruby script (see https://redis.io/topics/cluster-tutorial).
  * To do this, add a stage like this one after the <service-start> stage:
- * <command slaves="0" cmd="sh" args="-c" non-parsed-args="echo yes | <path-to-redis-distro>/redis-3.2.8/src/redis-trib.rb create --replicas 1 192.168.11.101:6379 192.168.11.102:6379 192.168.11.103:6379 192.168.11.104:6379 192.168.11.105:6379 192.168.11.106:6379" exit-values="0"/>
+ * <command workers="0" cmd="sh" args="-c" non-parsed-args="echo yes | <path-to-redis-distro>/redis-3.2.8/src/redis-trib.rb create --replicas 1 192.168.11.101:6379 192.168.11.102:6379 192.168.11.103:6379 192.168.11.104:6379 192.168.11.105:6379 192.168.11.106:6379" exit-values="0"/>
  *
  * Note that redis saves some data in the distribution directory, and you need to delete it between runs. Using the distributionZip
  * property is preferred, so the distribution is 'clean' with each run.

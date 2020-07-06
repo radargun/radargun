@@ -32,7 +32,7 @@ import static org.radargun.config.VmArgUtils.replace;
 public class VmArgs implements Serializable {
    private static final Log log = LogFactory.getLog(VmArgs.class);
 
-   @Property(doc = "Ignore all VM arguments passed to slave and use only those specified here. Default is false.")
+   @Property(doc = "Ignore all VM arguments passed to worker and use only those specified here. Default is false.")
    private Boolean ignoreDefault = false;
 
    @Property(doc = "Print all VM arguments. Default is false.")

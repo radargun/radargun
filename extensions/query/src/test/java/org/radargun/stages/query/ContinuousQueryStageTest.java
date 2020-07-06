@@ -58,18 +58,18 @@ public class ContinuousQueryStageTest {
 
       List<DistStageAck> acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(continuousQueryStage, 0));
+      acks.add(stageRunner.executeOnWorker(continuousQueryStage, 0));
 
       Assert.assertNotNull(continuousQuery.getCacheCqMap().get("test"));
-      Assert.assertEquals(stageRunner.processAckOnMaster(continuousQueryStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(continuousQueryStage, acks), StageResult.SUCCESS);
 
       continuousQueryStage.remove = true;
 
       acks = new ArrayList<>(1);
 
-      acks.add(stageRunner.executeOnSlave(continuousQueryStage, 0));
+      acks.add(stageRunner.executeOnWorker(continuousQueryStage, 0));
 
       Assert.assertNull(continuousQuery.getCacheCqMap().get("test"));
-      Assert.assertEquals(stageRunner.processAckOnMaster(continuousQueryStage, acks), StageResult.SUCCESS);
+      Assert.assertEquals(stageRunner.processAckOnMain(continuousQueryStage, acks), StageResult.SUCCESS);
    }
 }

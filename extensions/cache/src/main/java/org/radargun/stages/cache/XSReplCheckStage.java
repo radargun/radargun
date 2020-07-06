@@ -29,7 +29,7 @@ public class XSReplCheckStage extends CheckCacheDataStage {
    private Debugable.Cache[] backupDebugable;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return successfulResponse();
       }
@@ -48,12 +48,12 @@ public class XSReplCheckStage extends CheckCacheDataStage {
          }
       }
       if (valueGenerator == null) {
-         valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
+         valueGenerator = (ValueGenerator) workerState.get(ValueGenerator.VALUE_GENERATOR);
          if (valueGenerator == null) {
             throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
          }
       }
-      return super.executeOnSlave();
+      return super.executeOnWorker();
    }
 
    @Override

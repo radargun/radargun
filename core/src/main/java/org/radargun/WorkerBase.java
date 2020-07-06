@@ -14,34 +14,34 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.lifecycle.ServiceStartStage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.TraitHelper;
 import org.radargun.utils.TimeService;
 
 /**
- * Base class for both standalone slave and slave integrated in master node (local cluster).
+ * Base class for both standalone worker and worker integrated in main node (local cluster).
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public abstract class SlaveBase {
+public abstract class WorkerBase {
    protected final Log log = LogFactory.getLog(getClass());
 
-   protected SlaveState state = new SlaveState();
+   protected WorkerState state = new WorkerState();
    protected Configuration configuration;
    protected Cluster cluster;
    protected Scenario scenario;
    protected Object service;
 
    protected void scenarioLoop() throws IOException {
-      Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
+      Cluster.Group group = cluster.getGroup(state.getWorkerIndex());
       Configuration.Setup setup = configuration.getSetup(group.name);
       state.setCluster(cluster);
       state.setPlugin(setup.plugin);
       state.setService(setup.service);
-      state.setTimeline(new Timeline(state.getSlaveIndex()));
+      state.setTimeline(new Timeline(state.getWorkerIndex()));
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
       ServiceContext context =
-         new ServiceContext(group.name, setup.plugin, state.getSlaveIndex());
+         new ServiceContext(group.name, setup.plugin, state.getWorkerIndex());
       ServiceHelper.setServiceContext(context);
 
       try {
@@ -53,7 +53,7 @@ public abstract class SlaveBase {
          for (;;) {
             int stageId = getNextStageId();
             log.trace("Received stage ID " + stageId);
-            processMasterData(getNextMasterData());
+            processMainData(getNextMainData());
             DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
 
             if (stage instanceof ScenarioCleanupStage) {
@@ -62,7 +62,7 @@ public abstract class SlaveBase {
             }
             //lazy services created during ServiceStartStage
             if (stage instanceof ServiceStartStage && setup.lazyInit) {
-               stage.initOnSlave(state);
+               stage.initOnWorker(state);
                if (stage.shouldExecute() && service == null) {
                   createService(setup, extras);
                }
@@ -74,7 +74,7 @@ public abstract class SlaveBase {
             try {
                result = TraitHelper.inject(stage, state.getTraits());
                InitHelper.init(stage);
-               stage.initOnSlave(state);
+               stage.initOnWorker(state);
             } catch (Exception e) {
                log.error("Stage '" + stage.getName() + "' initialization has failed", e);
                initException = e;
@@ -99,7 +99,7 @@ public abstract class SlaveBase {
                long start = TimeService.currentTimeMillis();
                long end;
                try {
-                  response = stage.executeOnSlave();
+                  response = stage.executeOnWorker();
                   end = TimeService.currentTimeMillis();
                   if (response == null) {
                      response = new DistStageAck(state).error("Stage returned null response", null);
@@ -135,8 +135,8 @@ public abstract class SlaveBase {
       state.setTraits(TraitHelper.retrieve(service));
    }
 
-   private void processMasterData(Map<String, Object> masterData) throws IOException {
-      for (Map.Entry<String, Object> entry : masterData.entrySet()) {
+   private void processMainData(Map<String, Object> mainData) throws IOException {
+      for (Map.Entry<String, Object> entry : mainData.entrySet()) {
          if (entry.getKey().equals(ServiceContext.class.getName())) {
             updateServiceContexts(entry.getValue());
          } else {
@@ -162,7 +162,7 @@ public abstract class SlaveBase {
 
    protected abstract int getNextStageId() throws IOException;
 
-   protected abstract Map<String, Object> getNextMasterData() throws IOException;
+   protected abstract Map<String, Object> getNextMainData() throws IOException;
 
    protected abstract void sendResponse(DistStageAck response) throws IOException;
 
@@ -173,9 +173,9 @@ public abstract class SlaveBase {
          ScenarioCleanupStage stage = (ScenarioCleanupStage) scenario.getStage(scenario.getStageCount() - 1, state,
                extras, null);
          InitHelper.init(stage);
-         stage.initOnSlave(state);
+         stage.initOnWorker(state);
          log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
-         response = stage.executeOnSlave();
+         response = stage.executeOnWorker();
       } catch (Exception e) {
          log.error("Stage execution has failed", e);
          response = new DistStageAck(state).error("Stage execution has failed", e);

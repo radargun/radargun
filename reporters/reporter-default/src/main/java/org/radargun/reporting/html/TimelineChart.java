@@ -70,14 +70,14 @@ public class TimelineChart {
       this.paint = paint;
    }
 
-   public void setEvents(List<? extends Object> events, int slaveIndex, long startTimestamp, long endTimestamp, double lowerBound, double upperBound) {
-      int paintIndex = slaveIndex % DEFAULT_PAINTS.length;
+   public void setEvents(List<? extends Object> events, int workerIndex, long startTimestamp, long endTimestamp, double lowerBound, double upperBound) {
+      int paintIndex = workerIndex % DEFAULT_PAINTS.length;
       if (paintIndex < 0) paintIndex += DEFAULT_PAINTS.length;
       paint = DEFAULT_PAINTS[paintIndex];
       this.startTimestamp = startTimestamp;
       this.endTimestamp = endTimestamp + (startTimestamp == endTimestamp ? 1 : 0);
 
-      TimeSeries series = new TimeSeries("Slave " + slaveIndex);
+      TimeSeries series = new TimeSeries("Worker " + workerIndex);
       TimeSeriesCollection dataset = new TimeSeriesCollection(series, GMT);
       chart = ChartFactory.createTimeSeriesChart(null, "Time from start", null, dataset, false, false, false);
       chart.setBackgroundPaint(new Color(0, 0, 0, 0));
@@ -123,7 +123,7 @@ public class TimelineChart {
             marker.setLabel(intervalEvent.description);
             marker.setLabelAnchor(RectangleAnchor.BOTTOM);
             marker.setLabelTextAnchor(TextAnchor.BOTTOM_CENTER);
-            marker.setLabelOffset(new RectangleInsets(0, 0, (slaveIndex + 1) * LABEL_OFFSET, 0));
+            marker.setLabelOffset(new RectangleInsets(0, 0, (workerIndex + 1) * LABEL_OFFSET, 0));
             plot.addDomainMarker(marker);
          } else if (event instanceof Timeline.TextEvent) {
             Timeline.TextEvent textEvent = (Timeline.TextEvent) event;
@@ -131,7 +131,7 @@ public class TimelineChart {
             marker.setLabel(textEvent.text);
             marker.setLabelAnchor(RectangleAnchor.BOTTOM_LEFT);
             marker.setLabelTextAnchor(TextAnchor.BOTTOM_LEFT);
-            marker.setLabelOffset(new RectangleInsets(0, 0, (slaveIndex + 1) * LABEL_OFFSET, 0));
+            marker.setLabelOffset(new RectangleInsets(0, 0, (workerIndex + 1) * LABEL_OFFSET, 0));
             plot.addDomainMarker(marker);
          }
       }
@@ -204,9 +204,9 @@ public class TimelineChart {
       return RegularTimePeriod.createInstance(timePeriodClass, date, GMT);
    }
 
-   public static int getColorForIndex(int slaveIndex) {
-      if (slaveIndex < 0) return 0;
-      return ((Color) DEFAULT_PAINTS[slaveIndex % DEFAULT_PAINTS.length]).getRGB() & 0xFFFFFF;
+   public static int getColorForIndex(int workerIndex) {
+      if (workerIndex < 0) return 0;
+      return ((Color) DEFAULT_PAINTS[workerIndex % DEFAULT_PAINTS.length]).getRGB() & 0xFFFFFF;
    }
 
    public void setDimensions(int width, int height) {

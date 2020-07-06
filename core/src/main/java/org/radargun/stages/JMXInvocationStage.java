@@ -17,7 +17,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.PrimitiveValue;
@@ -58,9 +58,9 @@ public class JMXInvocationStage extends AbstractDistStage {
 
    @Property(doc = "Expected result value. If specified, results of method invocations are compared with this value.",
       complexConverter = PrimitiveValue.ObjectConverter.class)
-   private PrimitiveValue expectedSlaveResult;
+   private PrimitiveValue expectedWorkerResult;
 
-   @Property(doc = "Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual slaves.",
+   @Property(doc = "Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual workers.",
       complexConverter = PrimitiveValue.ObjectConverter.class)
    private PrimitiveValue expectedTotalResult;
 
@@ -68,7 +68,7 @@ public class JMXInvocationStage extends AbstractDistStage {
    private JmxConnectionProvider jmxConnectionProvider;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
          return successfulResponse();
       }
@@ -127,8 +127,8 @@ public class JMXInvocationStage extends AbstractDistStage {
                   return errorResponse("New value for attribute was not specified in methodParameters property.");
                }
             }
-            if (expectedSlaveResult != null && !expectedSlaveResult.getElementValue().equals(result)) {
-               return errorResponse(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedSlaveResult.getElementValue(), result));
+            if (expectedWorkerResult != null && !expectedWorkerResult.getElementValue().equals(result)) {
+               return errorResponse(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedWorkerResult.getElementValue(), result));
             }
             results.add(result);
          } catch (Exception e) {
@@ -139,7 +139,7 @@ public class JMXInvocationStage extends AbstractDistStage {
             }
          }
       }
-      return new JMXInvocationAck(slaveState, results);
+      return new JMXInvocationAck(workerState, results);
    }
 
    private Collection<ObjectInstance> getQueryResult(MBeanServerConnection connection) throws MalformedObjectNameException, IOException {
@@ -148,14 +148,14 @@ public class JMXInvocationStage extends AbstractDistStage {
 
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult stageResult = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult stageResult = super.processAckOnMain(acks);
       if (stageResult.isError()) {
          return stageResult;
       }
       if (expectedTotalResult != null || showOnly) {
          if (acks == null || acks.isEmpty()) {
-            log.error("Expected total result has been specified, but no results have been returned from slaves.");
+            log.error("Expected total result has been specified, but no results have been returned from workers.");
             return StageResult.FAIL;
          }
          Object totalResult = null;
@@ -227,8 +227,8 @@ public class JMXInvocationStage extends AbstractDistStage {
 
       private final List<Object> results;
 
-      public JMXInvocationAck(SlaveState slaveState, List<Object> results) {
-         super(slaveState);
+      public JMXInvocationAck(WorkerState workerState, List<Object> results) {
+         super(workerState);
          this.results = results;
       }
    }

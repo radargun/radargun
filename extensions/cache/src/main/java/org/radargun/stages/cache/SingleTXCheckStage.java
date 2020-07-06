@@ -22,8 +22,8 @@ public class SingleTXCheckStage extends AbstractDistStage {
 
    private static final Pattern TX_VALUE = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");
 
-   @Property(doc = "Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.")
-   public Set<Integer> commitSlave;
+   @Property(doc = "Indices of workers which should have committed the transaction (others rolled back). Default is all committed.")
+   public Set<Integer> commitWorker;
 
    @Property(doc = "Indices of threads which should have committed the transaction (others rolled back). Default is all committed.")
    public Set<Integer> commitThread;
@@ -41,7 +41,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
    private CacheInformation cacheInformation;
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!shouldExecute()) {
          return successfulResponse();
       }
@@ -69,22 +69,22 @@ public class SingleTXCheckStage extends AbstractDistStage {
                      }
                      if (committer == null) {
                         committer = m.group(2);
-                        if (commitSlave != null) {
+                        if (commitWorker != null) {
                            boolean found = false;
-                           for (int slave : commitSlave) {
-                              if (committer.startsWith(String.valueOf(slave))) {
+                           for (int worker : commitWorker) {
+                              if (committer.startsWith(String.valueOf(worker))) {
                                  found = true;
                                  break;
                               }
                            }
                            if (!found) {
-                              return errorResponse("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer);
+                              return errorResponse("The transaction should be committed by worker " + commitWorker + " but commiter is " + committer);
                            }
                         }
                         if (commitThread != null) {
                            boolean found = false;
-                           for (int slave : commitThread) {
-                              if (committer.endsWith(String.valueOf(slave))) {
+                           for (int worker : commitThread) {
+                              if (committer.endsWith(String.valueOf(worker))) {
                                  found = true;
                                  break;
                               }

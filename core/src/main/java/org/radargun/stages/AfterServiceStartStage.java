@@ -8,41 +8,41 @@ import org.radargun.ServiceContext;
 import org.radargun.ServiceHelper;
 import org.radargun.StageResult;
 import org.radargun.config.Stage;
-import org.radargun.state.SlaveState;
+import org.radargun.state.WorkerState;
 
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the ServiceStartStage.")
 public final class AfterServiceStartStage extends AbstractDistStage {
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      StageResult result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMain(acks);
       Map<String, Object> serviceProperties = new HashMap<>();
       if (!result.isError()) {
          for (ServiceContextAck ack : instancesOf(acks, ServiceContextAck.class)) {
             ServiceContext context = ack.getServiceContext();
             for (Map.Entry<String, Object> e : context.getProperties().entrySet()) {
-               //store entries from slaves in the format: ${group.slaveIndex.key}
+               //store entries from workers in the format: ${group.workerIndex.key}
                String key = e.getKey().startsWith(context.getPrefix()) ?
                   e.getKey() : context.getPrefix() + "." + e.getKey();
                serviceProperties.put(key, e.getValue());
             }
          }
-         log.trace("ServiceContext properties on master: " + serviceProperties);
-         masterState.put(ServiceContext.class.getName(), serviceProperties);
+         log.trace("ServiceContext properties on main: " + serviceProperties);
+         mainState.put(ServiceContext.class.getName(), serviceProperties);
       }
       return result;
    }
 
-   //Send data from Slave to Master
-   public DistStageAck executeOnSlave() {
-      return new ServiceContextAck(slaveState);
+   //Send data from Worker to Main
+   public DistStageAck executeOnWorker() {
+      return new ServiceContextAck(workerState);
    }
 
    public static class ServiceContextAck extends DistStageAck {
       private ServiceContext serviceContext;
 
-      private ServiceContextAck(SlaveState slaveState) {
-         super(slaveState);
+      private ServiceContextAck(WorkerState workerState) {
+         super(workerState);
          serviceContext = ServiceHelper.getContext();
       }
 

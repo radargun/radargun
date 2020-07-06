@@ -60,7 +60,7 @@ The `size` property of the `cluster` element has to be the sum of `size` propert
     </clusters>
 {% endhighlight %}
 
-This configuration defines three clusters of sizes 3, 9 and 15, each having three groups with equal numbers of slaves. `Scale` element sets a `cluster.size` [property](./properties.html) for each increment, which can be used for group naming (**discouraged**) and size definition.
+This configuration defines three clusters of sizes 3, 9 and 15, each having three groups with equal numbers of workers. `Scale` element sets a `cluster.size` [property](./properties.html) for each increment, which can be used for group naming (**discouraged**) and size definition.
 
 #### A bit more complex example
 

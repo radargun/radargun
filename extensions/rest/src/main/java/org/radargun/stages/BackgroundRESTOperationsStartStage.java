@@ -41,15 +41,15 @@ public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage 
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
+   public DistStageAck executeOnWorker() {
       if (!isServiceRunning()) {
-         log.info("Not running test on this slave as service is not running.");
+         log.info("Not running test on this worker as service is not running.");
          return successfulResponse();
       }
       try {
          log.info("Starting test " + testName + " in the background.");
          stressorsManager = setUpAndStartStressors();
-         slaveState.put(testName, this);
+         workerState.put(testName, this);
          return successfulResponse();
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
@@ -57,7 +57,7 @@ public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage 
    }
 
    @Override
-   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMain(List<DistStageAck> acks) {
       StageResult result = StageResult.SUCCESS;
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
