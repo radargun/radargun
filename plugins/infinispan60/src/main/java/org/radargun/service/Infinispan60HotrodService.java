@@ -1,9 +1,13 @@
 package org.radargun.service;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +64,8 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    @Property(doc = "Maximal amount of active connections to all servers. Default is unlimited.")
    protected int maxConnectionsTotal = -1;
 
+   @Property(doc = "Absolute path to the hotrod-client.properties file. Optional.")
+   protected String propertiesPath;
 
    protected ArrayList<String> serverHostnames = new ArrayList<String>();
    protected InfinispanHotrodQueryable queryable;
@@ -72,6 +78,15 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
 
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
+      if (propertiesPath != null) {
+         Properties p = new Properties();
+         try (Reader r = new FileReader(propertiesPath)) {
+            p.load(r);
+            builder.withProperties(p);
+         } catch (IOException e) {
+            throw new IllegalStateException("Something went wrong with provided properties file:" + propertiesPath, e);
+         }
+      }
       configureConnectionPool(builder.connectionPool());
       parseServerAddresses().forEach((address) -> builder.addServer().host(address.getHost()).port(address.getPort()));
       createQueryConfiguration(builder);
