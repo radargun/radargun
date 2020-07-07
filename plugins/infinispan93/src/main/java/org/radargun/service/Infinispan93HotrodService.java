@@ -1,9 +1,5 @@
 package org.radargun.service;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Properties;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
@@ -31,9 +27,6 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
    @Property(doc = "Max number of retries. Default is unlimited.")
    protected int maxRetries = 10;
 
-   @Property(doc = "Absolute path to the hotrod-client.properties file. Optional.")
-   protected String propertiesPath;
-
    @ProvidesTrait
    public Transactional createTransactional() {
       return new Infinispan93HotRodTransactional(this);
@@ -59,15 +52,6 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
 
       config.maxRetries(maxRetries).socketTimeout(connectionTimeout).connectionTimeout(connectionTimeout);
 
-      if (propertiesPath != null) {
-         Properties p = new Properties();
-         try (Reader r = new FileReader(propertiesPath)) {
-            p.load(r);
-            config.withProperties(p);
-         } catch (IOException e) {
-            throw new IllegalStateException("Something went wrong with provided properties file:" + propertiesPath, e);
-         }
-      }
       return config;
    }
 
