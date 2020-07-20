@@ -195,6 +195,7 @@ Executes operations from BulkOperations trait.
 
 ### check-cache-data
 Stage for checking presence or absence of data entered in other stages.
+> cache-selector (**optional**) - Selects which caches will be loaded. Default is the default cache.  
 > check-entry-count (**optional**) - Number of entries that will be checked in each step. Default is 1.  
 > check-subparts-are-replicas (**optional**) - Check that number of non-zero subparts is equal to number of replicas. Default is false.  
 > check-subparts-equal (**optional**) - Check whether the same subparts from each cache have the same size. Default is false.  
@@ -629,6 +630,7 @@ Stage checking the write skew detection in transactional caches.
 Checks loaded data for validity. Useful for testing cross-site replication.
 > backup-caches (**optional**) - Comma-separated list of all backup caches to be checked. Ignored if backup-value-generator is not specified.  
 > backup-value-generator (**optional**) - Backup value generator. By default, only main (default) cache is checked. If specified, backup caches will be checked too.  
+> cache-selector (**optional**) - Selects which caches will be loaded. Default is the default cache.  
 > check-entry-count (**optional**) - Number of entries that will be checked in each step. Default is 1.  
 > check-subparts-are-replicas (**optional**) - Check that number of non-zero subparts is equal to number of replicas. Default is false.  
 > check-subparts-equal (**optional**) - Check whether the same subparts from each cache have the same size. Default is false.  

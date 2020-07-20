@@ -87,6 +87,11 @@ public class CheckCacheDataStage extends AbstractDistStage {
       "will be executed only against in-memory data. Default is false.")
    public boolean memoryOnly = false;
 
+   // we can call the load stage in the group A and the check stage in the group B
+   @Property(doc = "Selects which caches will be loaded. Default is the default cache.",
+      complexConverter = CacheSelector.ComplexConverter.class)
+   protected CacheSelector cacheSelector = new CacheSelector.Default();
+
    @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.",
       complexConverter = KeyGenerator.ComplexConverter.class)
    public KeyGenerator keyGenerator = null;
@@ -218,7 +223,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    private String getCacheName() {
-      CacheSelector selector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+      CacheSelector selector;
+      if (cacheSelector != null) {
+         selector = cacheSelector;
+      } else {
+         selector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+      }
       return selector == null ? null : selector.getCacheName(-1);
    }
 
