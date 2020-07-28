@@ -1,14 +1,17 @@
 package org.radargun.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.Clustered;
@@ -51,6 +54,9 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    @Property(doc="Password of the user to be created.")
    private String password;
 
+   @Property(doc="Libs to be added to the classpath. Buildr string comma separated. Example: group:artifactId:version;group:artifactId:version")
+   private String libs;
+
    protected Clustered clustered;
 
    @Override
@@ -91,6 +97,14 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
                process.waitFor();
 
                log.info("User is created.");
+            }
+         }
+
+         if (libs != null && !libs.trim().isEmpty()) {
+            Path libPath = homePath.resolve("server/lib");
+            File[] jars = Maven.resolver().resolve(libs.split(";")).withoutTransitivity().asFile();
+            for (File jar : jars) {
+               Files.copy(jar.toPath(), libPath.resolve(jar.getName()), StandardCopyOption.REPLACE_EXISTING);
             }
          }
 
