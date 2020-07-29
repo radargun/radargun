@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.container.entries.InternalCacheEntry;
-import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.radargun.traits.CacheInformation;
 
@@ -30,7 +29,7 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
 
       @Override
       public Map<?, Long> getStructuredSize() {
-         ConsistentHash ch = ((DistributionManager) cache.getDistributionManager()).getReadConsistentHash();
+         ConsistentHash ch = cache.getDistributionManager().getReadConsistentHash();
          int[] segmentSizes = new int[ch.getNumSegments()];
          for (InternalCacheEntry entry : cache.getDataContainer()) {
             segmentSizes[ch.getSegment(entry.getKey())]++;
