@@ -24,23 +24,26 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
       try {
          ConfigDumpHelper configDumpHelper = service.createConfigDumpHelper();
          GlobalConfiguration global = service.cacheManager.getCacheManagerConfiguration();
-         String jmxDomain = getJmxDomain(global);
-         Properties globalProperties = configDumpHelper.dumpGlobal(global, jmxDomain, service.cacheManager.getName());
-         if (!globalProperties.isEmpty()) {
-            configurationMap.put("global", globalProperties);
-         }
-         for (Map.Entry<String, Cache> cache : service.caches.entrySet()) {
-            Properties cacheProperties = configDumpHelper.dumpCache(
-               cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
-               service.cacheManager.getName(), cache.getValue().getName());
-            if (cacheProperties != null && !cacheProperties.isEmpty()) {
-               configurationMap.put("cache_" + cache.getValue().getName(), cacheProperties);
+         boolean enabled = service.isJmxEnabled();
+         if (enabled) {
+            String jmxDomain = getJmxDomain(global);
+            Properties globalProperties = configDumpHelper.dumpGlobal(global, jmxDomain, service.cacheManager.getName());
+            if (!globalProperties.isEmpty()) {
+               configurationMap.put("global", globalProperties);
             }
-         }
-         String clusterName = global.transport() == null ? "default" : global.transport().clusterName();
-         Properties jgroupsProperties = configDumpHelper.dumpJGroups(jmxDomain, clusterName);
-         if (!jgroupsProperties.isEmpty()) {
-            configurationMap.put("jgroups", jgroupsProperties);
+            for (Map.Entry<String, Cache> cache : service.caches.entrySet()) {
+               Properties cacheProperties = configDumpHelper.dumpCache(
+                  cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
+                  service.cacheManager.getName(), cache.getValue().getName());
+               if (cacheProperties != null && !cacheProperties.isEmpty()) {
+                  configurationMap.put("cache_" + cache.getValue().getName(), cacheProperties);
+               }
+            }
+            String clusterName = global.transport() == null ? "default" : global.transport().clusterName();
+            Properties jgroupsProperties = configDumpHelper.dumpJGroups(jmxDomain, clusterName);
+            if (!jgroupsProperties.isEmpty()) {
+               configurationMap.put("jgroups", jgroupsProperties);
+            }
          }
       } catch (Exception e) {
          log.error("Error while creating normalized configuration files", e);

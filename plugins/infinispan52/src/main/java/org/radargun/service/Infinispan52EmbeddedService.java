@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
@@ -136,5 +137,11 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
          log.trace("joinComplete=" + joinComplete + ", ownedSegments=" + ownedSegments + ", " + getCHInfo(dm));
       }
       return joinComplete && !ownedSegments.isEmpty();
+   }
+
+   protected boolean isJmxEnabled() {
+      GlobalConfiguration global = cacheManager.getCacheManagerConfiguration();
+      boolean enabled = global.globalJmxStatistics().enabled();
+      return enabled;
    }
 }

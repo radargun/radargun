@@ -27,7 +27,7 @@ public class Infinispan52CacheInfoTotalSize {
    public static long getTotalSize(AdvancedCache cache) {
       long totalSize = 0;
       DistributedExecutorService des = new DefaultExecutorService(cache);
-      CacheSizer<?, ?, Integer> cacheSizer = new CacheSizer<Object, Object, Integer>();
+      CacheSizer<?, ?, Integer> cacheSizer = new CacheSizer<>();
       DistributedTaskBuilder<Integer> taskBuilder = des.createDistributedTaskBuilder(cacheSizer);
       List<Future<Integer>> futureList = des.submitEverywhere(taskBuilder.build());
 
