@@ -47,7 +47,7 @@ Follow these steps to build and deploy RadarGun image in OpenShift and run perfo
     
     Note: The config file will be finally placed in the running container under /opt/radargun-configs/ and RadarGun will consume it from there.
 
-8) Collect results and log files when the tests finish. Results are available in the Master pod as /opt/radargun-data/results.
+8) Collect results and log files when the tests finish. Results are available in the Main pod as /opt/radargun-data/results.
      Logs are available in all RadarGun pods in /opt/radargun-data
 
     `./openshift results`

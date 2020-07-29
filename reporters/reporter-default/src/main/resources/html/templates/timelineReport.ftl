@@ -76,7 +76,7 @@
                 onclick="${resetDisplayTimeline(timeline)}">
          <#if (timeline.workerIndex >= 0)>
             <strong>
-               Slave
+               Worker
                <#if (groups?size > 1)>
                   ${timeline.workerIndex} ${timelineDocument.getCluster().getGroup(timeline.workerIndex).name}
                <#else>
@@ -125,7 +125,7 @@
 
 <#function resetDisplayGroup groups groupId>
    <#local result = "" />
-   <#list timelineDocument.cluster.getSlaves(groups?api.get(groupId).name) as workerIndex>
+   <#list timelineDocument.cluster.getWorkers(groups?api.get(groupId).name) as workerIndex>
       <#list timelineDocument.valueCategories?values as valuesId>
          <#local result = result + (String.format("document.getElementById('worker_%d').checked = this.checked;", workerIndex)) />
          <#local result = result + String.format("reset_display('layer_%d_%d', this.checked, 'block');",

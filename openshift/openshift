@@ -12,13 +12,13 @@ TEST_PROJECT=${TEST_PROJECT:-"myprojectradargun"}
 LOGIN_COMMAND=""
 RADARGUN_IMAGE=radargun
 FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
-RADARGUN_MASTER="radargun-main.${TEST_PROJECT}.svc"
+RADARGUN_MAIN="radargun-main.${TEST_PROJECT}.svc"
 CONFIG_DIR=${CONFIG_DIR:-"configs/"}
 RADARGUN_CONFIG="library-dist-reads.xml"
 DEFAULT_JAVA_OPTS="-XX:+UseG1GC -verbose:gc -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
 CUSTOM_JAVA_OPTS=""
-TOTAL_CONTAINER_MEM_SLAVE=1024
-NUMBER_OF_SLAVES=2
+TOTAL_CONTAINER_MEM_WORKER=1024
+NUMBER_OF_WORKERS=2
 DEFAULT_OC_CLIENT_INSTALL_PATH=$(pwd)
 
 JVM_NATIVE_MB=80
@@ -39,9 +39,9 @@ help_and_exit() {
   wrappedecho '  -L LOGIN_COMMAND' 'Login command specific to your OpenShift provider. Defaults to empty string. Must start with oc. Applicable to login command.'
   wrappedecho "  -cd CONFIG_DIR" "Directory with confiration files for RadarGun and its plugins. Defaults to configs/. Applicable to deploy command."
   wrappedecho "  -cf CONFIG_FILE" "RadarGun benchmark file. Must be placed in CONFIG_DIR. Defaults to library-dist-reads.xml. Applicable to deploy command."
-  wrappedecho "  -s NUMBER_OF_SLAVES" "Number of RadarGun workers. Defaults to 2. Applicable to deploy command."
+  wrappedecho "  -s NUMBER_OF_WORKERS" "Number of RadarGun workers. Defaults to 2. Applicable to deploy command."
   wrappedecho "  -j CUSTOM_JAVA_OPTS" "Custom JAVA_OPTS that will be passed to the worker and main process JVM. Applicable to deploy command."
-  wrappedecho "  -m TOTAL_CONTAINER_MEM_SLAVE" "Total container memory for Slave containers. Defaults to 1024MiB. Applicable to deploy command."
+  wrappedecho "  -m TOTAL_CONTAINER_MEM_WORKER" "Total container memory for Worker containers. Defaults to 1024MiB. Applicable to deploy command."
   exit 0
 }
 
@@ -95,7 +95,7 @@ function new_project {
 }
 
 function compute_heap_size {
-    MEM=$(expr ${TOTAL_CONTAINER_MEM_SLAVE} - ${JVM_NATIVE_MB})
+    MEM=$(expr ${TOTAL_CONTAINER_MEM_WORKER} - ${JVM_NATIVE_MB})
     XMS="-Xms${MEM}M"
     XMX="-Xmx${MEM}M"
     echo "======= Max heap size: ${XMX} ======="
@@ -108,11 +108,11 @@ function deploy_template {
     fi
     oc create -f radargun-template.json
     oc process radargun \
-           -p TOTAL_CONTAINER_MEM=${TOTAL_CONTAINER_MEM_SLAVE} \
-           -p NUMBER_OF_SLAVES=${NUMBER_OF_SLAVES} \
-           -p RADARGUN_MASTER=${RADARGUN_MASTER} \
+           -p TOTAL_CONTAINER_MEM=${TOTAL_CONTAINER_MEM_WORKER} \
+           -p NUMBER_OF_WORKERS=${NUMBER_OF_WORKERS} \
+           -p RADARGUN_MAIN=${RADARGUN_MAIN} \
            -p RADARGUN_CONFIG=${RADARGUN_CONFIG} \
-           -p OPENSHIFT_MASTER_URL=${OPENSHIFT_MASTER_URL} \
+           -p OPENSHIFT_MAIN_URL=${OPENSHIFT_MAIN_URL} \
            -p OPENSHIFT_TOKEN=${OPENSHIFT_TOKEN} \
            -p TEMPLATE_FILE_NAME=${TEMPLATE_FILE_NAME} \
            -p NAMESPACE=${TEST_PROJECT} \
@@ -147,11 +147,11 @@ while ! [ -z $1 ]
 do
   case "$1" in
     "-m")
-        TOTAL_CONTAINER_MEM_SLAVE=$2
+        TOTAL_CONTAINER_MEM_WORKER=$2
         shift
     ;;
     "-s")
-        NUMBER_OF_SLAVES=$2
+        NUMBER_OF_WORKERS=$2
         shift
     ;;
     "-cd")
