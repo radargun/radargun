@@ -8,9 +8,9 @@
    <table>
       <tr>
          <th></th>
-         <#list normalized.getSlaves() as worker>
+         <#list normalized.getWorkers() as worker>
             <th class="center">
-               Slave ${worker}
+               Worker ${worker}
             </th>
          </#list>
       </tr>

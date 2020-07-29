@@ -49,7 +49,7 @@
          "kind": "Service",
          "metadata": {
             "annotations": {
-               "description": "RadarGun Master service"
+               "description": "RadarGun Main service"
             },
             "labels": {
                "application": "radargun-main"
@@ -112,8 +112,8 @@
                               "value": "-Xms412M -Xmx412M -XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -verbose:gc -Xloggc:gc-main.log -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
                            },
                            {
-                              "name": "OPENSHIFT_MASTER_URL",
-                              "value": "${OPENSHIFT_MASTER_URL}"
+                              "name": "OPENSHIFT_MAIN_URL",
+                              "value": "${OPENSHIFT_MAIN_URL}"
                            },
                            {
                               "name": "OPENSHIFT_TOKEN",
@@ -210,7 +210,7 @@
             "name": "radargun-worker"
          },
          "spec": { 
-            "replicas": "${{NUMBER_OF_SLAVES}}",
+            "replicas": "${{NUMBER_OF_WORKERS}}",
             "podManagementPolicy": "Parallel",
             "strategy": {
                "type": "Rolling",
@@ -236,16 +236,16 @@
                      {
                         "env": [
                            {
-                              "name": "RADARGUN_MASTER",
-                              "value": "${RADARGUN_MASTER}"
+                              "name": "RADARGUN_MAIN",
+                              "value": "${RADARGUN_MAIN}"
                            },
                            {
                               "name": "CUSTOM_JAVA_OPTS",
                               "value": "${CUSTOM_JAVA_OPTS}"
                            },
                            {
-                              "name": "OPENSHIFT_MASTER_URL",
-                              "value": "${OPENSHIFT_MASTER_URL}"
+                              "name": "OPENSHIFT_MAIN_URL",
+                              "value": "${OPENSHIFT_MAIN_URL}"
                            },
                            {
                               "name": "OPENSHIFT_TOKEN",
@@ -334,9 +334,9 @@
    ],
    "parameters": [
       {
-         "description": "The hostname of radargun Master node.",
-         "name": "RADARGUN_MASTER",
-         "displayName": "RadarGun Master hostname",
+         "description": "The hostname of radargun Main node.",
+         "name": "RADARGUN_MAIN",
+         "displayName": "RadarGun Main hostname",
          "required": true,
          "value": "radargun-main.myproject.svc"
       },
@@ -349,7 +349,7 @@
       },
       {
          "description": "Number of instances in the cluster.",
-         "name": "NUMBER_OF_SLAVES",
+         "name": "NUMBER_OF_WORKERS",
          "displayName": "Number of workers",
          "required": true,
          "value": "1"
@@ -377,7 +377,7 @@
       {
          "description": "The main-url attribute from openshift plugin",
          "displayName": "The main-url attribute from openshift plugin",
-         "name": "OPENSHIFT_MASTER_URL",
+         "name": "OPENSHIFT_MAIN_URL",
          "required": false
       },
       {
