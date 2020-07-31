@@ -36,7 +36,7 @@ public class Infinispan110FailureEmbeddedService extends Infinispan110EmbeddedSe
                   bridgeChannel.getProtocolStack().insertProtocol(discard, ProtocolStack.Position.ABOVE, TP.class);
                }
             } catch (Exception e) {
-               throw new IllegalStateException("Cannot createFailure");
+               throw new IllegalStateException("Cannot createFailure", e);
             }
          }
 
@@ -47,56 +47,70 @@ public class Infinispan110FailureEmbeddedService extends Infinispan110EmbeddedSe
                   bridgeChannel.getProtocolStack().removeProtocol(DISCARD.class);
                }
             } catch (Exception e) {
-               throw new IllegalStateException("Cannot solveFailure");
+               throw new IllegalStateException("Cannot solveFailure", e);
             }
          }
 
          @Override
          public boolean checkIfFailurePresent(String action, Object expectedValue) {
-            int total = Integer.valueOf(expectedValue.toString());
-            boolean match = false;
-            long max = 60000;
-            long now = System.currentTimeMillis();
-            while (System.currentTimeMillis() - now <= max) {
-               int siteSize = cacheManager.getTransport().getSitesView().size();
-               if (siteSize == total) {
-                  match = true;
-                  break;
+            RELAY2 relay2 = getRELAY2();
+
+            if (relay2.isSiteMaster()) {
+               int total = Integer.valueOf(expectedValue.toString());
+               boolean match = false;
+               long max = 60000;
+               long now = System.currentTimeMillis();
+               while (System.currentTimeMillis() - now <= max) {
+                  int siteSize = cacheManager.getTransport().getSitesView().size();
+                  if (siteSize == total) {
+                     match = true;
+                     break;
+                  }
+                  try {
+                     Thread.sleep(1000);
+                  } catch (InterruptedException e) {
+                     e.printStackTrace();
+                  }
                }
-               try {
-                  Thread.sleep(1000);
-               } catch (InterruptedException e) {
-                  e.printStackTrace();
-               }
+               return match;
+            } else {
+               return true;
             }
-            return match;
          }
 
          private List<JChannel> getBridgeChannels() throws NoSuchFieldException, IllegalAccessException {
-            JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-            RELAY2 relay2 = transport.getChannel().getProtocolStack().findProtocol("RELAY2");
-            Field field = relay2.getClass().getDeclaredField("relayer");
-            field.setAccessible(true);
-            Relayer relayer = (Relayer) field.get(relay2);
-
-            field = relayer.getClass().getDeclaredField("bridges");
-            field.setAccessible(true);
-            Queue<Object> bridges = (Queue<Object>) field.get(relayer);
-
-            Iterator<Object> iterator = bridges.iterator();
-
             List<JChannel> bridgeChannels = new ArrayList<>();
 
-            while (iterator.hasNext()) {
-               Object object = iterator.next();
-               field = object.getClass().getDeclaredField("channel");
-               field.setAccessible(true);
+            RELAY2 relay2 = getRELAY2();
 
-               JChannel jChannel = (JChannel) field.get(object);
-               bridgeChannels.add(jChannel);
+            if (relay2.isSiteMaster()) {
+
+               Field field = relay2.getClass().getDeclaredField("relayer");
+               field.setAccessible(true);
+               Relayer relayer = (Relayer) field.get(relay2);
+               field = relayer.getClass().getDeclaredField("bridges");
+               field.setAccessible(true);
+               Queue<Object> bridges = (Queue<Object>) field.get(relayer);
+
+               Iterator<Object> iterator = bridges.iterator();
+
+               while (iterator.hasNext()) {
+                  Object object = iterator.next();
+                  field = object.getClass().getDeclaredField("channel");
+                  field.setAccessible(true);
+
+                  JChannel jChannel = (JChannel) field.get(object);
+                  bridgeChannels.add(jChannel);
+               }
             }
 
             return bridgeChannels;
+         }
+
+         private RELAY2 getRELAY2() {
+            JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+            RELAY2 relay2 = transport.getChannel().getProtocolStack().findProtocol("RELAY2");
+            return relay2;
          }
       };
    }
