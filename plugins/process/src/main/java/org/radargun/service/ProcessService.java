@@ -72,6 +72,10 @@ public class ProcessService {
       return lifecycle;
    }
 
+   public ProcessLifecycle<?> getLifecycle() {
+      return lifecycle;
+   }
+
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>(args.size() + 2);
       command.add(this.command);
