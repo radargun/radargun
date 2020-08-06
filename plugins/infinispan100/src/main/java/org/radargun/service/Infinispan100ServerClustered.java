@@ -40,4 +40,8 @@ public class Infinispan100ServerClustered extends InfinispanServerClustered {
       String nodeAddress = cacheManagerInfo.getNodeAddress();
       return new InfinispanCacheManagerInfo(membersString, nodeAddress);
    }
+
+   public InfinispanRestAPI getRestAPI() {
+      return restAPI;
+   }
 }

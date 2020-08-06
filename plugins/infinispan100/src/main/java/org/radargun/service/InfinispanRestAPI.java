@@ -8,7 +8,6 @@ import java.util.concurrent.TimeoutException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-
 import org.infinispan.client.rest.RestResponse;
 import org.infinispan.client.rest.configuration.RestClientConfigurationBuilder;
 import org.infinispan.client.rest.impl.okhttp.RestClientOkHttp;
@@ -65,7 +64,7 @@ public class InfinispanRestAPI {
       return host;
    }
 
-   CacheManagerInfo getCacheManager() throws RestException {
+   public CacheManagerInfo getCacheManager() throws RestException {
       CacheManagerInfo cacheManagerInfo;
       try {
          RestResponse response = restClientOkHttp.cacheManager(this.cacheManagerName).info().toCompletableFuture()
@@ -77,6 +76,18 @@ public class InfinispanRestAPI {
          throw new RestException(e);
       }
       return cacheManagerInfo;
+   }
+
+   public void stopCluster(long stopTimeout) {
+      try {
+         restClientOkHttp.cluster().stop().toCompletableFuture().get(stopTimeout, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+         // the stage should be responsible to check if the node still alive
+      }
+   }
+
+   public void info() throws ExecutionException, InterruptedException {
+      restClientOkHttp.server().info().toCompletableFuture().get();
    }
 
    static class RestException extends Exception {

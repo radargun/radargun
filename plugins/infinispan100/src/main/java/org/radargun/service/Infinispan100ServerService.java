@@ -63,7 +63,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    public void init() {
 
       executor = new ScheduledThreadPoolExecutor(executorPoolSize);
-      lifecycle = new Infinispan100ServerLifecycle(this);
+      lifecycle = this.createServerLifecyle();
 
       try {
 
@@ -168,4 +168,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
       return command;
    }
 
+   protected InfinispanServerLifecycle createServerLifecyle() {
+      return new Infinispan100ServerLifecycle(this);
+   }
 }
