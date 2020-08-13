@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 
@@ -74,11 +77,10 @@ public class RESTEasyCacheInfo implements CacheInformation {
                size = Long.parseLong(responseStr);    //if the call was done to nodejs app, then the long size is returned
 
             } catch (NumberFormatException ex) {
-               //If the call was done to Infinispan Server, then the response is the list of all entries
-               //WARNING: As this way the REST API retrieves all keys from the cache and returns them as a response,
-               //this part of block may have an impact on the performance of the stage which rely on this trait.
-               String[] entries = responseStr.split(System.getProperty("line.separator"));
-               size = entries.length;
+               Matcher matcher = Pattern.compile("\"size\":(\\d+)").matcher(responseStr);
+               if (matcher.find()) {
+                  size = Long.parseLong(matcher.group().split(":")[1]);
+               }
             } catch (Exception e) {
                throw new RuntimeException("RESTEasyCacheOperations::size request threw exception: " + target, e);
             } finally {

@@ -3,9 +3,7 @@ package org.radargun.http.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.URLEncoder;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.Service;
@@ -57,7 +55,7 @@ public class RESTEasyCacheService extends AbstractRESTEasyService {
    }
 
    String buildUrl(Object key) {
-      StringBuilder str = new StringBuilder(buildCacheUrl(cacheName));
+      StringBuilder str = new StringBuilder(buildCacheUrl(nextServer(), getRootPath(), getUsername(), getPassword(), cacheName));
       if (key != null) {
          str.append("/").append(key);
       }
@@ -66,28 +64,6 @@ public class RESTEasyCacheService extends AbstractRESTEasyService {
       }
 
       return str.toString();
-   }
-
-   String buildCacheUrl(String cache) {
-      InetSocketAddress node = nextServer();
-      StringBuilder s = new StringBuilder("http://");
-      if (getUsername() != null) {
-         try {
-            s.append(URLEncoder.encode(getUsername(), "UTF-8")).append(":")
-               .append(URLEncoder.encode(getPassword(), "UTF-8")).append("@");
-         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not encode the supplied username and password", e);
-         }
-      }
-      s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
-      if (getRootPath() != null) {
-         s.append(getRootPath()).append("/");
-      }
-      s.append(cache);
-      if (log.isTraceEnabled()) {
-         log.trace("buildCacheUrl(String cache) = " + s.toString());
-      }
-      return s.toString();
    }
 
    Object decodeByteArray(byte[] bytes) throws IOException, ClassNotFoundException {
@@ -103,5 +79,9 @@ public class RESTEasyCacheService extends AbstractRESTEasyService {
          }
       }
       return null;
+   }
+
+   String buildCacheUrl(String cache) {
+      return buildCacheUrl(nextServer(), getRootPath(), getUsername(), getPassword(), cache);
    }
 }
