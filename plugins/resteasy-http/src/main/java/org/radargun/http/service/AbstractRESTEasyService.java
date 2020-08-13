@@ -1,7 +1,9 @@
 package org.radargun.http.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +63,12 @@ public abstract class AbstractRESTEasyService implements Lifecycle {
    @Property(doc = "Http headers for request. Default is null", complexConverter = KeyValueProperty.KeyValuePairListConverter.class)
    private List<KeyValueProperty> httpHeaders;
 
+   @Property(doc = "The HTTP protocol. Default is http")
+   private String protocol = "http";
+
+   @Property(doc = "Trust all https certificates. Default is false")
+   private boolean trustAll = false;
+
    @ProvidesTrait
    public Lifecycle getLifecycle() {
       return this;
@@ -71,6 +79,10 @@ public abstract class AbstractRESTEasyService implements Lifecycle {
       if (httpClient != null) {
          log.warn("Service already started");
          return;
+      }
+
+      if (trustAll) {
+         HttpsHelper.trustAll();
       }
 
       httpClient = new ResteasyClientBuilder().httpEngine(new URLConnectionEngine())
@@ -148,5 +160,40 @@ public abstract class AbstractRESTEasyService implements Lifecycle {
 
    public ResteasyClient getHttpClient() {
       return httpClient;
+   }
+
+   // URL
+   private String buildUrl(InetSocketAddress node, String rootPath, String username, String password) {
+      StringBuilder s = new StringBuilder();
+      s.append(protocol).append("://");
+      if (username != null) {
+         try {
+            s.append(URLEncoder.encode(username, "UTF-8")).append(":")
+               .append(URLEncoder.encode(password, "UTF-8")).append("@");
+         } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Could not encode the supplied username and password", e);
+         }
+      }
+      s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
+      if (rootPath != null) {
+         s.append(rootPath).append("/");
+      }
+      if (log.isTraceEnabled()) {
+         log.trace("buildCacheUrl = " + s.toString());
+      }
+      return s.toString();
+   }
+
+   public String buildCacheUrl(InetSocketAddress nextServer, String rootPath, String username, String password, String cache) {
+      StringBuilder s = new StringBuilder(buildUrl(nextServer, rootPath, username, password));
+      s.append(cache);
+      if (log.isTraceEnabled()) {
+         log.trace("buildCacheUrl(String cache) = " + s.toString());
+      }
+      return s.toString();
+   }
+
+   public String buildApplicationUrl(InetSocketAddress pickServer, String contextPath, String username, String password) {
+      return buildUrl(pickServer, contextPath, username, password);
    }
 }

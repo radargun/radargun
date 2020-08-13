@@ -1,15 +1,15 @@
 package org.radargun.http.service;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.Random;
+
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.RESTOperations;
@@ -38,24 +38,7 @@ public class RESTEasyOperations implements RESTOperations {
       private String uri;
 
       public RESTOperationInvokerImpl(String contextPath) {
-         this.uri = buildApplicationUrl(contextPath);
-      }
-
-      private String buildApplicationUrl(String contextPath) {
-         InetSocketAddress node = pickServer();
-         StringBuilder s = new StringBuilder("http://");
-         if (service.getUsername() != null) {
-            try {
-               s.append(URLEncoder.encode(service.getUsername(), "UTF-8")).append(":")
-                  .append(URLEncoder.encode(service.getPassword(), "UTF-8")).append("@");
-            } catch (UnsupportedEncodingException e) {
-               throw new RuntimeException("Could not encode the supplied username and password", e);
-            }
-         }
-         s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
-         s.append(contextPath);
-         log.info("buildApplicationUrl = " + s.toString());
-         return s.toString();
+         this.uri = service.buildApplicationUrl(pickServer(), contextPath, service.getUsername(), service.getPassword());
       }
 
       /* There's one server picked for each thread at the beginning. Subsequent requests from this
