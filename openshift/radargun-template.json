@@ -70,7 +70,7 @@
          }
       },
       {
-         "apiVersion": "apps/v1beta1",
+         "apiVersion": "apps/v1",
          "kind": "StatefulSet",
          "metadata": {
             "labels": {
@@ -78,7 +78,12 @@
             },
             "name": "radargun-main"
          },
-         "spec": { 
+         "spec": {
+            "selector": {
+               "matchLabels": {
+                  "application": "radargun-main"
+               }
+            },
             "replicas": 1,
             "strategy": {
                "type": "Rolling",
@@ -128,7 +133,7 @@
                               "value": "${NAMESPACE}"
                            }
                         ],
-                        "image": "radargun:latest",
+                        "image": "${IMAGE}",
                         "name": "radargun-main",
                         "command": [
                            "/opt/radargun/run_main.sh"
@@ -200,7 +205,7 @@
          }
       },
       {
-         "apiVersion": "apps/v1beta1",
+         "apiVersion": "apps/v1",
          "kind": "StatefulSet",
          "metadata": {
             "labels": {
@@ -209,7 +214,12 @@
             },
             "name": "radargun-worker"
          },
-         "spec": { 
+         "spec": {
+            "selector": {
+               "matchLabels": {
+                  "application": "radargun-worker"
+               }
+            },
             "replicas": "${{NUMBER_OF_WORKERS}}",
             "podManagementPolicy": "Parallel",
             "strategy": {
@@ -260,7 +270,7 @@
                               "value": "${NAMESPACE}"
                            }
                         ],
-                        "image": "radargun:latest",
+                        "image": "${IMAGE}",
                         "name": "radargun-worker",
                         "command": [
                            "/opt/radargun/run_worker.sh"
@@ -391,6 +401,12 @@
          "displayName": "The namespace attribute from openshift plugin",
          "name": "NAMESPACE",
          "required": false
+      },
+      {
+         "description": "The RadarGun full image name published to the registry",
+         "displayName": "The RadarGun full image name published to the registry",
+         "name": "IMAGE",
+         "required": true
       }
    ]
 }

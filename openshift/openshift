@@ -6,8 +6,6 @@ if [ "x$RADARGUN_HOME" = "x" ]; then
 fi;
 export RADARGUN_HOME
 
-OSE_MAIN_VERSION=v3.9.0
-OSE_SHA1_VERSION=191fece
 TEST_PROJECT=${TEST_PROJECT:-"myprojectradargun"}
 LOGIN_COMMAND=""
 RADARGUN_IMAGE=radargun
@@ -55,32 +53,20 @@ function assert_linux {
     exit 1;
   fi
 }
-
-function download_oc_client {
-  export PATH=$PATH:$DEFAULT_OC_CLIENT_INSTALL_PATH
-  $(./oc &>/dev/null || oc &>/dev/null)
-  if [[ $? = 0 ]]; then
-    echo "OC client installed"
-  else
-    assert_linux
-    echo "Installing OC Client ..."
-    wget -q -N https://github.com/openshift/origin/releases/download/$OSE_MAIN_VERSION/openshift-origin-client-tools-$OSE_MAIN_VERSION-$OSE_SHA1_VERSION-linux-64bit.tar.gz
-    tar -zxf openshift-origin-client-tools-$OSE_MAIN_VERSION-$OSE_SHA1_VERSION-linux-64bit.tar.gz
-    cp openshift-origin-client-tools-$OSE_MAIN_VERSION-$OSE_SHA1_VERSION-linux-64bit/oc .
-    rm -rf openshift-origin-client-tools-$OSE_MAIN_VERSION+$OSE_SHA1_VERSION-linux-64bit
-    rm -rf openshift-origin-client-tools-$OSE_MAIN_VERSION-$OSE_SHA1_VERSION-linux-64bit.tar.gz
-  fi
-}
     
 function build_radargun_image {
     cp -R ${RADARGUN_HOME}/target/distribution/RadarGun-3.0.0-SNAPSHOT ./
     # avoid running docker as sudo
     # https://docs.docker.com/install/linux/linux-postinstall/
-    docker build -t ${RADARGUN_IMAGE} .
+    #------
+    # enable experimental -> vi /etc/docker/daemon.json
+    # {
+    # "experimental": true
+    # }
+    docker build --squash --compress -t ${RADARGUN_IMAGE} .
     docker login -u $(oc whoami) -p $(oc whoami -t) ${DOCKER_REGISTRY}
     docker tag ${RADARGUN_IMAGE} ${FULL_IMAGE}
     docker push ${FULL_IMAGE}
-    oc set image-lookup ${RADARGUN_IMAGE}
 }
 
 function new_project {
@@ -116,6 +102,7 @@ function deploy_template {
            -p OPENSHIFT_TOKEN=${OPENSHIFT_TOKEN} \
            -p TEMPLATE_FILE_NAME=${TEMPLATE_FILE_NAME} \
            -p NAMESPACE=${TEST_PROJECT} \
+           -p IMAGE=${FULL_IMAGE} \
            -p CUSTOM_JAVA_OPTS="${CUSTOM_JAVA_OPTS}" | oc create -f -
 }
 
@@ -139,8 +126,6 @@ function get_results {
         oc rsync ${node}:/opt/radargun-data .
     done
 }
-
-download_oc_client
 
 ## read in any command-line params
 while ! [ -z $1 ]

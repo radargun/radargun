@@ -118,6 +118,11 @@
          <artifactId>infinispan-anchored-keys</artifactId>
          <version>${version.infinispan}</version>
       </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jboss-marshalling</artifactId>
+         <optional>true</optional>
+      </dependency>
    </dependencies>
 
    <dependencyManagement>

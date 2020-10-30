@@ -121,9 +121,13 @@ public final class RestartHelper {
          classpathBuilder.append(File.pathSeparatorChar);
       }
       classpathBuilder.append(parentDir).append(File.separatorChar).append("conf/");
-      for (File f : new File(parentDir, "lib").listFiles()) {
-         classpathBuilder.append(File.pathSeparatorChar);
-         classpathBuilder.append(f.getAbsolutePath());
+      // if we wish to create a thin build we remove the lib from the plugins
+      File[] libDir = new File(parentDir, "lib").listFiles();
+      if (libDir != null) {
+         for (File f : libDir) {
+            classpathBuilder.append(File.pathSeparatorChar);
+            classpathBuilder.append(f.getAbsolutePath());
+         }
       }
    }
 

@@ -28,3 +28,5 @@ core/src/main/resources/schema
 *.pyc
 deploy
 install
+openshift/RadarGun-3.0.0-SNAPSHOT
+openshift/radargun-data
