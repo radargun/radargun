@@ -34,6 +34,12 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan100</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
@@ -49,12 +55,6 @@
          <artifactId>radargun-mapreduce</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
-      </dependency>
-
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan100</artifactId>
-         <version>${project.version}</version>
       </dependency>
 
       <dependency>
@@ -159,12 +159,6 @@
 
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-server-runtime</artifactId>
-         <version>${version.infinispan}</version>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-client-rest</artifactId>
          <version>${version.infinispan}</version>
       </dependency>
@@ -173,6 +167,12 @@
          <groupId>org.glassfish.jaxb</groupId>
          <artifactId>jaxb-core</artifactId>
          <version>${version.glassfish.jaxb}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jboss-marshalling</artifactId>
+         <optional>true</optional>
       </dependency>
 
    </dependencies>

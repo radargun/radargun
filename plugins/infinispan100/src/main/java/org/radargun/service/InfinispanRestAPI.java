@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.infinispan.client.rest.RestResponse;
 import org.infinispan.client.rest.configuration.RestClientConfigurationBuilder;
 import org.infinispan.client.rest.impl.okhttp.RestClientOkHttp;
-import org.infinispan.server.network.NetworkAddress;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
@@ -53,17 +52,9 @@ public class InfinispanRestAPI {
    }
 
    private String lookupServerHost() throws IOException {
-      // the following are predefined values in the INFINISPAN10 XML Files
-      String interfaceName = System.getProperty("radargun.infinispan.interfaceName", "public");
-      String bindAddress = System.getProperty("infinispan.bind.address", "127.0.0.1");
-
-      // given a config, search the network address
-      NetworkAddress networkServerAddress = NetworkAddress.fromString(interfaceName, bindAddress);
-      String host = networkServerAddress.getAddress().getHostAddress();
-
-      log.info(String.format("interface: %s, bindAddress: %s, host: %s", interfaceName, bindAddress, host));
-
-      return host;
+      String infinispanHost = System.getProperty("infinispan.bind.address", "127.0.0.1");
+      log.info(String.format("Infinispan API is going to connect to: %s", infinispanHost));
+      return infinispanHost;
    }
 
    public CacheManagerInfo getCacheManager() throws RestException {

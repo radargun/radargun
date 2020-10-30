@@ -1,0 +1,66 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+    <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}" />
+
+    <clusters>
+        <cluster>
+            <group name="client" size="1"/>
+        </cluster>
+    </clusters>
+
+    <configurations>
+        <config name="OpenShift Client Server Test">
+            <setup group="client" plugin="infinispan140" lazy-init="true">
+                <hotrod xmlns="urn:radargun:plugins:infinispan140:3.0" cache="default">
+                    <servers>HOST_EXAMPLE:11222</servers>
+                </hotrod>
+            </setup>
+        </config>
+    </configurations>
+
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns:l="urn:radargun:stages:legacy:3.0">
+        <define var="num.entries" value="10" />
+        <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:100}" />
+
+        <service-start groups="client" validate-cluster="false" />
+
+        <jvm-monitor-start />
+
+        <cache:load groups="client" num-entries="${num.entries}" entry-size="${entry.size}" num-threads="1"/>
+        <l:basic-operations-test groups="client"
+                                 test-name="reads1"
+                                 duration="10s"
+                                 num-threads-per-node="1"
+                                 entry-size="${entry.size}"
+                                 get-ratio="1"
+                                 put-ratio="0">
+            <statistics>
+                <common/>
+            </statistics>
+            <l:key-selector>
+                <l:concurrent-keys total-entries="${num.entries}" />
+            </l:key-selector>
+        </l:basic-operations-test>
+
+        <jvm-monitor-stop />
+        <service-stop />
+
+    </rg:scenario>
+
+    <reports>
+        <reporter type="serialized">
+            <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
+        </reporter>
+        <reporter type="csv">
+            <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
+        </reporter>
+        <reporter type="html">
+            <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
+        </reporter>
+    </reports>
+
+</benchmark>
