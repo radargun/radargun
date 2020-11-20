@@ -73,11 +73,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
 
    @Init
    public void init() {
-      configuration = getDefaultHotRodConfig().build();
-   }
-
-   protected ConfigurationBuilder getDefaultHotRodConfig() {
-      ConfigurationBuilder builder = new ConfigurationBuilder();
+      ConfigurationBuilder builder = getDefaultHotRodConfig();
       if (propertiesPath != null) {
          Properties p = new Properties();
          try (Reader r = new FileReader(propertiesPath)) {
@@ -87,6 +83,11 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
             throw new IllegalStateException("Something went wrong with provided properties file:" + propertiesPath, e);
          }
       }
+      configuration = builder.build();
+   }
+
+   protected ConfigurationBuilder getDefaultHotRodConfig() {
+      ConfigurationBuilder builder = new ConfigurationBuilder();
       configureConnectionPool(builder.connectionPool());
       parseServerAddresses().forEach((address) -> builder.addServer().host(address.getHost()).port(address.getPort()));
       createQueryConfiguration(builder);
