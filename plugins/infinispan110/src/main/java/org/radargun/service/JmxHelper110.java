@@ -2,13 +2,13 @@ package org.radargun.service;
 
 import org.infinispan.configuration.global.GlobalConfiguration;
 
-public class JmxHelper101 {
+public class JmxHelper110 {
 
-   private JmxHelper101() {
+   private JmxHelper110() {
 
    }
 
    public static String getJmxDomain(GlobalConfiguration global) {
-      return global.globalJmxStatistics().domain();
+      return global.jmx().domain();
    }
 }

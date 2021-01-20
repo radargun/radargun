@@ -24,10 +24,20 @@ public class Infinispan110EmbeddedService extends Infinispan101EmbeddedService {
       return new Infinispan110EmbeddedQueryable(this);
    }
 
+   @ProvidesTrait
+   public EmbeddedConfigurationProvider createConfigurationProvider() {
+      return new EmbeddedConfigurationProvider110(this);
+   }
+
    @Override
    protected boolean isJmxEnabled() {
       GlobalConfiguration global = cacheManager.getCacheManagerConfiguration();
       boolean enabled = global.jmx().enabled();
       return enabled;
+   }
+
+   @Override
+   protected String getJmxDomain() {
+      return JmxHelper110.getJmxDomain(cacheManager.getCacheManagerConfiguration());
    }
 }
