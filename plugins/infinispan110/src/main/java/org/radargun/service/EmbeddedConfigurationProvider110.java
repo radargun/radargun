@@ -10,6 +10,6 @@ public class EmbeddedConfigurationProvider110 extends EmbeddedConfigurationProvi
 
    @Override
    protected String getJmxDomain(GlobalConfiguration global) {
-      return JmxHelper101.getJmxDomain(global);
+      return JmxHelper110.getJmxDomain(global);
    }
 }
