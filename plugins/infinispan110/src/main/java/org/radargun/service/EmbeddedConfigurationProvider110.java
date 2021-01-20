@@ -2,9 +2,9 @@ package org.radargun.service;
 
 import org.infinispan.configuration.global.GlobalConfiguration;
 
-public class EmbeddedConfigurationProvider101 extends EmbeddedConfigurationProvider60 {
+public class EmbeddedConfigurationProvider110 extends EmbeddedConfigurationProvider101 {
 
-   public EmbeddedConfigurationProvider101(Infinispan101EmbeddedService service) {
+   public EmbeddedConfigurationProvider110(Infinispan110EmbeddedService service) {
       super(service);
    }
 
