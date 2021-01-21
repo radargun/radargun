@@ -83,7 +83,12 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
             throw new IllegalStateException("Something went wrong with provided properties file:" + propertiesPath, e);
          }
       }
+      afterConfigurationPropertiesLoad(builder);
       configuration = builder.build();
+   }
+
+   protected void afterConfigurationPropertiesLoad(ConfigurationBuilder builder) {
+
    }
 
    protected ConfigurationBuilder getDefaultHotRodConfig() {
