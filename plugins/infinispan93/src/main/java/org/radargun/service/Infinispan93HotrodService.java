@@ -35,6 +35,11 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
    @Override
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder config = super.getDefaultHotRodConfig();
+      configureTransaction(config);
+      return config;
+   }
+
+   protected void configureTransaction(ConfigurationBuilder config) {
       if (transactionManagerLookup != null) {
          try {
             config.transaction().transactionManagerLookup((TransactionManagerLookup) Class.forName(transactionManagerLookup).newInstance());
@@ -51,8 +56,6 @@ public class Infinispan93HotrodService extends Infinispan92HotrodService {
       }
 
       config.maxRetries(maxRetries).socketTimeout(connectionTimeout).connectionTimeout(connectionTimeout);
-
-      return config;
    }
 
    public boolean isCacheTransactional(String cacheName) {
