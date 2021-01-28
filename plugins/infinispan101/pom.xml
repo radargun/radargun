@@ -169,6 +169,12 @@
          <version>${version.infinispan}</version>
       </dependency>
 
+      <dependency>
+         <groupId>org.glassfish.jaxb</groupId>
+         <artifactId>jaxb-core</artifactId>
+         <version>${version.glassfish.jaxb}</version>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>
