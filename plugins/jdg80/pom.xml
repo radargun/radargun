@@ -15,6 +15,7 @@
 
    <properties>
       <version.infinispan>${jdg80.infinispan.version}</version.infinispan>
+      <version.netty>4.1.45.Final-redhat-00002</version.netty>
    </properties>
 
    <profiles>
@@ -90,6 +91,56 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-client-hotrod</artifactId>
          <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.glassfish.jaxb</groupId>
+               <artifactId>jaxb-core</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-handler</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-transport-native-epoll</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-codec-http</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-codec-http2</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-transport-native-epoll</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-buffer</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-transport</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-common</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-codec</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-transport-native-unix-common</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-resolver</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>
@@ -151,6 +202,63 @@
          <artifactId>jaxb-core</artifactId>
          <version>${version.glassfish.jaxb}</version>
       </dependency>
+
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-handler</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-transport-native-epoll</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-codec-http</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-codec-http2</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-transport-native-epoll</artifactId>
+         <classifier>linux-x86_64</classifier>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-buffer</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-transport</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-common</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-codec</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-transport-native-unix-common</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-resolver</artifactId>
+         <version>${version.netty}</version>
+      </dependency>
    </dependencies>
 
    <dependencyManagement>
@@ -165,6 +273,50 @@
                <exclusion>
                   <groupId>org.glassfish.jaxb</groupId>
                   <artifactId>jaxb-core</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-handler</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-transport-native-epoll</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-codec</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-codec-http</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-codec-http2</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-transport-native-epoll</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-buffer</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-transport</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-common</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-transport-native-unix-common</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-resolver</artifactId>
                </exclusion>
             </exclusions>
          </dependency>
