@@ -130,21 +130,19 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-kryo</artifactId>
+         <optional>true</optional>
       </dependency>
 
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-marshaller-protostuff</artifactId>
+         <optional>true</optional>
       </dependency>
 
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-rocksdb</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-persistence-soft-index</artifactId>
+         <optional>true</optional>
       </dependency>
 
       <!--
@@ -192,7 +190,7 @@
                   </goals>
 
                   <configuration>
-                     <outputDirectory>${basedir}/target/distribution/${artifactId}-bin/${artifactId}/conf</outputDirectory>
+                     <outputDirectory>${basedir}/target/distribution/${project.artifactId}-bin/${project.artifactId}/conf</outputDirectory>
                      <resources>
                         <resource>
                            <directory>${basedir}/../infinispan101/src/main/resources</directory>
