@@ -80,7 +80,6 @@ function build_radargun_image {
     docker login -u $(oc whoami) -p $(oc whoami -t) ${DOCKER_REGISTRY}
     docker tag ${RADARGUN_IMAGE} ${FULL_IMAGE}
     docker push ${FULL_IMAGE}
-    oc set image-lookup ${RADARGUN_IMAGE}
 }
 
 function new_project {
@@ -116,6 +115,7 @@ function deploy_template {
            -p OPENSHIFT_TOKEN=${OPENSHIFT_TOKEN} \
            -p TEMPLATE_FILE_NAME=${TEMPLATE_FILE_NAME} \
            -p NAMESPACE=${TEST_PROJECT} \
+           -p RADARGUN_FULL_IMAGE_NAME=${FULL_IMAGE} \
            -p CUSTOM_JAVA_OPTS="${CUSTOM_JAVA_OPTS}" | oc create -f -
 }
 
