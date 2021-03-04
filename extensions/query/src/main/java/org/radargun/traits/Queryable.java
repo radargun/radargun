@@ -18,6 +18,13 @@ public interface Queryable {
    Query.Builder getBuilder(String containerName, Class<?> clazz);
 
    /**
+    * Get object for building the query.
+    * @param containerName Name of the container (cache, database, ...) where the query should be executed.
+    * @return Builder
+    */
+   Query.Builder getBuilder(String containerName, String queryString);
+
+   /**
     * Retrieve a reference to the context that should be wrapped in
     * {@link org.radargun.traits.Transactional.Transaction#wrap(Object)}
     * in order to execute the query in transactional context.

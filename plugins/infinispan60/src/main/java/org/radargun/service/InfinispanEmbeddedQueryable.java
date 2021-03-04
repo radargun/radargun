@@ -26,6 +26,11 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
    }
 
    @Override
+   public Query.Builder getBuilder(String containerName, String queryString) {
+      throw new UnsupportedOperationException("Supported only on Infinispan version equals or greater than 11");
+   }
+
+   @Override
    public Query.Context createContext(String containerName) {
       return new EmbeddedQueryContext(service.getCache(containerName).getAdvancedCache());
    }

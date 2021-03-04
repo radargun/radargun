@@ -33,6 +33,11 @@ public class QueryTraitRepository extends CoreTraitRepository {
       }
 
       @Override
+      public Query.Builder getBuilder(String containerName, String queryString) {
+         return new Builder(cache);
+      }
+
+      @Override
       public Query.Context createContext(String containerName) {
          return new Context();
       }

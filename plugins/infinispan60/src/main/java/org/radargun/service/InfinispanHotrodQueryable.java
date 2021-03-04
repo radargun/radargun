@@ -43,6 +43,11 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    }
 
    @Override
+   public Query.Builder getBuilder(String cacheName, String queryString) {
+      throw new UnsupportedOperationException("Supported only on Infinispan version greater than 11");
+   }
+
+   @Override
    public void reindex(String containerName) {
       // We should rather throw an exception because if the cache is configured
       // with manual index we cannot make sure that the cache will be reindexed.
