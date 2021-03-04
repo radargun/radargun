@@ -19,20 +19,27 @@ public class Infinispan110EmbeddedQueryable extends Infinispan90EmbeddedQueryabl
       return new QueryBuilder110Impl(Search.getQueryFactory(service.getCache(containerName)), clazz);
    }
 
+   @Override
+   public Query.Builder getBuilder(String containerName, String queryString) {
+      return new QueryBuilder110Impl(Search.getQueryFactory(service.getCache(containerName)), queryString);
+   }
+
    protected static class QueryBuilder110Impl extends QueryBuilder90Impl {
+
+      private String queryString;
 
       public QueryBuilder110Impl(QueryFactory factory, Class<?> clazz) {
          super(factory, clazz);
       }
 
-      protected QueryBuilder110Impl(QueryFactory factory) {
+      protected QueryBuilder110Impl(QueryFactory factory, String queryString) {
          super(factory);
+         this.queryString = queryString;
       }
 
       @Override
       public Query build() {
-         if (builder == null) throw new IllegalArgumentException("You have to call build() on root query builder!");
-         return new Query110Impl(builder.build());
+         return new Query110Impl(factory.create(queryString));
       }
    }
 

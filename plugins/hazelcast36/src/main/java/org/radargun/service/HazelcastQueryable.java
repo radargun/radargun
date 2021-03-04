@@ -33,6 +33,11 @@ public class HazelcastQueryable implements Queryable {
    }
 
    @Override
+   public Query.Builder getBuilder(String containerName, String queryString) {
+      throw new UnsupportedOperationException("RadarGun doesn't support queryString for Hazelcast");
+   }
+
+   @Override
    public Query.Context createContext(String containerName) {
       return new HazelcastQuery.Context(service.getMap(containerName));
    }

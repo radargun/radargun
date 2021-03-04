@@ -23,7 +23,7 @@ import org.radargun.traits.Queryable;
  * This stage was refactored out to {@link org.radargun.stages.query} package in order
  * to make that code reusable with different threading models.
  */
-@Stage(doc = "Stage which executes a query.")
+@Stage(doc = "Stage which executes a query created from a DSL.")
 public class QueryStage extends TestStage {
    @PropertyDelegate
    public QueryConfiguration query = new QueryConfiguration();
