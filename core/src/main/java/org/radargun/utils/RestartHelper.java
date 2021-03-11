@@ -78,10 +78,6 @@ public final class RestartHelper {
       command.add(javaExecutable);
       List<String> defaultVmArgs = ArgsHolder.getDefaultVmArgs();
       command.addAll(vmArgs.getVmArgs(defaultVmArgs));
-      // we have to specify log4j configuration explicitly because plugin can define its default config
-      if (!defaultVmArgs.stream().anyMatch(s -> s.startsWith("-Dlog4j.configuration"))) {
-         command.add("-Dlog4j.configuration=file://" + Directories.ROOT_DIR + "/conf/log4j.xml");
-      }
       if (!defaultVmArgs.stream().anyMatch(s -> s.startsWith("-Dlog4j.configurationFile"))) {
          command.add("-Dlog4j.configurationFile=file://" + Directories.ROOT_DIR + "/conf/log4j2.xml");
       }
