@@ -32,12 +32,12 @@ public class InfinispanServerClustered implements Clustered {
 
    public InfinispanServerClustered(InfinispanServerService service) {
       this.service = service;
-      service.schedule(new Runnable() {
+      service.lifecycle.addListener(new ProcessLifecycle.ListenerAdapter() {
          @Override
-         public void run() {
-            checkAndUpdateMembership();
+         public void afterStart() {
+            service.schedule(() -> checkAndUpdateMembership(), service.viewCheckPeriod);
          }
-      }, service.viewCheckPeriod);
+      });
    }
 
    @Override
