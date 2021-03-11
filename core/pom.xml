@@ -13,7 +13,6 @@
    <packaging>jar</packaging>
 
    <properties>
-      <version.log4j>1.2.16</version.log4j>
       <version.log4j2>2.14.0</version.log4j2>
    </properties>
 
@@ -27,13 +26,6 @@
          <groupId>io.github.lukehutch</groupId>
          <artifactId>fast-classpath-scanner</artifactId>
          <version>1.93.1</version>
-      </dependency>
-      <dependency>
-         <groupId>log4j</groupId>
-         <artifactId>log4j</artifactId>
-         <version>${version.log4j}</version>
-         <scope>provided</scope>
-         <optional>true</optional>
       </dependency>
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
@@ -75,26 +67,9 @@
    </dependencies>
    <profiles>
       <profile>
-         <id>log4j</id>
-         <activation>
-            <property>
-               <name>!no-log4j</name>
-            </property>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>log4j</groupId>
-               <artifactId>log4j</artifactId>
-               <version>${version.log4j}</version>
-            </dependency>
-         </dependencies>
-      </profile>
-      <profile>
          <id>log4j2</id>
          <activation>
-            <property>
-               <name>log4j2</name>
-            </property>
+            <activeByDefault>true</activeByDefault>
          </activation>
          <dependencies>
             <dependency>

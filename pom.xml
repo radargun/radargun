@@ -262,7 +262,7 @@
                                     <path refid="core_and_extensions"/>
                                     <fileset dir="${distribution.artifact}/plugins/@{plugin}/lib" includes="*.jar"/>
                                  </classpath>
-                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                                  <arg value="${distribution.artifact}/schema" />
                                  <arg value="@{plugin}" />
                               </java>
@@ -299,7 +299,7 @@
                                  <fileset dir="reporters/@{reporter}/target/distribution/@{reporter}-bin/@{reporter}/lib" excludes="${core_jar_list}"/>
                               </copy>
                               <java classname="org.radargun.config.ReporterSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
-                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                                  <arg value="${distribution.artifact}/schema" />
                                  <arg value="${distribution.artifact}/reporters/@{reporter}" />
                                  <arg value="@{reporter}" />
@@ -323,15 +323,15 @@
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
                         <java classname="org.radargun.config.BenchmarkSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
-                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
                         <java classname="org.radargun.config.ScenarioSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
-                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
                         <java classname="org.radargun.config.StagesSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
-                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
                         <copy todir="${distribution.artifact}/schema">
@@ -393,7 +393,7 @@
                         <java classname="org.radargun.config.PhaseDocumentationGenerator"
                            failonerror="true" classpathref="core_and_extensions" fork="true">
                            <sysproperty key="log4j.configuration"
-                              value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                              value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j2.xml" />
                            <arg value="${basedir}/docs/stages/" />
                         </java>
                      </target>
