@@ -16,6 +16,7 @@ import org.radargun.sysmonitor.NetworkBytesMonitor;
 import org.radargun.sysmonitor.OpenFilesMonitor;
 import org.radargun.sysmonitor.RssMonitor;
 import org.radargun.sysmonitor.SystemWorkerMonitor;
+import org.radargun.sysmonitor.ThreadDumpMonitor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
@@ -45,6 +46,14 @@ public class MonitorStartStage extends AbstractDistStage {
    @InjectTrait
    private InternalsExposition internalsExposition;
 
+   // related to thread dump
+   @Property(doc = "Thread Dump. Default is false.")
+   private boolean threadDump = false;
+   @Property(doc = "Dump all locked monitors. Default is true.")
+   private boolean threadDumpLockedMonitors = true;
+   @Property(doc = "Dump all locked ownable synchronizers. Default is true.")
+   private boolean threadDumpLockedSynchronizers = true;
+
    @Override
    public void initOnMain(MainState mainState) {
       super.initOnMain(mainState);
@@ -67,6 +76,11 @@ public class MonitorStartStage extends AbstractDistStage {
          workerMonitors.addMonitor(new InternalsMonitor(internalsExposition, workerState.getTimeline()));
       }
 
+      if (threadDump) {
+         workerMonitors.addMonitor(new ThreadDumpMonitor(jmxConnectionProvider, workerState.getTimeline(), threadDumpLockedMonitors,
+               threadDumpLockedSynchronizers, this.workerState.getWorkerIndex()));
+      }
+
       workerMonitors.start();
       return successfulResponse();
    }
@@ -85,6 +99,5 @@ public class MonitorStartStage extends AbstractDistStage {
          monitors.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, timeline));
          monitors.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, timeline));
       }
-
    }
 }
