@@ -170,6 +170,9 @@ Starts collecting statistics locally on main and each worker node.
 > interface-name (**optional**) - Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.  
 > period (**optional**) - Period of statistics collection. The default is 1 second.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> thread-dump (**optional**) - Thread Dump. Default is false.  
+> thread-dump-locked-monitors (**optional**) - Dump all locked monitors. Default is true.  
+> thread-dump-locked-synchronizers (**optional**) - Dump all locked ownable synchronizers. Default is true.  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
 ### jvm-monitor-stop
@@ -186,6 +189,9 @@ Starts collecting statistics locally on main and each worker node.
 > interface-name (**optional**) - Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.  
 > period (**optional**) - Period of statistics collection. The default is 1 second.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> thread-dump (**optional**) - Thread Dump. Default is false.  
+> thread-dump-locked-monitors (**optional**) - Dump all locked monitors. Default is true.  
+> thread-dump-locked-synchronizers (**optional**) - Dump all locked ownable synchronizers. Default is true.  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
 ### monitor-stop
