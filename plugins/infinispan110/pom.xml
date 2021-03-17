@@ -168,7 +168,10 @@
          <artifactId>infinispan-client-rest</artifactId>
          <version>${version.infinispan}</version>
       </dependency>
-
+      <dependency>
+         <groupId>org.infinispan.protostream</groupId>
+         <artifactId>protostream</artifactId>
+      </dependency>
    </dependencies>
 
    <dependencyManagement>
