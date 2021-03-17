@@ -1,0 +1,5 @@
+package org.radargun.marshaller;
+
+message Book {
+  optional string title = 1;
+}
