@@ -28,7 +28,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.4.0.Final-redhat-2</version.infinispan>
+            <version.infinispan>8.4.2.Final-redhat-1</version.infinispan>
          </properties>
       </profile>
       <profile>
