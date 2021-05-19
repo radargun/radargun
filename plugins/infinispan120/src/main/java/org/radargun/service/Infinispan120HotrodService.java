@@ -22,7 +22,7 @@ public class Infinispan120HotrodService extends Infinispan110HotrodService {
             throw new IllegalArgumentException(String.format("Unknown transactionManagerLookup: %s", transactionManagerLookup));
          }
       }
-      if (transactionMode != null) {
+      if (transactionMode != null && !TransactionMode.NONE.name().equals(transactionMode)) {
          if (this.cacheName == null || this.cacheName.trim().isEmpty()) {
             throw new IllegalArgumentException("A cache name is required to configure transaction");
          }
