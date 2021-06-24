@@ -110,11 +110,6 @@
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-persistence-soft-index</artifactId>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-jcache</artifactId>
          <optional>true</optional>
       </dependency>
@@ -129,10 +124,6 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-rocksdb</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-persistence-soft-index</artifactId>
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
