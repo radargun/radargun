@@ -101,6 +101,16 @@ Introduce a failure. We can start or stop the failure.
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
+### http-invocation
+Allows to invoke Http methods.
+> auth-mechanism (**optional**) - Authentication Mechanism  
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> expected-result (**optional**) - Expected Http Response body  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> url (**mandatory**) - Url  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
+
 ### j-groups-probe
 Allows to invoke JGroups probe queries. For details on probe usage see org.jgroups.tests.Probe.
 > address (**optional**) - Diagnostic address to send queries to. Default is 224.0.75.75.  
