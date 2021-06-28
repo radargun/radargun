@@ -30,6 +30,9 @@ public class HttpInvocationStage extends AbstractDistStage {
    @Property(optional = true, doc = "Expected Http Response body")
    private String expectedResult;
 
+   @Property(doc = "Print response. Default false")
+   private boolean printResponse;
+
    @Override
    public DistStageAck executeOnWorker() {
       String result;
@@ -50,6 +53,9 @@ public class HttpInvocationStage extends AbstractDistStage {
                sb.append(charArray, 0, numCharsRead);
             }
             result = sb.toString();
+            if (printResponse) {
+               log.info(result);
+            }
          }
       } catch (MalformedURLException e) {
          return errorResponse("Malformed URL", e);
