@@ -6,7 +6,7 @@ import org.infinispan.client.hotrod.transaction.lookup.GenericTransactionManager
 import org.infinispan.client.hotrod.transaction.lookup.RemoteTransactionManagerLookup;
 import org.radargun.Service;
 
-@Service(doc = Infinispan60HotrodService.SERVICE_DESCRIPTION)
+@Service(doc = Infinispan120HotrodService.SERVICE_DESCRIPTION)
 public class Infinispan120HotrodService extends Infinispan110HotrodService {
 
    protected void configureTransaction(ConfigurationBuilder config) {

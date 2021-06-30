@@ -5,7 +5,7 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.radargun.traits.Query;
 
 public class Infinispan110HotrodQueryable extends Infinispan80HotrodQueryable {
-   public Infinispan110HotrodQueryable(Infinispan60HotrodService service) {
+   public Infinispan110HotrodQueryable(Infinispan80HotrodService service) {
       super(service);
    }
 

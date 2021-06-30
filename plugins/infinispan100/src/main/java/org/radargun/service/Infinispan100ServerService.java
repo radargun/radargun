@@ -54,7 +54,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    @Property(doc="Password of the user to be created.")
    private String password;
 
-   @Property(doc="Libs to be added to the classpath. Buildr string comma separated. Example: group:artifactId:version;group:artifactId:version")
+   @Property(doc="Libs to be added to the classpath. Build string comma separated. Example: group:artifactId:version;group:artifactId:version")
    private String libs;
 
    protected Clustered clustered;
@@ -89,7 +89,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
                throw new IllegalArgumentException("Username and Password should be provided for adding user to Server.");
             } else {
                Utils.setPermissions(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getCliScriptPrefix() + (getWindows() ? "bat" : "sh")).toString(), "rwxr-xr-x");
-               StringBuffer command = new StringBuffer(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getCliScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
+               StringBuilder command = new StringBuilder(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getCliScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
                command.append(" user create ").append(username).append(" -p \"").append(password).append("\"");
 
                log.info(command.toString());
@@ -130,6 +130,18 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
 
    protected String getCliScriptPrefix() {
       return "cli.";
+   }
+
+   protected String getUsername() {
+      return username;
+   }
+
+   protected String getPassword() {
+      return password;
+   }
+
+   protected Integer getDefaultServerPort() {
+      return defaultServerPort;
    }
 
    @ProvidesTrait
