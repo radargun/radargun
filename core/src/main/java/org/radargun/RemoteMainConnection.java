@@ -53,7 +53,7 @@ public class RemoteMainConnection {
             socketChannel.connect(socketAddress);
             break;
          } catch (IOException e) {
-            log.trace("Connect attempt " + i + " failed", e);
+            log.warn("Connect attempt " + i + " failed", e);
             if (i >= 10) {
                throw e;
             }
