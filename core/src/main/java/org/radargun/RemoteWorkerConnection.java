@@ -410,9 +410,9 @@ public class RemoteWorkerConnection {
       }
       log.info("Attempting to start Main listening for connection on: " + address);
       serverSocketChannel.socket().bind(address);
-      log.info("Waiting 15 seconds for server socket to open completely");
+      log.info("Waiting 60 seconds for server socket to open completely");
       try {
-         Thread.sleep(15000);
+         Thread.sleep(60000);
       } catch (InterruptedException ex) {
          // ignore
       }
