@@ -159,7 +159,7 @@
                      <outputDirectory>${basedir}/target/distribution/${project.artifactId}-bin/${project.artifactId}/conf</outputDirectory>
                      <resources>
                         <resource>
-                           <directory>${basedir}/../infinispan121/src/main/resources</directory>
+                           <directory>${basedir}/../infinispan130/src/main/resources</directory>
                            <includes>
                               <include>**/*.*</include>
                            </includes>
