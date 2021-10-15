@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>13.0.0.CD20210901-temporary-redhat-00001</version.infinispan>
+            <version.infinispan>13.0.0.ER1-redhat-00001</version.infinispan>
          </properties>
       </profile>
    </profiles>
