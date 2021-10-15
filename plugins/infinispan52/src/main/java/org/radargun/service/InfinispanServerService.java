@@ -70,6 +70,9 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(doc = "Number of threads in scheduled tasks pool. Default is 2.")
    protected int executorPoolSize = 2;
 
+   @Property(doc = "The executable bash script responsible to start the server")
+   protected String startBashScript;
+
    protected ScheduledExecutorService executor;
    protected Clustered clustered;
 
@@ -96,7 +99,7 @@ public class InfinispanServerService extends JavaProcessService {
                Files.delete(fromDir);
             }
             // the extraction erases the executable bits
-            Utils.setPermissions(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh")).toString(), "rwxr-xr-x");
+            Utils.setPermissions(FileSystems.getDefault().getPath(home, "bin", getStartBashScript()).toString(), "rwxr-xr-x");
          }
 
          evaluateFile(home, "standalone", "configuration");
@@ -155,7 +158,7 @@ public class InfinispanServerService extends JavaProcessService {
    @Override
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
-      command.add(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh")).toString());
+      command.add(FileSystems.getDefault().getPath(home, "bin", getStartBashScript()).toString());
       command.add("-Djboss.node.name=worker" + ServiceHelper.getContext().getWorkerIndex());
       if (logDir != null) {
          command.add("-Djboss.server.log.dir=" + logDir);
@@ -166,8 +169,16 @@ public class InfinispanServerService extends JavaProcessService {
       return command;
    }
 
-   protected String getStartScriptPrefix() {
-      return "clustered.";
+   protected String getStartBashScript() {
+      if (startBashScript != null) {
+         return startBashScript;
+      } else {
+         return getDefaultStartBashScript();
+      }
+   }
+
+   protected String getDefaultStartBashScript() {
+      return "clustered." + (windows ? "bat" : "sh");
    }
 
    @Override
