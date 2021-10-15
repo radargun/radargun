@@ -82,7 +82,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
             Files.delete(fromDir);
          }
          // the extraction erases the executable bits
-         Utils.setPermissions(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString(), "rwxr-xr-x");
+         Utils.setPermissions(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartBashScript()).toString(), "rwxr-xr-x");
 
          if (addUser) {
             if (username == null || password == null) {
@@ -124,8 +124,8 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    }
 
    @Override
-   protected String getStartScriptPrefix() {
-      return "server.";
+   protected String getDefaultStartBashScript() {
+      return "server." + (getWindows() ? "bat" : "sh");
    }
 
    protected String getCliScriptPrefix() {
@@ -157,7 +157,7 @@ public class Infinispan100ServerService extends Infinispan80ServerService {
    protected List<String> getCommand() {
       Path sererConfiguration = createServerConfiguration();
       ArrayList<String> command = new ArrayList<String>();
-      command.add(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartScriptPrefix() + (getWindows() ? "bat" : "sh")).toString());
+      command.add(FileSystems.getDefault().getPath(getRadargunInstalationFolder(), "bin", getStartBashScript()).toString());
       command.add("-c");
       command.add(sererConfiguration.toString());
       if (loggingConfig != null) {
