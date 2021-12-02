@@ -26,7 +26,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.2.0.Final</version.infinispan>
+            <version.infinispan>9.2.5.Final</version.infinispan>
          </properties>
       </profile>
    </profiles>

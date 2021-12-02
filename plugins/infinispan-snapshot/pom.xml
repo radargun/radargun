@@ -159,7 +159,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>13.0.1-SNAPSHOT</version.infinispan>
+            <version.infinispan>14.0.0-SNAPSHOT</version.infinispan>
          </properties>
       </profile>
    </profiles>

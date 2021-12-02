@@ -233,6 +233,7 @@ Periodically generates heap dumps.
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > initial-delay (**optional**) - Delay before the first heap dump. Default is 0.  
+> live (**optional**) - If set it only prints objects which have active references and discards the ones that are ready to be garbage collected  
 > period (**optional**) - How often should be the heap dumps created. Default is every 30 minutes.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > stop (**optional**) - Set this flag to true in order to terminate the heap dumper. Default is false.  

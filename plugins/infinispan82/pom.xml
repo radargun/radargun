@@ -141,7 +141,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.2.1.Final</version.infinispan>
+            <version.infinispan>8.2.12.Final</version.infinispan>
          </properties>
       </profile>
       <profile>
