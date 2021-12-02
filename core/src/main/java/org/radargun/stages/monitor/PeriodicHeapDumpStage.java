@@ -1,22 +1,27 @@
 package org.radargun.stages.monitor;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
+import com.sun.management.HotSpotDiagnosticMXBean;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.ServiceListener;
+import org.radargun.sysmonitor.JmxMonitor;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.TimeConverter;
-import org.radargun.utils.Utils;
 
 /**
- * // TODO: Allow heap dumps of remote (server) process, too.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -37,10 +42,18 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
    @Property(doc = "Set this flag to true in order to terminate the heap dumper. Default is false.")
    protected boolean stop = false;
 
+   @Property(doc = "If set it only prints objects which have active references and discards the ones that are ready to be garbage collected")
+   protected boolean live = false;
+
+   @InjectTrait
+   private JmxConnectionProvider jmxConnectionProvider;
+
    @Override
    public DistStageAck executeOnWorker() {
+      HeapDumpTask heapDumpTask = new HeapDumpTask(jmxConnectionProvider);
       ScheduledFuture<?> future = (ScheduledFuture<?>) workerState.get(FUTURE);
       if (stop) {
+         heapDumpTask.stop();
          if (future == null) {
             return errorResponse("Heap dumps have not been scheduled!");
          }
@@ -55,6 +68,7 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
          workerState.removeListener(cleanup);
          workerState.remove(CLEANUP);
       } else {
+         heapDumpTask.start();
          if (future != null) {
             return errorResponse("Periodic heap dumps are already running!");
          }
@@ -68,21 +82,7 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
          }
 
          ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
-         future = executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-               try {
-                  File heapDumpFile = new File(PeriodicHeapDumpStage.this.dir, workerState.getConfigName() + "." + workerState.getWorkerIndex()
-                     + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".hprof");
-                  log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
-                  Utils.dumpHeap(heapDumpFile.getAbsolutePath());
-                  log.info("Successfully written heap dump.");
-               } catch (Exception e) {
-                  log.error("Cannot write heap dump!", e);
-               }
-
-            }
-         }, initialDelay, period, TimeUnit.MILLISECONDS);
+         future = executor.scheduleAtFixedRate(heapDumpTask, initialDelay, period, TimeUnit.MILLISECONDS);
          workerState.put(FUTURE, future);
 
          Cleanup cleanup = new Cleanup(executor);
@@ -102,6 +102,45 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
       @Override
       public void serviceDestroyed() {
          executor.shutdown();
+      }
+   }
+
+   private class HeapDumpTask extends JmxMonitor implements Runnable {
+
+      private HotSpotDiagnosticMXBean heapDumpMXBean;
+
+      public HeapDumpTask(JmxConnectionProvider jmxConnectionProvider) {
+         super(jmxConnectionProvider, null);
+      }
+
+      @Override
+      public synchronized void start() {
+         super.start();
+         try {
+            heapDumpMXBean = newPlatformMXBeanProxy(connection, "com.sun.management:type=HotSpotDiagnostic", HotSpotDiagnosticMXBean.class);
+         } catch (IOException e) {
+            throw new IllegalStateException("Cannot create threadMXBean", e);
+         }
+      }
+
+      @Override
+      public void run() {
+         runMonitor();
+      }
+
+      @Override
+      public void runMonitor() {
+         try {
+            File heapDumpFile = new File(dir, workerState.getConfigName() + "." + workerState.getWorkerIndex()
+                  + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".hprof");
+            log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
+
+            heapDumpMXBean.dumpHeap(heapDumpFile.getAbsolutePath(), live);
+
+            log.info("Successfully written heap dump.");
+         } catch (Exception e) {
+            log.error("Cannot write heap dump!", e);
+         }
       }
    }
 }

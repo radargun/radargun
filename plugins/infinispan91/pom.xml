@@ -169,7 +169,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.1.4.Final</version.infinispan>
+            <version.infinispan>9.1.7.Final</version.infinispan>
          </properties>
       </profile>
       <profile>
