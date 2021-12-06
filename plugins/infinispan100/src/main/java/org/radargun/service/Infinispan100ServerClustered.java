@@ -2,10 +2,15 @@ package org.radargun.service;
 
 import java.io.IOException;
 
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+
 /**
  * @author Gustavo Lira &lt;glira@redhat.com&gt;
  */
 public class Infinispan100ServerClustered extends InfinispanServerClustered {
+
+   protected final Log log = LogFactory.getLog(getClass());
 
    private InfinispanRestAPI restAPI;
    private boolean coordinator;
@@ -30,6 +35,7 @@ public class Infinispan100ServerClustered extends InfinispanServerClustered {
          infinispanCacheManagerInfo = createBasedOn(cacheManagerInfo);
          this.coordinator = cacheManagerInfo.isCoordinator();
       } catch (InfinispanRestAPI.RestException e) {
+         log.error(e.getMessage(), e);
          infinispanCacheManagerInfo = new InfinispanCacheManagerInfo();
       }
       return infinispanCacheManagerInfo;

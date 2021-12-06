@@ -1,10 +1,12 @@
 package org.radargun.service;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -66,14 +68,19 @@ public class InfinispanRestAPI {
 
    public CacheManagerInfo getCacheManager() throws RestException {
       CacheManagerInfo cacheManagerInfo;
+      CompletableFuture<RestResponse> responseFuture = restClientOkHttp.cacheManager(this.cacheManagerName).info().toCompletableFuture();
+      RestResponse response;
       try {
-         RestResponse response = restClientOkHttp.cacheManager(this.cacheManagerName).info().toCompletableFuture()
-               .get(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
-         cacheManagerInfo = mapper.readValue(response.getBodyAsStream(), CacheManagerInfo.class);
-         log.info(cacheManagerInfo.toString());
-      } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-         log.error("Cannot access the cache manager: " + e.getMessage());
-         throw new RestException(e);
+         response = responseFuture.get(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
+         String body = response.getBody();
+         try {
+            cacheManagerInfo = mapper.readValue(body, CacheManagerInfo.class);
+         } catch (JsonProcessingException e) {
+            log.error("Http status: " + response.getStatus() + ", Http body: " + body);
+            throw new RestException("Cannot parse the response", e);
+         }
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+         throw new RestException("Cannot retrieve the response", e);
       }
       return cacheManagerInfo;
    }
@@ -91,8 +98,8 @@ public class InfinispanRestAPI {
    }
 
    static class RestException extends Exception {
-      public RestException(Exception e) {
-         super(e);
+      public RestException(String message, Exception e) {
+         super(message, e);
       }
    }
 
