@@ -108,6 +108,7 @@ Allows to invoke Http methods.
 > expected-result (**optional**) - Expected Http Response body  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > print-response (**optional**) - Print response. Default false  
+> request-method (**optional**) - Method for the URL request. Default GET  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > url (**mandatory**) - Url  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
