@@ -2,9 +2,9 @@ package org.radargun.stages;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Base64;
 import java.util.List;
 
@@ -33,15 +33,19 @@ public class HttpInvocationStage extends AbstractDistStage {
    @Property(doc = "Print response. Default false")
    private boolean printResponse;
 
+   @Property(optional = true, doc = "Method for the URL request. Default GET")
+   private String requestMethod = "GET";
+
    @Override
    public DistStageAck executeOnWorker() {
       String result;
       try {
-         URL javaUrl = new URL(url);
-         URLConnection urlConnection = javaUrl.openConnection();
-         if (javaUrl.getUserInfo() != null) {
+         URL url = new URL(this.url);
+         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+         urlConnection.setRequestMethod(requestMethod.toUpperCase());
+         if (url.getUserInfo() != null) {
             if (AuthenticationMechanism.BASIC.equals(authMechanism)) {
-               String userEncoded = Base64.getEncoder().encodeToString(javaUrl.getUserInfo().getBytes());
+               String userEncoded = Base64.getEncoder().encodeToString(url.getUserInfo().getBytes());
                urlConnection.setRequestProperty("Authorization", "Basic " + userEncoded);
             }
          }
