@@ -354,3 +354,11 @@ Debug usage only. Periodically check for all thread stack traces and print them 
 > short-stack (**optional**) - Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
+### stop-test
+Stop async test stage
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> timeout (**optional**) - Max duration of the test. Default is infinite.  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
+

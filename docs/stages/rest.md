@@ -25,6 +25,7 @@ Stage for starting REST operations in the background
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
 > report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> run-background (**optional**) - When true the stage will run in background. No stats will be available. Default false  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
@@ -54,6 +55,7 @@ Stage for stopping REST operations running in the background
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
 > report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> run-background (**optional**) - When true the stage will run in background. No stats will be available. Default false  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
@@ -84,6 +86,7 @@ Test using RESTOperations with specific URL
 > repeat-condition (**optional**) - If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.  
 > report-latency-as-service-time (**optional**) - Enable this property in order to show the difference between latency and service.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> run-background (**optional**) - When true the stage will run in background. No stats will be available. Default false  
 > statistics (**optional**) - Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).  
 > synchronous-requests (**optional**) - Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, there is still the random ramp-up delay. Default is false.  
 > test-name (**optional**) - Name of the test as used for reporting. Default is 'Test'.  
