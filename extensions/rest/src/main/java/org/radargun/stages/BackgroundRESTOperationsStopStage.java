@@ -6,6 +6,7 @@ import org.radargun.StageResult;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.test.StopTestStage;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -57,7 +58,7 @@ public class BackgroundRESTOperationsStopStage extends RESTOperationsTestStage {
 
          startedStage.setTerminated();
 
-         waitForStressorsToFinish(startedStage.getStressorsManager());
+         StopTestStage.waitForStressorsToFinish(startedStage.getStressorsManager(), timeout);
          log.info("Finished test. Test duration is: " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - startedStage.getStressorsManager().getStartTime()));
          return newStatisticsAck(startedStage.getStressorsManager().getStressors());
       } catch (Exception e) {

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
@@ -32,6 +31,7 @@ import org.radargun.utils.Utils;
 public abstract class TestStage extends BaseTestStage {
    public static final String NAMESPACE = "urn:radargun:stages:cache:" + Version.SCHEMA_VERSION;
    public static final String DEPRECATED_NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
+   protected static final String STRESSORS_MANAGER = "StressorsManager";
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
    public int numThreadsPerNode = 0;
@@ -73,6 +73,9 @@ public abstract class TestStage extends BaseTestStage {
    @Property(doc = "Enable this property in order to show the difference between latency and service.")
    protected boolean reportLatencyAsServiceTime;
 
+   @Property(doc = "When true the stage will run in background. No stats will be available. Default false")
+   protected boolean runBackground;
+
    @InjectTrait
    protected Transactional transactional;
 
@@ -110,10 +113,15 @@ public abstract class TestStage extends BaseTestStage {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
          stressorsManager = setUpAndStartStressors();
-         waitForStressorsToFinish(stressorsManager);
-         destroy();
-         log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
-         return newStatisticsAck(stressorsManager.getStressors());
+         if (runBackground) {
+            workerState.put(STRESSORS_MANAGER, stressorsManager);
+            return successfulResponse();
+         } else {
+            StopTestStage.waitForStressorsToFinish(stressorsManager, timeout);
+            destroy();
+            log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
+            return newStatisticsAck(stressorsManager.getStressors());
+         }
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
@@ -197,38 +205,6 @@ public abstract class TestStage extends BaseTestStage {
       return new StressorsManager(stressors, startTime, finishCountDown);
    }
 
-   protected void waitForStressorsToFinish(StressorsManager manager) {
-      try {
-         if (timeout > 0) {
-            long waitTime = getWaitTime(manager.getStartTime());
-            if (waitTime <= 0) {
-               throw new TestTimeoutException();
-            } else {
-               if (!manager.getFinishCountDown().await(waitTime, TimeUnit.MILLISECONDS)) {
-                  throw new TestTimeoutException();
-               }
-            }
-         } else {
-            manager.getFinishCountDown().await();
-         }
-      } catch (InterruptedException e) {
-         throw new IllegalStateException("Unexpected interruption", e);
-      }
-      for (Thread stressorThread : manager.getStressors()) {
-         try {
-            if (timeout > 0) {
-               long waitTime = getWaitTime(manager.getStartTime());
-               if (waitTime <= 0) throw new TestTimeoutException();
-               stressorThread.join(waitTime);
-            } else {
-               stressorThread.join();
-            }
-         } catch (InterruptedException e) {
-            throw new TestTimeoutException(e);
-         }
-      }
-   }
-
    protected Completion createCompletion() {
       if (numOperations > 0) {
          long countPerNode = numOperations / getExecutingWorkers().size();
@@ -290,10 +266,6 @@ public abstract class TestStage extends BaseTestStage {
             .filter(r -> r != null)
             .collect(Collectors.toList());
       }
-   }
-
-   protected long getWaitTime(long startTime) {
-      return startTime + timeout - TimeService.currentTimeMillis();
    }
 
    public int getTotalThreads() {
@@ -384,15 +356,6 @@ public abstract class TestStage extends BaseTestStage {
       @Override
       public Statistics merge(Statistics stats1, Statistics stats2) {
          return Statistics.MERGE.apply(stats1, stats2);
-      }
-   }
-
-   protected class TestTimeoutException extends RuntimeException {
-      public TestTimeoutException() {
-      }
-
-      public TestTimeoutException(Throwable cause) {
-         super(cause);
       }
    }
 
