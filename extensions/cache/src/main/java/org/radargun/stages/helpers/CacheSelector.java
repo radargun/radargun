@@ -1,6 +1,7 @@
 package org.radargun.stages.helpers;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
@@ -50,6 +51,18 @@ public abstract class CacheSelector implements Serializable {
       }
    }
 
+   @DefinitionElement(name = "fixed", doc = "Each thread will use cache 'cache_/limit/' where /limit/ is a random number between 0 and the limit (inclusive).")
+   public static class Fixed extends CacheSelector {
+      @Property(doc = "Name of the cache returned in this selector.")
+      private int limit;
+
+      @Override
+      public String getCacheName(int threadIndex) {
+         int rand = ThreadLocalRandom.current().nextInt(0, limit + 1);
+         return "cache_" + rand;
+      }
+   }
+
    public abstract String getCacheName(int threadIndex);
 
    @Override
@@ -59,7 +72,7 @@ public abstract class CacheSelector implements Serializable {
 
    public static class ComplexConverter extends ReflexiveConverters.ObjectConverter {
       public ComplexConverter() {
-         super(new Class<?>[] {Default.class, Thread.class, UseCache.class});
+         super(new Class<?>[] {Default.class, Thread.class, UseCache.class, Fixed.class});
       }
    }
 }
