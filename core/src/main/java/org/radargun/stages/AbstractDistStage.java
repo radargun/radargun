@@ -176,7 +176,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return new DistStageAck(workerState).error(message, null);
    }
 
-   protected DistStageAck errorResponse(String message, Exception e) {
+   protected DistStageAck errorResponse(String message, Throwable e) {
       log.error(message, e);
       return new DistStageAck(workerState).error(message, e);
    }
