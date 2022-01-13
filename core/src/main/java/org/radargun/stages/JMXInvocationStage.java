@@ -69,83 +69,94 @@ public class JMXInvocationStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnWorker() {
-      if (!isServiceRunning()) {
-         return successfulResponse();
-      }
-      if (methodParameters.size() != methodSignatures.length) {
-         return errorResponse("Signatures need to be specified for individual method parameters.");
-      }
-      MBeanServerConnection connection = null;
-      if (jmxConnectionProvider != null) {
-         JMXConnector connector = jmxConnectionProvider.getConnector();
-         if (connector != null) {
-            try {
-               connection = connector.getMBeanServerConnection();
-            } catch (IOException e) {
-               return errorResponse("Failed to connect to MBean server.", e);
+      List<Object> results = new ArrayList<>();
+      try {
+         if (!isServiceRunning()) {
+            return successfulResponse();
+         }
+         if (methodParameters.size() != methodSignatures.length) {
+            throw new JMXInvocationStageException("Signatures need to be specified for individual method parameters.");
+         }
+         MBeanServerConnection connection = null;
+         if (jmxConnectionProvider != null) {
+            JMXConnector connector = jmxConnectionProvider.getConnector();
+            if (connector != null) {
+               try {
+                  connection = connector.getMBeanServerConnection();
+               } catch (IOException e) {
+                  throw new JMXInvocationStageException("Failed to connect to MBean server.", e);
+               }
+            } else {
+               throw new JMXInvocationStageException("Failed to connect to MBean server.");
             }
          } else {
-            return errorResponse("Failed to connect to MBean server.");
+            connection = ManagementFactory.getPlatformMBeanServer();
          }
-      } else {
-         connection = ManagementFactory.getPlatformMBeanServer();
-      }
-      Collection<ObjectInstance> queryResult = null;
-      try {
-         queryResult = getQueryResult(connection);
-         if (queryResult == null || queryResult.isEmpty()) {
-            return errorResponse(String.format("Specified query '%s' returned no results.", query));
-         }
-         log.trace(String.format("Query returned %d results", queryResult.size()));
-      } catch (Exception e) {
-         return errorResponse(String.format("Exception while performing query '%s'", query), e);
-      }
-      List<Object> values = new ArrayList<>();
-      if (methodParameters != null) {
-         for (PrimitiveValue primitiveValue : methodParameters) {
-            values.add(primitiveValue.getElementValue());
-         }
-      }
-      List<Object> results = new ArrayList<>(queryResult.size());
-      for (ObjectInstance objectInstance : queryResult) {
+         Collection<ObjectInstance> queryResult = null;
          try {
-            Object result = null;
-            if (operationType == OperationType.INVOKE_METHOD) {
-               log.trace("Invoking method " + targetName);
-               result = connection.invoke(objectInstance.getObjectName(), targetName, values.toArray(new Object[methodParameters.size()]), methodSignatures);
-            } else if (operationType == OperationType.GET_ATTRIBUTE_VALUE) {
-               log.trace("Getting value of attribute " + targetName);
-               result = connection.getAttribute(objectInstance.getObjectName(), targetName);
-            } else if (operationType == OperationType.SET_ATTRIBUTE_VALUE) {
-               if (methodParameters != null && !methodParameters.isEmpty()) {
-                  log.trace("Setting value of attribute " + targetName + " to "
-                     + methodParameters.get(0).getElementValue().toString());
-                  Attribute attribute = new Attribute(targetName, methodParameters.get(0).getElementValue());
-                  connection.setAttribute(objectInstance.getObjectName(), attribute);
+            queryResult = getQueryResult(connection);
+            if (queryResult == null || queryResult.isEmpty()) {
+               throw new JMXInvocationStageException(String.format("Specified query '%s' returned no results.", query));
+            }
+            log.trace(String.format("Query returned %d results", queryResult.size()));
+         } catch (Exception e) {
+            throw new JMXInvocationStageException(String.format("Exception while performing query '%s'", query), e);
+         }
+         List<Object> values = new ArrayList<>();
+         if (methodParameters != null) {
+            for (PrimitiveValue primitiveValue : methodParameters) {
+               values.add(primitiveValue.getElementValue());
+            }
+         }
+         for (ObjectInstance objectInstance : queryResult) {
+            try {
+               Object result = null;
+               if (operationType == OperationType.INVOKE_METHOD) {
+                  log.trace("Invoking method " + targetName);
+                  result = connection.invoke(objectInstance.getObjectName(), targetName, values.toArray(new Object[methodParameters.size()]), methodSignatures);
+               } else if (operationType == OperationType.GET_ATTRIBUTE_VALUE) {
+                  log.trace("Getting value of attribute " + targetName);
                   result = connection.getAttribute(objectInstance.getObjectName(), targetName);
+               } else if (operationType == OperationType.SET_ATTRIBUTE_VALUE) {
+                  if (methodParameters != null && !methodParameters.isEmpty()) {
+                     log.trace("Setting value of attribute " + targetName + " to "
+                           + methodParameters.get(0).getElementValue().toString());
+                     Attribute attribute = new Attribute(targetName, methodParameters.get(0).getElementValue());
+                     connection.setAttribute(objectInstance.getObjectName(), attribute);
+                     result = connection.getAttribute(objectInstance.getObjectName(), targetName);
+                  } else {
+                     throw new JMXInvocationStageException("New value for attribute was not specified in methodParameters property.");
+                  }
+               }
+               if (expectedWorkerResult != null && !expectedWorkerResult.getElementValue().equals(result)) {
+                  throw new JMXInvocationStageException(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedWorkerResult.getElementValue(), result));
+               }
+               results.add(result);
+            } catch (Exception e) {
+               if (continueOnFailure) {
+                  continue;
                } else {
-                  return errorResponse("New value for attribute was not specified in methodParameters property.");
+                  throw new JMXInvocationStageException(String.format("Exception while invoking method '%s'.", targetName), e);
                }
             }
-            if (expectedWorkerResult != null && !expectedWorkerResult.getElementValue().equals(result)) {
-               return errorResponse(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedWorkerResult.getElementValue(), result));
-            }
-            results.add(result);
-         } catch (Exception e) {
-            if (continueOnFailure) {
-               continue;
+         }
+         return new JMXInvocationAck(workerState, results);
+      } catch (JMXInvocationStageException e) {
+         if (continueOnFailure) {
+            return new JMXInvocationAck(workerState, results);
+         } else {
+            if (e.getCause() != null) {
+               return errorResponse(e.getMessage(), e.getCause());
             } else {
-               return errorResponse(String.format("Exception while invoking method '%s'.", targetName), e);
+               return errorResponse(e.getMessage());
             }
          }
       }
-      return new JMXInvocationAck(workerState, results);
    }
 
    private Collection<ObjectInstance> getQueryResult(MBeanServerConnection connection) throws MalformedObjectNameException, IOException {
       return connection.queryMBeans(new ObjectName(query), null);
    }
-
 
    @Override
    public StageResult processAckOnMain(List<DistStageAck> acks) {
@@ -219,7 +230,7 @@ public class JMXInvocationStage extends AbstractDistStage {
       }
    }
 
-   private static enum OperationType {
+   private enum OperationType {
       INVOKE_METHOD, GET_ATTRIBUTE_VALUE, SET_ATTRIBUTE_VALUE
    }
 
@@ -230,6 +241,15 @@ public class JMXInvocationStage extends AbstractDistStage {
       public JMXInvocationAck(WorkerState workerState, List<Object> results) {
          super(workerState);
          this.results = results;
+      }
+   }
+
+   private static class JMXInvocationStageException extends Exception {
+      JMXInvocationStageException(String message) {
+         super(message);
+      }
+      JMXInvocationStageException(String message, Throwable cause) {
+         super(message, cause);
       }
    }
 }
