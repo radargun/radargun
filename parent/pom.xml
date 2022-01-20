@@ -377,6 +377,8 @@
             <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
          </properties>
       </profile>
+      <!--
+      The dependency is not available eu.monniot.redis:embedded-redis
       <profile>
          <id>redis</id>
          <activation>
@@ -392,6 +394,7 @@
             <plugins.redis>${plugins.redis-latest}</plugins.redis>
          </properties>
       </profile>
+      -->
       <profile>
          <id>jbosscache</id>
          <activation>
@@ -876,10 +879,6 @@
       <repository>
          <id>jboss-public-repository-group</id>
          <url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
-      </repository>
-      <repository>
-         <id>jcenter</id>
-         <url>https://jcenter.bintray.com/</url>
       </repository>
    </repositories>
 
