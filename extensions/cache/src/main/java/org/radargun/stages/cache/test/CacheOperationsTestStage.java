@@ -24,7 +24,7 @@ public abstract class CacheOperationsTestStage extends CacheTestStage {
 
    private static class KeySelectorFactoryConverter extends ReflexiveConverters.ObjectConverter {
       protected KeySelectorFactoryConverter() {
-         super(new Class<?>[] {CollidingKeysSelector.Factory.class, ConcurrentKeysSelector.Factory.class, GaussianKeysSelector.Factory.class});
+         super(new Class<?>[] {CollidingKeysSelector.Factory.class, ConcurrentKeysSelector.Factory.class, GaussianKeysSelector.Factory.class, UUIDKeysSelector.Factory.class});
       }
    }
 }
