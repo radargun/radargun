@@ -122,6 +122,12 @@
          <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jboss-marshalling</artifactId>
+         <optional>true</optional>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>
