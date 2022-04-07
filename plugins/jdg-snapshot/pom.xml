@@ -160,7 +160,11 @@
                             <outputDirectory>${basedir}/target/distribution/${artifactId}-bin/${artifactId}/conf</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${basedir}/../${plugins.infinispan-latest}/src/main/resources</directory>
+                                    <!--
+                                    * ${plugins.jdg-latest} is using the copy-resources plugin. In this case, the
+                                    jdg-snapshot distribution folder will be empty.
+                                    -->
+                                    <directory>${basedir}/../${plugins.jdg-latest}/target/distribution/plugin-${plugins.jdg-latest}-bin/plugin-${plugins.jdg-latest}/conf</directory>
                                     <includes>
                                         <include>**/*.*</include>
                                     </includes>
