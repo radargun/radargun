@@ -115,6 +115,9 @@ public class Stressor extends Thread {
                   if (thinkTime > 0)
                     sleep(thinkTime);
                } catch (OperationLogic.RequestException e) {
+                  if (stage.exitOnFailure) {
+                     throw new IllegalStateException("Benchmark has exit on failure configured");
+                  }
                   // the exception was already logged in makeRequest
                } catch (InterruptedException e) {
                   log.trace("Stressor interrupted.", e);
@@ -136,6 +139,9 @@ public class Stressor extends Thread {
                if (thinkTime > 0)
                   sleep(thinkTime);
             } catch (OperationLogic.RequestException e) {
+               if (stage.exitOnFailure) {
+                  throw new IllegalStateException("Benchmark has exit on failure configured");
+               }
                // the exception was already logged in makeRequest
             } catch (InterruptedException e) {
                log.trace("Stressor interrupted.", e);
