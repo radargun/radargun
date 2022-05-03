@@ -1,7 +1,7 @@
 package org.radargun.stages.cache.test;
 
 import java.util.Random;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Namespace;
@@ -14,7 +14,8 @@ public class UUIDKeysSelector implements KeySelector {
 
    @Override
    public long next() {
-      return UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+      long next = ThreadLocalRandom.current().nextLong() & Long.MAX_VALUE;
+      return next;
    }
 
    @Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
