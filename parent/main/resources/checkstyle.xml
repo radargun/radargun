@@ -78,6 +78,7 @@
       <module name="DeclarationOrder">
          <property name="ignoreModifiers" value="true"/>
       </module>
+      <module name="EmptyStatement"/>
       <module name="EqualsHashCode"/>
       <module name="IllegalInstantiation"/>
       <module name="OneStatementPerLine"/>
