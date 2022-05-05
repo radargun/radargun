@@ -145,6 +145,7 @@
       <extension.rest />
       <extension.counter/>
       <extension.multimap/>
+      <plugins.echo/>
       <version.glassfish.jaxb>2.3.0.1</version.glassfish.jaxb>
    </properties>
 
@@ -707,6 +708,20 @@
          </modules>
          <properties>
             <plugins.etcd>etcd</plugins.etcd>
+         </properties>
+      </profile>
+      <profile>
+         <id>echo</id>
+         <activation>
+            <property>
+               <name>!no-echo</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../plugins/echo</module>
+         </modules>
+         <properties>
+            <plugins.docker>echo</plugins.docker>
          </properties>
       </profile>
    </profiles>
