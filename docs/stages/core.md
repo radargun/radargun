@@ -240,6 +240,19 @@ Periodically generates heap dumps.
 > stop (**optional**) - Set this flag to true in order to terminate the heap dumper. Default is false.  
 > workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
 
+### remote-monitor-start
+Starts collecting statistics locally on main and each worker node.
+> exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
+> groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
+> interface-name (**optional**) - Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.  
+> jmx-service-url (**optional**) - Remote JMX service url. Example: service:jmx:rmi:///jndi/rmi://127.0.0.1:9999/jmxrmi  
+> period (**optional**) - Period of statistics collection. The default is 1 second.  
+> roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
+> thread-dump (**optional**) - Thread Dump. Default is false.  
+> thread-dump-locked-monitors (**optional**) - Dump all locked monitors. Default is true.  
+> thread-dump-locked-synchronizers (**optional**) - Dump all locked ownable synchronizers. Default is true.  
+> workers (**optional**) - Specifies on which workers this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all workers.  
+
 ### repeat-begin
 DO NOT USE DIRECTLY. This stage is added at the beginning of each repeat.
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
