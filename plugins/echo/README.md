@@ -18,7 +18,7 @@ The idea of this plugin is to create a worker that can:
 
         <config name="my-example">
             <setup group="echo" plugin="echo">
-                <echo xmlns="urn:radargun:plugins:${env.PLUGINNAME}:3.0" />
+                <echo xmlns="urn:radargun:plugins:echo:3.0" />
             </setup>
             <setup group="client" plugin="${env.PLUGINNAME}">
                 <hotrod .....
@@ -30,12 +30,12 @@ The idea of this plugin is to create a worker that can:
     <rg:scenario ....
 
         <service-start />
-        <remote-monitor-start jmx-service-url="service:jmx:rmi:///jndi/rmi://127.0.0.1:9999/jmxrmi" groups="echo" workers="0"/>
-        <remote-monitor-start jmx-service-url="service:jmx:rmi:///jndi/rmi://127.0.0.1:9998/jmxrmi" groups="echo" workers="1"/>
+        <remote-monitor-start jmx-service-url="service:jmx:rmi:///jndi/rmi://127.0.0.1:9998/jmxrmi" groups="echo" workers="0"/>
+        <remote-monitor-start jmx-service-url="service:jmx:rmi:///jndi/rmi://127.0.0.1:9999/jmxrmi" groups="echo" workers="1"/>
         <monitor-start groups="client"/>
 
         <l:basic-operations-test ...
 
-        <jvm-monitor-stop />
+        <monitor-stop />
         <service-stop />
 ```
