@@ -4,6 +4,7 @@ import org.radargun.Service;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Lifecycle;
+import org.radargun.traits.ProvidesTrait;
 
 @Service(doc = EchoService.SERVICE_DESCRIPTION)
 public class EchoService implements Lifecycle {
@@ -22,6 +23,11 @@ public class EchoService implements Lifecycle {
    public void stop() {
       started = false;
       log.infof("Echo service stopped");
+   }
+
+   @ProvidesTrait
+   public Lifecycle createLifecycle() {
+      return this;
    }
 
    @Override
