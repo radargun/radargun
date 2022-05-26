@@ -55,6 +55,7 @@ public class CheckTopologyStageTest extends PowerMockTestCase {
 
    private void testCheckEvent(EnumSet<HistoryType> checkType) throws NoSuchFieldException, IllegalAccessException {
       CheckTopologyStage stage = initStage(checkType, 10, true);
+      stage.cacheName = "test";
 
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(CheckTopologyStage.class, stage, "topologyHistory", topologyHistory);

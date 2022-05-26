@@ -10,5 +10,5 @@ The best way to get started with RadarGun is the [Five-minute tutorial](http://r
 ## Report a bug
 ... or request a feature using our [issue tracker](https://github.com/radargun/radargun/issues)
 
-## Java 8
-RadarGun requires Jav8 to build/test
+## Java 11
+RadarGun requires Java11 to build/test

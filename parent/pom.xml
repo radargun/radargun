@@ -99,8 +99,8 @@
 
    </developers>
    <properties>
-      <maven.compiler.target>1.8</maven.compiler.target>
-      <maven.compiler.source>1.8</maven.compiler.source>
+      <maven.compiler.target>11</maven.compiler.target>
+      <maven.compiler.source>11</maven.compiler.source>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <plugins.chm/>
       <plugins.couchbase/>
@@ -731,7 +731,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.0.0-M2</version>
+            <version>3.0.0</version>
             <executions>
                <execution>
                   <id>enforce-java</id>
@@ -741,10 +741,10 @@
                   <configuration>
                      <rules>
                         <requireJavaVersion>
-                           <version>[1.8.0-0,1.8.0-999]</version>
+                           <version>11</version>
                         </requireJavaVersion>
                         <requireMavenVersion>
-                           <version>[3.5.4,)</version>
+                           <version>[3.6.3,)</version>
                         </requireMavenVersion>
                      </rules>
                   </configuration>
@@ -754,11 +754,17 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.8.1</version>
+            <version>3.10.1</version>
             <configuration>
                <source>${maven.compiler.source}</source>
                <target>${maven.compiler.target}</target>
                <encoding>${project.build.sourceEncoding}</encoding>
+               <compilerArgs>
+                  <arg>--add-exports</arg><arg>java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED</arg>
+               </compilerArgs>
+               <argLine>
+                  --illegal-access=permit
+               </argLine>
             </configuration>
          </plugin>
          <plugin>
@@ -772,8 +778,13 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.0.0-M3</version>
+            <version>3.0.0-M6</version>
             <configuration>
+               <argLine>
+                  --illegal-access=permit
+                  --add-exports java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED
+                  --add-exports java.xml/jdk.xml.internal=ALL-UNNAMED
+               </argLine>
                 <parallel>tests</parallel>
                 <forkCount>1</forkCount>
                 <reuseForks>true</reuseForks>
@@ -849,24 +860,7 @@
    </build>
 
    <dependencies>
-      <!-- This dependency is not loaded in plugin classloader, we have to include
-                 that directly on classpath. The reason is that it loads native shared
-                 libraries and you can't have that loaded in multiple classloaders. -->
-      <dependency>
-         <groupId>com.sun</groupId>
-         <artifactId>tools</artifactId>
-         <version>1.8.0</version>
-         <scope>system</scope>
-         <!-- TODO: this system path is OS-dependent - create Win and Mac profiles -->
-         <systemPath>${java.home}/../lib/tools.jar</systemPath>
-      </dependency>
       <!-- Test dependencies -->
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>1.10.19</version>
-         <scope>test</scope>
-      </dependency>
       <dependency>
          <groupId>org.testng</groupId>
          <artifactId>testng</artifactId>
@@ -875,14 +869,14 @@
       </dependency>
       <dependency>
          <groupId>org.powermock</groupId>
-         <artifactId>powermock-api-mockito</artifactId>
-         <version>1.6.2</version>
+         <artifactId>powermock-api-mockito2</artifactId>
+         <version>2.0.9</version>
          <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.powermock</groupId>
          <artifactId>powermock-module-testng</artifactId>
-         <version>1.6.2</version>
+         <version>2.0.9</version>
          <scope>test</scope>
       </dependency>
    </dependencies>
