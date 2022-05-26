@@ -13,7 +13,7 @@ Radargun has been successfully used for benchmarking performance under heavy loa
 
 ### Status
 
-Version 3.0.0 (in development) will contain design improvements to extend our territory (e.g. JPA performance testing). New version will provide better isolation between service runs and enhance the way performance is measured. 3.x branch will be based on Java 8.
+Version 3.0.0 (in development) will contain design improvements to extend our territory (e.g. JPA performance testing). New version will provide better isolation between service runs and enhance the way performance is measured. 3.x branch will be based on Java 11.
 
 [RadarGun 2.1.0](https://github.com/radargun/radargun/releases/download/RadarGun-2.1.0.Final/RadarGun-2.1.0.Final.zip) supports both embedded and client-server scenarios, provides generic way of specifying the functionality (called traits) and pluggable mechanisms for both reporting and external tests. Current version, fully supported.
 

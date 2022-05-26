@@ -50,6 +50,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
    @Test(timeOut = 10_000)
    public void testExecuteOnWorkerMembershipChanges() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.noneOf(HistoryType.class), true);
+      stage.cacheName = "test";
       stage.period = 10l;
       Clustered clustered = mock(Clustered.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "clustered", clustered);
@@ -74,6 +75,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
    private void testExecuteOnWorkerTopologyChanges(EnumSet<TopologyHistory.HistoryType> checkEvents) throws Exception {
       WaitForTopologySettleStage stage = initStage(checkEvents, false);
+      stage.cacheName = "test";
       stage.period = 0l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "history", topologyHistory);
@@ -168,6 +170,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
    public void testExecuteOnWorkerSingleEvents() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.of(HistoryType.CACHE_STATUS), false);
+      stage.cacheName = "test";
       stage.period = 10l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "history", topologyHistory);

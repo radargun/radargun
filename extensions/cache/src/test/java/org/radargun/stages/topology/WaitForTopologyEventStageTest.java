@@ -63,6 +63,7 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
 
    private void testCheckEvent(TopologyHistory.HistoryType checkType, EventType condition) throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologyEventStage stage = initStage(checkType, condition, true, true, 10);
+      stage.cacheName = "test";
 
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologyEventStage.class, stage, "topologyHistory", topologyHistory);
