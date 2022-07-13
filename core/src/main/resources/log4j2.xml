@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration packages="org.radargun.logging">
    <Appenders>
-      <PerNodeRollingRandomAccessFile
-         name="FILE"
-         fileName="radargun.log"
-         filePattern="radargun-%i.log"
-         append="false"
-         immediateFlush="false"
-         advertise="false">
-         <PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %m%n"/>
+      <RollingFile name="FILE" createOnDemand="true"
+                   fileName="radargun.log"
+                   filePattern="radargun-%i-%d{yyyy-MM-dd}.log">
+
          <Policies>
-            <SizeBasedTriggeringPolicy size="100 MB"/>
+            <OnStartupTriggeringPolicy />
+            <SizeBasedTriggeringPolicy size="1000 MB" />
+            <TimeBasedTriggeringPolicy />
          </Policies>
-         <DefaultRolloverStrategy max="3"/>
-      </PerNodeRollingRandomAccessFile>
+         <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p (%t) [%c] %m%throwable%n"/>
+      </RollingFile>
       <Console name="CONSOLE" target="SYSTEM_OUT">
          <PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %m%n"/>
       </Console>
