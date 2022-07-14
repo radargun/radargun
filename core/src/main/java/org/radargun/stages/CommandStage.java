@@ -49,6 +49,8 @@ public class CommandStage extends AbstractDistStage {
    @Property(doc = "Append error output to the file instead of overwriting. Default is to overwrite.")
    private boolean errAppend = false;
 
+   @Property(doc = "Discard messages from the command. Default is false.")
+   private boolean discardMessages = false;
 
    @Override
    public DistStageAck executeOnWorker() {
@@ -98,9 +100,15 @@ public class CommandStage extends AbstractDistStage {
       }
       log.info("Running: " + command);
       ProcessBuilder pb = new ProcessBuilder().command(command);
-      pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
-      pb.redirectOutput(getDestination(out, outAppend));
-      pb.redirectError(getDestination(err, errAppend));
+      if (discardMessages) {
+         pb.redirectInput(ProcessBuilder.Redirect.DISCARD);
+         pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+      } else {
+         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+         pb.redirectOutput(getDestination(out, outAppend));
+         pb.redirectError(getDestination(err, errAppend));
+      }
       return pb.start();
    }
 
