@@ -1,6 +1,8 @@
 package org.radargun.service;
 
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Infinispan 10.0.x custom JGroupsTransport
@@ -8,6 +10,8 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
  * @author Diego Lovison &lt;dlovison@redhat.com&gt;
  */
 public class Infinispan100HookedJGroupsTransport extends JGroupsTransport {
+
+   private static final Log log = LogFactory.getLog(Infinispan100HookedJGroupsTransport.class);
 
    private InfinispanPartitionableLifecycle lifecycle;
 
@@ -23,5 +27,6 @@ public class Infinispan100HookedJGroupsTransport extends JGroupsTransport {
    protected void startJGroupsChannelIfNeeded() {
       this.lifecycle.handleStartJGroupsChannelIfNeeded(this.channel);
       super.startJGroupsChannelIfNeeded();
+      log.info(String.format("JGroups stack: %s", this.channel.getProtocolStack().getProtocols()));
    }
 }
