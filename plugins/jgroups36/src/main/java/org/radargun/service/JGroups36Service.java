@@ -4,21 +4,48 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.management.*;
 
-import org.jgroups.*;
-import org.jgroups.blocks.*;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanServer;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+
+import org.jgroups.Address;
+import org.jgroups.Channel;
+import org.jgroups.JChannel;
+import org.jgroups.MembershipListener;
+import org.jgroups.Message;
+import org.jgroups.MessageListener;
+import org.jgroups.ReceiverAdapter;
+import org.jgroups.View;
+import org.jgroups.blocks.MethodCall;
+import org.jgroups.blocks.RequestOptions;
+import org.jgroups.blocks.ResponseMode;
+import org.jgroups.blocks.RpcDispatcher;
+import org.jgroups.blocks.RspFilter;
 import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.traits.*;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.Clustered;
+import org.radargun.traits.ConfigurationProvider;
+import org.radargun.traits.Lifecycle;
+import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.Utils;
 
 /**
@@ -43,10 +70,10 @@ import org.radargun.utils.Utils;
  * @author Bela Ban
  */
 @Service(doc = "JGroupsService faking cache operations")
-public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clustered, BasicOperations.Cache {
+public class JGroups36Service implements Lifecycle, Clustered, BasicOperations.Cache {
    protected static Log log = LogFactory.getLog(JGroups36Service.class);
 
-   private static final Method[] METHODS = new Method[7];
+   protected static final Method[] METHODS = new Method[7];
    protected static final short GET = 0;
    protected static final short CONTAINS_KEY = 1;
    protected static final short PUT = 2;
@@ -57,10 +84,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
    protected JChannel ch;
    protected RpcDispatcher disp;
-   protected volatile Address localAddr;
-   protected volatile int myRank; // rank of current member in view
-   protected volatile List<Address> members = Collections.emptyList();
-   protected List<Membership> membershipHistory = new ArrayList<>();
+   protected JGroupsReceiver receiver;
 
    @Property(doc = "Number of nodes where the writes will be replicated.")
    protected int numOwners = 2;
@@ -177,21 +201,40 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
       try {
          ch = new JChannel(configFile).name(name);
-         disp = new RpcDispatcher(ch, null, this, this);
-         disp.setMethodLookup(id -> METHODS[id]);
-         ch.connect("x");
+         receiver = new JGroups36Receiver(ch);
+         disp = createRpcDispatcher(ch);
+         connectChannel("x");
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
-      localAddr = ch.getAddress();
-      myRank = Util.getRank(ch.getView(), localAddr) - 1;
+      receiver.updateLocalAddr(ch.getAddress());
+      receiver.updateMyRank(Util.getRank(ch.getView(), ch.getAddress()) - 1);
+   }
+
+   protected void connectChannel(String clusterName) throws Exception {
+      // binary compatibility
+      ch.connect(clusterName);
+   }
+
+   protected RpcDispatcher createRpcDispatcher(JChannel ch) throws Exception {
+      // binary compatibility
+      Constructor<RpcDispatcher> constructor = RpcDispatcher.class.getConstructor(Channel.class, MessageListener.class, MembershipListener.class, Object.class);
+      RpcDispatcher disp = constructor.newInstance(ch, null, new ReceiverAdapter() {
+         @Override
+         public void viewAccepted(View view) {
+            JGroups36Service.this.receiver.viewAccepted(view);
+            super.viewAccepted(view);
+         }
+      }, this);
+      disp.setMethodLookup(id -> METHODS[id]);
+      return disp;
    }
 
    @Override
    public void stop() {
       Util.close(ch);
       synchronized (this) {
-         membershipHistory.add(Membership.empty());
+         receiver.getMembershipHistory().add(Membership.empty());
       }
    }
 
@@ -229,7 +272,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
       // forward to backup owners
       if (excludeRank == -1)
          return;
-      List<Address> backupOwners = pickBackups(myRank, excludeRank);
+      List<Address> backupOwners = pickBackups(receiver.getMyRank(), excludeRank);
       if (backupOwners == null || backupOwners.isEmpty())
          return;
       if (backupOwners.size() == 1)
@@ -284,10 +327,10 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
       if (this.primaryReplicatesPuts) {
          List<Address> owners = pickTargets(false, false);
          Address primary = owners.remove(0);
-         owners.remove(localAddr); // backups shouldn't forward back to us - we already applied the put
+         owners.remove(receiver.getLocalAddr()); // backups shouldn't forward back to us - we already applied the put
 
-         int excludeRank = owners.isEmpty() ? -1 : myRank;
-         if (primary.equals(localAddr))
+         int excludeRank = owners.isEmpty() ? -1 : receiver.getMyRank();
+         if (primary.equals(receiver.getLocalAddr()))
             putFromRemote(key, value, excludeRank);
          else
             invoke(primary, new MethodCall(PUT_AND_FORWARD, key, value, excludeRank), putOptions);
@@ -314,20 +357,6 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
       lastValue = null;
    }
 
-   public void viewAccepted(View newView) {
-      this.members = newView.getMembers();
-      this.myRank = Util.getRank(newView, localAddr) - 1;
-      ArrayList<Member> mbrs = new ArrayList<>(newView.getMembers().size());
-      boolean coord = true;
-      for (Address address : newView.getMembers()) {
-         mbrs.add(new Member(address.toString(), ch.getAddress().equals(address), coord));
-         coord = false;
-      }
-      synchronized (this) {
-         membershipHistory.add(Membership.create(mbrs));
-      }
-   }
-
    @Override
    public boolean isCoordinator() {
       View view = ch.getView();
@@ -337,13 +366,13 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
    @Override
    public synchronized Collection<Member> getMembers() {
-      if (membershipHistory.isEmpty()) return null;
-      return membershipHistory.get(membershipHistory.size() - 1).members;
+      if (receiver.getMembershipHistory().isEmpty()) return null;
+      return receiver.getMembershipHistory().get(receiver.getMembershipHistory().size() - 1).members;
    }
 
    @Override
    public synchronized List<Membership> getMembershipHistory() {
-      return new ArrayList<>(membershipHistory);
+      return new ArrayList<>(receiver.getMembershipHistory());
    }
 
    // 1-m invocation
@@ -392,7 +421,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     * the list
     */
    protected List<Address> pickTargets(boolean returnNullOnSelfInclusion, boolean skipSelf) {
-      List<Address> mbrs = this.members;
+      List<Address> mbrs = receiver.getMembers();
       int size = mbrs.size();
       int startIndex = ThreadLocalRandom.current().nextInt(size);
       int numTargets = Math.min(numOwners, size);
@@ -400,7 +429,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
       List<Address> targets = new ArrayList<>(numTargets);
       for (int i = 0; i < numTargets; i++) {
          int index = (startIndex + i) % size;
-         if (index == myRank) {
+         if (index == receiver.getMyRank()) {
             if (returnNullOnSelfInclusion)
                return null;
             if (skipSelf)
@@ -420,7 +449,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     * @return
     */
    protected List<Address> pickBackups(int primaryRank, int excludeRank) {
-      List<Address> mbrs = this.members;
+      List<Address> mbrs = receiver.getMembers();
       int size = mbrs.size();
       int startIndex = primaryRank + 1;
       int numTargets = Math.min(numOwners - 1, size);
