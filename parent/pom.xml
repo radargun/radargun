@@ -423,10 +423,12 @@
             <module>../plugins/jgroups34</module>
             <module>../plugins/jgroups35</module>
             <module>../plugins/jgroups36</module>
+            <module>../plugins/jgroups42</module>
+            <module>../plugins/jgroups52</module>
          </modules>
          <properties>
-            <plugins.jgroups-latest>jgroups36</plugins.jgroups-latest>
-            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,${plugins.jgroups-latest}</plugins.jgroups>
+            <plugins.jgroups-latest>jgroups52</plugins.jgroups-latest>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,jgroups36,jgroups42,${plugins.jgroups-latest}</plugins.jgroups>
          </properties>
       </profile>
       <profile>

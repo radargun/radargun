@@ -3,7 +3,6 @@ package org.radargun.service;
 import java.util.Arrays;
 
 import org.jgroups.JChannel;
-import org.jgroups.util.Util;
 
 /**
  * Manual test to verify that replication with primary-replicates-puts="true" works
@@ -32,7 +31,7 @@ public class JGroups36ServiceTest {
       es.start();
 
 
-      Util.waitUntilAllChannelsHaveSameSize(10000, 500, as.ch, bs.ch, cs.ch, ds.ch, es.ch);
+      //Util.waitUntilAllChannelsHaveSameSize(10000, 500, as.ch, bs.ch, cs.ch, ds.ch, es.ch);
 
       for (JChannel ch : Arrays.asList(as.ch, bs.ch, cs.ch, ds.ch, es.ch))
          System.out.printf("%s: %s\n", ch.getAddress(), ch.getView());

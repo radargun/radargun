@@ -9,15 +9,21 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-jgroups36</artifactId>
-   <name>JGroups 3.6.x plugin for RadarGun</name>
+   <artifactId>plugin-jgroups52</artifactId>
+   <name>JGroups 5.2.x plugin for RadarGun</name>
 
    <dependencies>
 
       <dependency>
          <groupId>org.jgroups</groupId>
          <artifactId>jgroups</artifactId>
-         <version>3.6.20.Final</version>
+         <version>5.2.4.Final</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-jgroups42</artifactId>
+         <version>${project.version}</version>
       </dependency>
 
       <dependency>
