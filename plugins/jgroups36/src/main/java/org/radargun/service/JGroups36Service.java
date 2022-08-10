@@ -46,6 +46,7 @@ import org.radargun.traits.Clustered;
 import org.radargun.traits.ConfigurationProvider;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.StringArrayConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -89,20 +90,17 @@ public class JGroups36Service implements Lifecycle, Clustered, BasicOperations.C
    @Property(doc = "Number of nodes where the writes will be replicated.")
    protected int numOwners = 2;
 
-   @Property(doc = "Controls use of the DONT_BUNDLE flag. Default is true.")
-   protected boolean bundle = true;
-
-   @Property(doc = "Controls use of the FC flag. Default is true.")
-   protected boolean flowControl = true;
-
-   @Property(doc = "Controls use of the OOB flag. Default is true.")
-   protected boolean oob = true;
-
    @Property(doc = "Controls use of anycasting flag in RequestOptions. Default is true.")
    protected boolean anycasting = true;
 
    @Property(name = "file", doc = "Configuration file for JGroups.", deprecatedName = "config")
    protected String configFile;
+
+   @Property(doc = "Flags that will be used in all requests.", converter = StringArrayConverter.class)
+   protected String[] flags;
+
+   @Property(doc = "Transient flags that will be used in all requests.", converter = StringArrayConverter.class)
+   protected String[] transientFlags;
 
    @Property(doc = "When enabled, a put is sent to the primary which (synchronously) " +
       "replicates it to the backup(s). Otherwise the put is sent to all owners and the call return on the first reply." +
@@ -169,27 +167,29 @@ public class JGroups36Service implements Lifecycle, Clustered, BasicOperations.C
 
    @Override
    public void start() {
-      this.getOptions = new RequestOptions(ResponseMode.GET_FIRST, 20000, anycasting, null);
-      if (oob) {
-         getOptions.setFlags(Message.Flag.OOB);
-      }
-      if (!bundle) {
-         getOptions.setFlags(Message.Flag.DONT_BUNDLE);
-      }
-      if (!flowControl) {
-         getOptions.setFlags(Message.Flag.NO_FC);
+      // Flag
+      Message.Flag[] messageFlags = null;
+      if (flags != null) {
+         messageFlags = new Message.Flag[flags.length];
+         for (int i = 0; i < flags.length; i++) {
+            messageFlags[i] = Message.Flag.valueOf(flags[i]);
+         }
       }
 
+      // TransientFlag
+      Message.TransientFlag[] messageTransientFlags = null;
+      if (transientFlags != null) {
+         messageTransientFlags = new Message.TransientFlag[transientFlags.length];
+         for (int i = 0; i < transientFlags.length; i++) {
+            messageTransientFlags[i] = Message.TransientFlag.valueOf(transientFlags[i]);
+         }
+      }
+
+      this.getOptions = new RequestOptions(ResponseMode.GET_FIRST, 20000, anycasting, null);
+      this.setFlags(this.getOptions, messageFlags, messageTransientFlags);
+
       this.putOptions = new RequestOptions(ResponseMode.GET_FIRST, 20000, true, null); // uses anycasting
-      if (oob) {
-         putOptions.setFlags(Message.Flag.OOB);
-      }
-      if (!bundle) {
-         putOptions.setFlags(Message.Flag.DONT_BUNDLE);
-      }
-      if (!flowControl) {
-         putOptions.setFlags(Message.Flag.NO_FC);
-      }
+      this.setFlags(this.putOptions, messageFlags, messageTransientFlags);
 
       putOptionsWithFilter = new RequestOptions(putOptions).setRspFilter(new FirstNonNullResponse());
 
@@ -209,6 +209,15 @@ public class JGroups36Service implements Lifecycle, Clustered, BasicOperations.C
       }
       receiver.updateLocalAddr(ch.getAddress());
       receiver.updateMyRank(Util.getRank(ch.getView(), ch.getAddress()) - 1);
+   }
+
+   private void setFlags(RequestOptions r, Message.Flag[] messageFlags, Message.TransientFlag[] messageTransientFlags) {
+      if (messageFlags != null && messageFlags.length > 0) {
+         r.setFlags(messageFlags);
+      }
+      if (messageTransientFlags != null && messageTransientFlags.length > 0) {
+         r.setTransientFlags(messageTransientFlags);
+      }
    }
 
    protected void connectChannel(String clusterName) throws Exception {
