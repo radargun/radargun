@@ -1,0 +1,57 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+   <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
+   <clusters>
+      <scale from="2" to="2">
+         <cluster />
+      </scale>
+   </clusters>
+   <configurations>
+
+      <config name="repl-13">
+         <setup plugin="infinispan130">
+            <embedded xmlns="urn:radargun:plugins:infinispan130:3.0" file="${env.WORKSPACE}/dg-qe/configs/infinispan130-library/regression/${env.LIBRARY_CONFIGURATION_FILE:library.xml}" cache="replCache"/>
+         </setup>
+      </config>
+
+   </configurations>
+   <init/>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
+      <define var="num.entries" value="1000000" />
+      <define var="entry.size" value="${env.BENCHMARK_ENTRY_SIZE:10000}" />
+
+      <service-start />
+      <jvm-monitor-start />
+      <periodic-cluster-split-verify period="1000" />
+
+      <l:basic-operations-test test-name="warmup" num-threads-per-node="1" duration="4m" entry-size="${entry.size}">
+         <l:key-selector>
+            <l:concurrent-keys total-entries="${num.entries}" />
+         </l:key-selector>
+         <cache:cache-selector>
+            <cache:use-cache>
+               <cache:cache>replCache</cache:cache>
+            </cache:use-cache>
+         </cache:cache-selector>
+         <cache:key-generator>
+            <cache:string />
+         </cache:key-generator>
+         <cache:value-generator>
+            <cache:byte-array/>
+         </cache:value-generator>
+      </l:basic-operations-test>
+
+      <periodic-cluster-split-verify stop="true" />
+      <jvm-monitor-stop />
+      <service-stop />
+   </rg:scenario>
+   <cleanup check-memory="false" check-memory-released="false" check-threads="false"/>
+
+   <reports>
+      <reporter type="html" />
+   </reports>
+
+</benchmark>
+
