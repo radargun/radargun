@@ -22,12 +22,6 @@ public abstract class AbstractCompletion implements Completion {
       }
    }
 
-   @Override
-   public synchronized void setCompletionHandler(Runnable handler) {
-      if (completed) throw new IllegalStateException();
-      this.handler = handler;
-   }
-
    protected synchronized void runCompletionHandler() {
       if (completed) return;
       completed = true;

@@ -31,7 +31,7 @@ import org.radargun.utils.Utils;
 public abstract class TestStage extends BaseTestStage {
    public static final String NAMESPACE = "urn:radargun:stages:cache:" + Version.SCHEMA_VERSION;
    public static final String DEPRECATED_NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
-   protected static final String STRESSORS_MANAGER = "StressorsManager";
+   public static final String STRESSORS_MANAGER = "StressorsManager";
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
    public int numThreadsPerNode = 0;
@@ -88,6 +88,8 @@ public abstract class TestStage extends BaseTestStage {
 
    protected StressorsManager stressorsManager;
 
+   private Runnable completionHandler;
+
    public StressorsManager getStressorsManager() {
       return stressorsManager;
    }
@@ -113,12 +115,17 @@ public abstract class TestStage extends BaseTestStage {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
          stressorsManager = setUpAndStartStressors();
+         workerState.put(STRESSORS_MANAGER, stressorsManager);
          if (runBackground) {
-            workerState.put(STRESSORS_MANAGER, stressorsManager);
             return successfulResponse();
          } else {
             StopTestStage.waitForStressorsToFinish(stressorsManager, timeout);
             destroy();
+            for (Stressor s : stressorsManager.getStressors()) {
+               if (s.forceStopped()) {
+                  return errorResponse("Stage was stopped by other stage");
+               }
+            }
             log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
             return newStatisticsAck(stressorsManager.getStressors());
          }
@@ -180,7 +187,7 @@ public abstract class TestStage extends BaseTestStage {
       long startTime = TimeService.currentTimeMillis();
       completion = createCompletion();
       CountDownLatch finishCountDown = new CountDownLatch(1);
-      completion.setCompletionHandler(new Runnable() {
+      completionHandler = new Runnable() {
          @Override
          public void run() {
             //Stop collecting statistics for duration-based tests
@@ -189,7 +196,7 @@ public abstract class TestStage extends BaseTestStage {
             }
             finishCountDown.countDown();
          }
-      });
+      };
       operationSelector = wrapOperationSelector(createOperationSelector());
 
       List<Stressor> stressors = startStressors();
@@ -337,6 +344,10 @@ public abstract class TestStage extends BaseTestStage {
 
    public boolean isSingleTxType() {
       return transactionSize == 1;
+   }
+
+   public Runnable getCompletionHandler() {
+      return completionHandler;
    }
 
    protected interface ResultRetriever<T> {
