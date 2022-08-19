@@ -43,6 +43,7 @@ public class Stressor extends Thread {
    private Statistics stats;
    private boolean started = false;
    private CountDownLatch threadCountDown;
+   private boolean continueRunning = true;
 
    // uniform rate limiter
    final long uniformRateLimiterOpsPerNano;
@@ -96,7 +97,7 @@ public class Stressor extends Thread {
          // the operation selector needs to be started before any #next() call
          operationSelector.start();
 
-         while (!stage.isTerminated()) {
+         while (!stage.isTerminated() && continueRunning) {
             boolean started = stage.isStarted();
             if (started) {
                txRemainingOperations = 0;
@@ -131,7 +132,7 @@ public class Stressor extends Thread {
          this.started = true;
          completion.start();
          int i = 0;
-         while (!stage.isTerminated()) {
+         while (!stage.isTerminated() && continueRunning) {
             Operation operation = operationSelector.next(random);
             if (!completion.moreToRun()) break;
             try {
@@ -150,6 +151,9 @@ public class Stressor extends Thread {
             i++;
             completion.logProgress(i);
          }
+         // before, the finishCountDown.countDown() was inside the completion.moreToRun() method
+         // if we have a custom logic in the while and the iteration stopped, the CountDownLatch wasn't called
+         stage.getCompletionHandler().run();
          this.started = false;
       } finally {
          if (txRemainingOperations > 0) {
@@ -362,5 +366,13 @@ public class Stressor extends Thread {
          }
       }
       return request;
+   }
+
+   public void setContinueRunning(boolean continueRunning) {
+      this.continueRunning = continueRunning;
+   }
+
+   public boolean forceStopped() {
+      return !this.continueRunning;
    }
 }

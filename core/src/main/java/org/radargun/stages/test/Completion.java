@@ -14,12 +14,6 @@ public interface Completion {
    boolean moreToRun();
 
    /**
-    * Register code that should be called once this completion has first returned false from {@link #moreToRun()}.
-    * @param runnable
-    */
-   void setCompletionHandler(Runnable runnable);
-
-   /**
     * Optionally writes progress message to the log.
     * @param executedOps Number of operations executed by this stressor thread.
     */
