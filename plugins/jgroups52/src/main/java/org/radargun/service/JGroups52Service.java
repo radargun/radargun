@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import org.jgroups.Address;
 import org.jgroups.BytesMessage;
 import org.jgroups.Header;
 import org.jgroups.Message;
@@ -20,7 +19,7 @@ public class JGroups52Service extends JGroups42Service {
       ch.setReceiver(new Receiver() {
          @Override
          public void receive(Message message) {
-            if (sendResponse) {
+            if (sendResponse && message.getSrc() != null && !message.getSrc().equals(ch.getAddress())) {
                RequestCorrelator.Header header = message.getHeader(HEADER_ID);
                if (header != null && header.requestId() > 0) {
                   Message response = new BytesMessage(message.getSrc()).setFlag(REPLY_FLAGS, false);
@@ -40,22 +39,17 @@ public class JGroups52Service extends JGroups42Service {
    }
 
    @Override
-   protected Message sendAndCopy(Message copy, Address dest, boolean doCopy) {
-      copy.dest(dest);
+   protected void sendMessage(Message message) {
       try {
-         ch.send(copy);
+         ch.send(message);
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
-      if (doCopy) {
-         copy = copy.copy(true, true);
-      }
-      return copy;
    }
 
    @Override
-   protected Message newMessage(Address dest, Object object) {
-      Message message = new BytesMessage(dest);
+   protected Message newMessage(Object object) {
+      Message message = new BytesMessage();
       for (String flag : flags) {
          message.setFlag(Message.Flag.valueOf(flag));
       }

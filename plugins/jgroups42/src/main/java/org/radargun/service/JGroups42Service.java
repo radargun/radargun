@@ -3,14 +3,12 @@ package org.radargun.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jgroups.Address;
 import org.jgroups.Header;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
@@ -137,14 +135,8 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
          executor.execute(() -> {
             Map kv = new HashMap();
             kv.put(key, value);
-            Message copy = newMessage(null, kv);
-            for (Iterator<Address> it = receiver.getMembers().iterator(); it.hasNext(); ) {
-               Address dest = it.next();
-               if (dest.equals(ch.getAddress())) {
-                  continue;
-               }
-               copy = sendAndCopy(copy, dest, it.hasNext());
-            }
+            Message message = newMessage(kv);
+            sendMessage(message);
          });
       } else {
          throw new UnsupportedOperationException("");
@@ -176,7 +168,7 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
       ch.setReceiver(new Receiver() {
          @Override
          public void receive(Message message) {
-            if (sendResponse) {
+            if (sendResponse && message.getSrc() != null && !message.getSrc().equals(ch.getAddress())) {
                RequestCorrelator.Header header = message.getHeader(HEADER_ID);
                if (header != null && header.requestId() > 0) {
                   Message response = new Message(message.getSrc()).setFlag(REPLY_FLAGS);
@@ -196,22 +188,17 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
    }
 
    // IncompatibleClassChangeError
-   protected Message sendAndCopy(Message copy, Address dest, boolean doCopy) {
-      copy.dest(dest);
+   protected void sendMessage(Message message) {
       try {
-         ch.send(copy);
+         ch.send(message);
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
-      if (doCopy) {
-         copy = copy.copy(true, true);
-      }
-      return copy;
    }
 
    // IncompatibleClassChangeError
-   protected Message newMessage(Address dest, Object object) {
-      Message message = new Message(dest);
+   protected Message newMessage(Object object) {
+      Message message = new Message();
       for (String flag : flags) {
          message.setFlag(Message.Flag.valueOf(flag));
       }
