@@ -41,7 +41,9 @@ public class JGroups52Service extends JGroups42Service {
    @Override
    protected void sendMessage(Message message) {
       try {
-         ch.send(message);
+         if (ch.isConnected()) {
+            ch.send(message);
+         }
       } catch (Exception e) {
          throw new RuntimeException(e);
       }

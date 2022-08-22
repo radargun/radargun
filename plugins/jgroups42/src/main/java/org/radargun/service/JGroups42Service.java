@@ -132,12 +132,19 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
    @Override
    public void put(Object key, Object value) {
       if (replicated) {
-         executor.execute(() -> {
+         if (nThreads > 1) {
+            executor.execute(() -> {
+               Map kv = new HashMap();
+               kv.put(key, value);
+               Message message = newMessage(kv);
+               sendMessage(message);
+            });
+         } else {
             Map kv = new HashMap();
             kv.put(key, value);
             Message message = newMessage(kv);
             sendMessage(message);
-         });
+         }
       } else {
          throw new UnsupportedOperationException("");
       }
@@ -168,6 +175,7 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
       ch.setReceiver(new Receiver() {
          @Override
          public void receive(Message message) {
+
             if (sendResponse && message.getSrc() != null && !message.getSrc().equals(ch.getAddress())) {
                RequestCorrelator.Header header = message.getHeader(HEADER_ID);
                if (header != null && header.requestId() > 0) {
@@ -190,7 +198,9 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
    // IncompatibleClassChangeError
    protected void sendMessage(Message message) {
       try {
-         ch.send(message);
+         if (ch.isConnected()) {
+            ch.send(message);
+         }
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
