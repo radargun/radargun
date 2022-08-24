@@ -24,7 +24,7 @@ public class PeriodicHeapDumpStage extends PeriodicStage {
    private JmxConnectionProvider jmxConnectionProvider;
 
    @Override
-   public PeriodicTask getTask() {
+   public PeriodicTask createTask() {
       return new HeapDumpTask(jmxConnectionProvider, dir, workerState.getConfigName(), workerState.getWorkerIndex(), live);
    }
 

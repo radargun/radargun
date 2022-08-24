@@ -16,6 +16,8 @@ import org.radargun.utils.TimeConverter;
  */
 public abstract class PeriodicStage extends AbstractDistStage {
 
+   protected static final String TASK = PeriodicStage.class.getSimpleName() + "_TASK";
+
    @Property(doc = "How often should be executed. Default is every 30 minutes.", converter = TimeConverter.class)
    protected long period = 1800000;
 
@@ -27,7 +29,11 @@ public abstract class PeriodicStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnWorker() {
-      PeriodicTask task = getTask();
+      PeriodicTask task = (PeriodicTask) workerState.get(TASK);
+      if (task == null) {
+         task = createTask();
+         workerState.put(TASK, task);
+      }
       ScheduledFuture<?> future = (ScheduledFuture<?>) workerState.get(getFutureKey());
       if (stop) {
          task.stop();
@@ -75,7 +81,7 @@ public abstract class PeriodicStage extends AbstractDistStage {
       }
    }
    
-   public abstract PeriodicTask getTask();
+   public abstract PeriodicTask createTask();
    
    public abstract String getFutureKey();
 
