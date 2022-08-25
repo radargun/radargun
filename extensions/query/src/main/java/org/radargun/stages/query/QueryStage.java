@@ -38,7 +38,7 @@ public class QueryStage extends TestStage {
    private InternalsExposition internalsExposition;
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       boolean useTxs = useTransactions == TransactionMode.ALWAYS ? true : useTransactions == TransactionMode.NEVER ? false : useTransactions(null);
       return new QueryLogic(base, queryable, useTxs);
    }

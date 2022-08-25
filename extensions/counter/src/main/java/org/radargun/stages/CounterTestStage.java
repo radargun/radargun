@@ -62,7 +62,7 @@ public class CounterTestStage extends TestStage {
    }
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new CounterLogic();
    }
 

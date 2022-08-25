@@ -64,7 +64,7 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
    }
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new Logic();
    }
 

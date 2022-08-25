@@ -57,7 +57,7 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    }
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new Logic();
    }
 

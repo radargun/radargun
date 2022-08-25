@@ -62,7 +62,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
 
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new Logic();
    }
 

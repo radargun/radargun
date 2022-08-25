@@ -88,7 +88,7 @@ public class PeriodicClusterSplitVerifyStage extends PeriodicStage {
                   } else {
                      log.info("Cluster size at the beginning of the test was " + clusterSizeAtTestStart + " but changed to " + clusterSizeDuringTest +
                            " during the test! Perhaps a split occured, or a new node joined?. Stopping the stressors.");
-                     stressorsManager.getStressors().forEach(s -> s.setContinueRunning(false));
+                     stressorsManager.forceStop();
                   }
                   splitDetected = true;
                }

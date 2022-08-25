@@ -53,7 +53,7 @@ public class RESTOperationsTestStage extends TestStage {
    }
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new StickySessionLogic();
    }
 

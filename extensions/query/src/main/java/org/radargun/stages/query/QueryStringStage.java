@@ -22,7 +22,7 @@ public class QueryStringStage extends TestStage {
    private Queryable queryable;
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       boolean useTxs = useTransactions == TransactionMode.ALWAYS ? true : useTransactions == TransactionMode.NEVER ? false : useTransactions(null);
       return new QueryStringLogic(base, queryable, useTxs);
    }
