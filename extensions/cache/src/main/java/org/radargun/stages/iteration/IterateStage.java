@@ -153,7 +153,7 @@ public class IterateStage extends TestStage {
    }
 
    @Override
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new Logic();
    }
 

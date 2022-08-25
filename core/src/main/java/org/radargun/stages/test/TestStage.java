@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
@@ -121,10 +122,8 @@ public abstract class TestStage extends BaseTestStage {
          } else {
             StopTestStage.waitForStressorsToFinish(stressorsManager, timeout);
             destroy();
-            for (Stressor s : stressorsManager.getStressors()) {
-               if (s.forceStopped()) {
-                  return errorResponse("Stage was stopped by other stage");
-               }
+            if (stressorsManager.wasForceStopped()) {
+               return errorResponse("Stage was stopped by other stage");
             }
             log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
             return newStatisticsAck(stressorsManager.getStressors());
@@ -199,7 +198,8 @@ public abstract class TestStage extends BaseTestStage {
       };
       operationSelector = wrapOperationSelector(createOperationSelector());
 
-      List<Stressor> stressors = startStressors();
+      AtomicBoolean continueRunning = new AtomicBoolean(true);
+      List<Stressor> stressors = startStressors(continueRunning);
       started = true;
 
       if (rampUp > 0) {
@@ -209,7 +209,7 @@ public abstract class TestStage extends BaseTestStage {
             throw new IllegalStateException("Interrupted during ramp-up.", e);
          }
       }
-      return new StressorsManager(stressors, startTime, finishCountDown);
+      return new StressorsManager(stressors, startTime, finishCountDown, continueRunning);
    }
 
    protected Completion createCompletion() {
@@ -236,14 +236,14 @@ public abstract class TestStage extends BaseTestStage {
       return operationSelector;
    }
 
-   protected List<Stressor> startStressors() {
+   protected List<Stressor> startStressors(AtomicBoolean continueRunning) {
       int myFirstThread = getFirstThreadOn(workerState.getWorkerIndex());
       int myNumThreads = getNumThreadsOn(workerState.getWorkerIndex());
       CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
 
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, threadCountDown);
+         Stressor stressor = new Stressor(this, createLogic(), myFirstThread + threadIndex, threadIndex, threadCountDown, continueRunning);
          stressors.add(stressor);
          stressor.start();
       }
@@ -340,7 +340,7 @@ public abstract class TestStage extends BaseTestStage {
       return useTransactions.use(transactional, resourceName, transactionSize);
    }
 
-   public abstract OperationLogic getLogic();
+   public abstract OperationLogic createLogic();
 
    public boolean isSingleTxType() {
       return transactionSize == 1;

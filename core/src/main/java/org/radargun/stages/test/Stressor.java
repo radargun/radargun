@@ -4,6 +4,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 import org.radargun.Operation;
@@ -43,7 +44,7 @@ public class Stressor extends Thread {
    private Statistics stats;
    private boolean started = false;
    private CountDownLatch threadCountDown;
-   private boolean continueRunning = true;
+   private final AtomicBoolean continueRunning;
 
    // uniform rate limiter
    final long uniformRateLimiterOpsPerNano;
@@ -52,7 +53,7 @@ public class Stressor extends Thread {
 
    final boolean reportLatencyAsServiceTime;
 
-   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, CountDownLatch threadCountDown) {
+   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, CountDownLatch threadCountDown, AtomicBoolean continueRunning) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;
@@ -66,6 +67,7 @@ public class Stressor extends Thread {
       this.thinkTime = stage.thinkTime;
       this.uniformRateLimiterOpsPerNano = TimeUnit.MILLISECONDS.toNanos(stage.cycleTime);
       this.reportLatencyAsServiceTime = stage.reportLatencyAsServiceTime;
+      this.continueRunning = continueRunning;
    }
 
    private boolean recording() {
@@ -97,7 +99,7 @@ public class Stressor extends Thread {
          // the operation selector needs to be started before any #next() call
          operationSelector.start();
 
-         while (!stage.isTerminated() && continueRunning) {
+         while (!stage.isTerminated() && continueRunning.get()) {
             boolean started = stage.isStarted();
             if (started) {
                txRemainingOperations = 0;
@@ -117,6 +119,8 @@ public class Stressor extends Thread {
                     sleep(thinkTime);
                } catch (OperationLogic.RequestException e) {
                   if (stage.exitOnFailure) {
+                     // it will stop all stressor
+                     continueRunning.set(false);
                      throw new IllegalStateException("Benchmark has exit on failure configured");
                   }
                   // the exception was already logged in makeRequest
@@ -132,7 +136,7 @@ public class Stressor extends Thread {
          this.started = true;
          completion.start();
          int i = 0;
-         while (!stage.isTerminated() && continueRunning) {
+         while (!stage.isTerminated() && continueRunning.get()) {
             Operation operation = operationSelector.next(random);
             if (!completion.moreToRun()) break;
             try {
@@ -141,6 +145,8 @@ public class Stressor extends Thread {
                   sleep(thinkTime);
             } catch (OperationLogic.RequestException e) {
                if (stage.exitOnFailure) {
+                  // it will stop all stressor
+                  continueRunning.set(false);
                   throw new IllegalStateException("Benchmark has exit on failure configured");
                }
                // the exception was already logged in makeRequest
@@ -151,11 +157,11 @@ public class Stressor extends Thread {
             i++;
             completion.logProgress(i);
          }
+      } finally {
          // before, the finishCountDown.countDown() was inside the completion.moreToRun() method
          // if we have a custom logic in the while and the iteration stopped, the CountDownLatch wasn't called
          stage.getCompletionHandler().run();
          this.started = false;
-      } finally {
          if (txRemainingOperations > 0) {
             endTransactionAndRegisterStats(null);
          }
@@ -366,13 +372,5 @@ public class Stressor extends Thread {
          }
       }
       return request;
-   }
-
-   public void setContinueRunning(boolean continueRunning) {
-      this.continueRunning = continueRunning;
-   }
-
-   public boolean forceStopped() {
-      return !this.continueRunning;
    }
 }

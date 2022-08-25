@@ -45,7 +45,7 @@ public class StreamingOperationsTestStage extends CacheOperationsTestStage {
             .build();
    }
 
-   public OperationLogic getLogic() {
+   public OperationLogic createLogic() {
       return new Logic();
    }
 
