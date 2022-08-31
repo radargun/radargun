@@ -230,12 +230,9 @@ The stage start and stops some nodes concurrently (without waiting for each othe
 
 ### periodic-cluster-split-verify
 Periodically check the cluster size.
-> dir (**optional**) - Location on disk where the heap dumps should be stored.  
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
-> generate-heap-dump (**optional**) - Set this flag to true to generate a thread dump when the cluster size changed. Default is false.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > initial-delay (**optional**) - Initial delay. Default is 0.  
-> live (**optional**) - If set it only prints objects which have active references and discards the ones that are ready to be garbage collected.  
 > period (**optional**) - How often should be executed. Default is every 30 minutes.  
 > roles (**optional**) - Specifies on which workers this stage should actively run, by their roles. The result set is intersection of specified workers, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.  
 > stop (**optional**) - Set this flag to true in order to terminate. Default is false.  
