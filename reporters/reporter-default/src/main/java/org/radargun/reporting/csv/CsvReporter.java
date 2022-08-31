@@ -4,22 +4,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.radargun.config.Cluster;
 import org.radargun.config.Converter;
 import org.radargun.config.MainConfig;
 import org.radargun.config.Property;
@@ -28,13 +23,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.AbstractReporter;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Timeline;
-import org.radargun.stats.Statistics;
-import org.radargun.stats.representation.DataThroughput;
-import org.radargun.stats.representation.DefaultOutcome;
-import org.radargun.stats.representation.MeanAndDev;
-import org.radargun.stats.representation.OperationThroughput;
-import org.radargun.stats.representation.Percentile;
-import org.radargun.utils.Utils;
+import org.radargun.reporting.commons.DataReporter;
 
 /**
  * Reporter producing CSV files.
@@ -44,10 +33,6 @@ import org.radargun.utils.Utils;
 public class CsvReporter extends AbstractReporter {
 
    protected static final Log log = LogFactory.getLog(CsvReporter.class);
-   protected static final String WORKER_INDEX = "WorkerIndex";
-   protected static final String ITERATION = "Iteration";
-   protected static final String PERIOD = "Period";
-   protected static final String THREAD_COUNT = "ThreadCount";
 
    @Property(doc = "Directory into which will be report files written.")
    private String targetDir = "results" + File.separator + "csv";
@@ -65,8 +50,7 @@ public class CsvReporter extends AbstractReporter {
    protected double[] percentiles = new double[] {95d, 99d};
 
    @Property(doc = "List od comma separated column name regex patterns which should be reordered to the left side, use '\\' to escape the commas if needed", converter = RegexConverter.class)
-   protected List<String> columnOrder = Arrays.asList(".*[Put|Get]\\.Throughput", ".*[Put|Get]\\.ResponseTimeMean",
-         ".*Get.*");
+   protected List<String> columnOrder = Arrays.asList(".*[Put|Get]\\.Throughput", ".*[Put|Get]\\.ResponseTimeMean", ".*Get.*");
 
    @Override
    public void run(MainConfig mainConfig, Collection<Report> reports) {
@@ -81,43 +65,9 @@ public class CsvReporter extends AbstractReporter {
    private void reportTest(Report report, Report.Test test) {
       FileWriter fileWriter = null;
       try {
-         fileWriter = prepareOutputFile(report, test.name, "");
-         int it = 0;
-         Set<String> columns = new TreeSet<String>();
-         ArrayList<Map<String, String>> rows = new ArrayList<>();
-         for (Report.TestIteration iteration : test.getIterations()) {
-            Statistics aggregated = null;
-            for (Map.Entry<Integer, List<Statistics>> workerStats : iteration.getStatistics()) {
-               if (ignore != null && ignore.contains(workerStats.getKey())) {
-                  continue;
-               }
-               if (workerStats.getValue().size() <= 0) {
-                  continue;
-               }
-               Statistics nodeSummary = processRow(it, columns, rows, workerStats);
-               if (computeTotal) {
-                  if (aggregated == null)
-                     aggregated = nodeSummary.copy();
-                  else
-                     aggregated.merge(nodeSummary);
-               }
-            }
-            if (computeTotal && aggregated != null) {
-               Map<String, String> rowData = new HashMap<String, String>();
-               rows.add(rowData);
-               for (String operation : aggregated.getOperations()) {
-                  addRepresentations(aggregated, rowData, aggregated, operation);
-               }
-               columns.addAll(rowData.keySet());
-
-               rowData.put(WORKER_INDEX, "TOTAL");
-               rowData.put(ITERATION, String.valueOf(it));
-               rowData.put(PERIOD, String.valueOf(aggregated.getEnd() - aggregated.getBegin()));
-               rowData.put(THREAD_COUNT, String.valueOf(iteration.getThreadCount()));
-            }
-            ++it;
-         }
-         writeFile(fileWriter, columns, rows);
+         DataReporter.DataReportValue value = DataReporter.get(test, ignore, computeTotal, percentiles);
+         fileWriter = new FileWriter(DataReporter.prepareOutputFile(report, test.name, "", targetDir, "csv"));
+         writeFile(fileWriter, value.columns, value.rows);
       } catch (IOException e) {
          log.error("Failed to create report for test " + test.name, e);
       } finally {
@@ -131,87 +81,10 @@ public class CsvReporter extends AbstractReporter {
       }
    }
 
-   private FileWriter prepareOutputFile(Report report, String prefix, String suffix) throws IOException {
-      File parentDir = new File(targetDir);
-      if (!parentDir.exists()) {
-         if (!parentDir.mkdirs()) {
-            log.warn("Issues creating parent dir " + parentDir);
-         }
-      } else {
-         if (!parentDir.isDirectory()) {
-            throw new IllegalStateException(targetDir + " is not a directory");
-         }
-      }
-
-      StringBuilder fileName = new StringBuilder(prefix).append('_').append(report.getConfiguration().name);
-      for (Cluster.Group group : report.getCluster().getGroups()) {
-         fileName.append('_').append(group.name).append('_').append(group.size);
-      }
-      fileName.append(suffix).append(".csv");
-      File outputFile = Utils.createOrReplaceFile(parentDir, fileName.toString());
-      return new FileWriter(outputFile);
-   }
-
-   private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows,
-         Map.Entry<Integer, List<Statistics>> workerStats) {
-      // this reporter is merging statistics from all threads on each node
-      Statistics summary = workerStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
-         .orElseThrow(() -> new IllegalStateException("No statistics!"));
-      Map<String, String> rowData = new HashMap<String, String>();
-      rows.add(rowData);
-      for (String operation : summary.getOperations()) {
-         addRepresentations(summary, rowData, summary, operation);
-      }
-      columns.addAll(rowData.keySet());
-
-      rowData.put(WORKER_INDEX, String.valueOf(workerStats.getKey()));
-      rowData.put(ITERATION, String.valueOf(it));
-      rowData.put(PERIOD, String.valueOf(summary.getEnd() - summary.getBegin()));
-      rowData.put(THREAD_COUNT, String.valueOf(workerStats.getValue().size()));
-      return summary;
-   }
-
-   private void addRepresentations(Statistics summary, Map<String, String> rowData, Statistics statistics,
-         String operationName) {
-      DefaultOutcome defaultOutcome = statistics.getRepresentation(operationName, DefaultOutcome.class);
-      if (defaultOutcome != null) {
-         if (defaultOutcome.requests == 0) return;
-         rowData.put(operationName + ".Requests", String.valueOf(defaultOutcome.requests));
-         rowData.put(operationName + ".Errors", String.valueOf(defaultOutcome.errors));
-         rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
-         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(defaultOutcome.responseTimeMean, 2)));
-      }
-      OperationThroughput throughput = statistics.getRepresentation(operationName, OperationThroughput.class);
-      if (throughput != null) {
-         rowData.put(operationName + ".ThroughputWithErrors", String.valueOf(round(throughput.gross, 1)));
-         rowData.put(operationName + ".Throughput", String.valueOf(round(throughput.net, 1)));
-      }
-      for (double percentile : percentiles) {
-         Percentile result = statistics.getRepresentation(operationName, Percentile.class, percentile);
-         if (result != null) {
-            rowData.put(operationName + ".RTM_" + percentile, String.valueOf(round(result.responseTimeMax, 2)));
-         }
-      }
-      MeanAndDev meanAndDev = statistics.getRepresentation(operationName, MeanAndDev.class);
-      if (meanAndDev != null) {
-         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(meanAndDev.mean, 2)));
-         rowData.put(operationName + ".ResponseTimeDeviation", String.valueOf(round(meanAndDev.dev, 2)));
-      }
-      DataThroughput dataThroughput = statistics.getRepresentation(operationName, DataThroughput.class);
-      if (dataThroughput != null) {
-         rowData.put(operationName + ".DataThrouputMin", String.valueOf(round(dataThroughput.minThroughput, 1)));
-         rowData.put(operationName + ".DataThrouputMax", String.valueOf(round(dataThroughput.maxThroughput, 1)));
-         rowData.put(operationName + ".DataThrouputMean", String.valueOf(round(dataThroughput.meanThroughput, 1)));
-         rowData.put(operationName + ".DataThrouputStdDeviation", String.valueOf(round(dataThroughput.deviation, 2)));
-         rowData.put(operationName + ".TotalBytes", String.valueOf(dataThroughput.totalBytes));
-         rowData.put(operationName + ".ResponseTimes", Arrays.toString(dataThroughput.responseTimes).replace(",", ""));
-      }
-   }
-
    private void writeFile(FileWriter fileWriter, Set<String> columns, List<Map<String, String>> rows)
          throws IOException {
 
-      List<String> indexColumns = Arrays.asList(ITERATION, WORKER_INDEX, PERIOD, THREAD_COUNT);
+      List<String> indexColumns = Arrays.asList(DataReporter.ITERATION, DataReporter.WORKER_INDEX, DataReporter.PERIOD, DataReporter.THREAD_COUNT);
 
       List<String> orderedColumns = new ArrayList<String>(indexColumns);
       orderedColumns.addAll(columns);
@@ -223,7 +96,7 @@ public class CsvReporter extends AbstractReporter {
       orderedColumns.sort(new ColumnComparator(columnOrderList));
 
       // sorts rows into correct order
-      rows.sort(new RowComparator(Arrays.asList(WORKER_INDEX, ITERATION, PERIOD, THREAD_COUNT)));
+      rows.sort(new RowComparator(Arrays.asList(DataReporter.WORKER_INDEX, DataReporter.ITERATION, DataReporter.PERIOD, DataReporter.THREAD_COUNT)));
 
       for (String column : orderedColumns) {
          fileWriter.write(column);
@@ -268,7 +141,7 @@ public class CsvReporter extends AbstractReporter {
       for (Timeline.Category valueCategory : allCategories) {
          FileWriter writer = null;
          try {
-            writer = prepareOutputFile(report, "timeline", "_" + valueCategory.getName());
+            writer = new FileWriter(DataReporter.prepareOutputFile(report, "timeline", "_" + valueCategory.getName(), targetDir, "csv"));
             writer.write("Timestamp");
             writer.write(separator);
             for (int i = 0; i <= maxWorkerIndex; ++i) {
@@ -320,11 +193,6 @@ public class CsvReporter extends AbstractReporter {
       }
    }
 
-   private double round(double number, int places) {
-      BigDecimal bigDecimal = new BigDecimal(number).setScale(places, RoundingMode.HALF_UP);
-      return bigDecimal.doubleValue();
-   }
-
    /**
     * Comparator for sorting rows based on column value
     * 
@@ -354,7 +222,6 @@ public class CsvReporter extends AbstractReporter {
          }
          return 0;
       }
-
    }
 
    /**
@@ -415,5 +282,4 @@ public class CsvReporter extends AbstractReporter {
       }
 
    }
-
 }

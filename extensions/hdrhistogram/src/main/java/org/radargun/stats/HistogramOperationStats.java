@@ -210,7 +210,7 @@ public final class HistogramOperationStats implements OperationStats {
       histogram = null;
    }
 
-   protected AbstractHistogram getHistogram() {
+   public AbstractHistogram getHistogram() {
       if (histogram != null) {
          return histogram;
       }

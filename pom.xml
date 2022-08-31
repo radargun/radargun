@@ -292,7 +292,7 @@
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
 
-                        <ac:for list="${reporter.default},${reporter.perfrepo}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${reporter.default},${reporter.perfrepo},${reporter.horreum}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging reporter @{reporter}..." />
                               <copy todir="${distribution.artifact}/reporters/@{reporter}">

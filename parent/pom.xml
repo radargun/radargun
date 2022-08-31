@@ -136,6 +136,7 @@
       <plugins.etcd/>
       <reporter.default />
       <reporter.perfrepo />
+      <reporter.horreum />
       <extension.cache />
       <extension.query />
       <extension.example-extension />
@@ -313,6 +314,20 @@
          </modules>
          <properties>
             <reporter.perfrepo>reporter-perfrepo</reporter.perfrepo>
+         </properties>
+      </profile>
+      <profile>
+         <id>reporter-horreum</id>
+         <activation>
+            <property>
+               <name>!no-reporter-horreum</name>
+            </property>
+         </activation>
+         <modules>
+            <module>../reporters/reporter-horreum</module>
+         </modules>
+         <properties>
+            <reporter.horreum>reporter-horreum</reporter.horreum>
          </properties>
       </profile>
       <!-- Plugins -->
