@@ -15,6 +15,7 @@ import org.radargun.traits.Queryable;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractInfinispanQueryable implements Queryable {
+   public static final String PROTOBUF_COMPONENT_NAME = "ProtobufMetadataManager";
    protected static class QueryBuilderImpl implements Query.Builder {
       protected final QueryFactory factory;
       protected final org.infinispan.query.dsl.QueryBuilder builder;

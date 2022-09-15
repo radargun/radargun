@@ -13,7 +13,6 @@ import javax.management.remote.JMXServiceURL;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.dsl.QueryFactory;
-import org.infinispan.query.remote.ProtobufMetadataManager;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Query;
@@ -25,7 +24,6 @@ import org.radargun.utils.Utils;
 public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    private static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remoting-jmx://%s:%d";
    protected static final Log log = LogFactory.getLog(InfinispanHotrodQueryable.class);
-
    protected final Infinispan60HotrodService service;
 
    public InfinispanHotrodQueryable(Infinispan60HotrodService service) {
@@ -107,7 +105,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       try {
          objName = new ObjectName(service.jmxDomain + ":type=RemoteQuery,name="
             + ObjectName.quote(service.clusterName)
-            + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
+            + ",component=" + PROTOBUF_COMPONENT_NAME);
       } catch (MalformedObjectNameException e) {
          throw new IllegalStateException("Failed to register protofiles", e);
       }

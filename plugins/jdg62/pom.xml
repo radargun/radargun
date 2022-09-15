@@ -131,13 +131,6 @@
 
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-remote-query-server</artifactId>
-         <version>${version.infinispan}</version>
-         <optional>true</optional>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-leveldb</artifactId>
          <version>${version.infinispan}</version>
          <optional>true</optional>
