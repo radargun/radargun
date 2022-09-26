@@ -34,7 +34,7 @@ public class DefaultConverter implements Converter<Object> {
       definedMap.put(long.class, new Parser() {
          @Override
          public Object parse(String string, Type[] parameters) {
-            return Long.parseLong(string.trim());
+            return Long.parseLong(string.replace("_", "").trim());
          }
       });
       definedMap.put(Long.class, definedMap.get(long.class));
