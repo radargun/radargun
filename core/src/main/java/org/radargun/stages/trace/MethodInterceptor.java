@@ -36,7 +36,10 @@ public class MethodInterceptor {
       long start = System.currentTimeMillis();
       Object value = callable.call();
       long end = System.currentTimeMillis();
-      histogram.recordValue(end - start);
+      // prevent ConcurrentModificationException - ConcurrentHistogram is not working
+      synchronized (histogram) {
+         histogram.recordValue(end - start);
+      }
 
       return value;
    }
