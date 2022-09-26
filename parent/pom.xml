@@ -147,6 +147,8 @@
       <extension.multimap/>
       <plugins.echo/>
       <version.glassfish.jaxb>2.3.0.1</version.glassfish.jaxb>
+      <version.hdrhistogram>2.1.12</version.hdrhistogram>
+      <version.byte-buddy>1.12.13</version.byte-buddy>
    </properties>
 
    <profiles>

@@ -59,6 +59,22 @@
          <version>1.2.0</version>
       </dependency>
 
+      <dependency>
+         <groupId>org.hdrhistogram</groupId>
+         <artifactId>HdrHistogram</artifactId>
+         <version>${version.hdrhistogram}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>net.bytebuddy</groupId>
+         <artifactId>byte-buddy-agent</artifactId>
+         <version>${version.byte-buddy}</version>
+      </dependency>
+      <dependency>
+         <groupId>net.bytebuddy</groupId>
+         <artifactId>byte-buddy</artifactId>
+         <version>${version.byte-buddy}</version>
+      </dependency>
    </dependencies>
    <profiles>
       <profile>
