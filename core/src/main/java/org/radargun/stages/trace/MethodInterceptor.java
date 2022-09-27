@@ -1,5 +1,7 @@
 package org.radargun.stages.trace;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -22,9 +24,8 @@ public class MethodInterceptor {
    }
 
    @RuntimeType
-   public static Object intercept(@Origin Class clazz, @AllArguments Object[] args, @SuperCall Callable<?> callable) throws Exception {
-
-      String key = clazz.getSimpleName();
+   public static Object intercept(@Origin Class clazz, @AllArguments Object[] args, @SuperCall Callable<?> callable, @Origin Method method) throws Exception {
+      String key = method.getName() + Arrays.toString(method.getParameterTypes()) + "::" + clazz.getSimpleName();
       Histogram histogram;
       synchronized (key) {
          histogram = histogramMap.get(key);
