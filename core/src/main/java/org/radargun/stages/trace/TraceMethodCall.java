@@ -34,33 +34,44 @@ public class TraceMethodCall {
    @Property(doc = "Class to trace")
    private String className;
 
-   @Property(doc = "Method to trace")
+   @Property(doc = "Method to trace. You can trace multiple methods in the same class separating by ;")
    private String methodName;
 
-   @Property(doc = "Method arguments. String of full class name separated by comma")
+   @Property(doc = "Method arguments. String of full class name separated by comma. You can trace multiple methods in the same class separating by ;")
    private String arguments;
 
    @Property(doc = "The scaling factor by which to divide histogram recorded values units in output. Default is 1000")
    private double outputValueUnitScalingRatio = 1000;
 
    public void start() {
+      // the fields are static, the method that intercept must be static
+      MethodInterceptor.highestTrackableValue = highestTrackableValue;
+      MethodInterceptor.numberOfSignificantValueDigits = numberOfSignificantValueDigits;
       try {
-         String[] argumentsData = arguments.split(",");
-         Class<?>[] argumentTypes = new Class<?>[argumentsData.length];
-         for (int i = 0; i < argumentTypes.length; i++) {
-            argumentTypes[i] = Class.forName(argumentsData[i].trim());
+         String[] methodNameData = methodName.split(";");
+         String[] argumentsData = arguments.split(";");
+         if (methodNameData.length != argumentsData.length) {
+            throw new IllegalStateException(String.format("methodName(%d) and arguments(%d) must have the same size", methodNameData.length, argumentsData.length));
          }
-         // the fields are static, the method that intercept must be static
-         MethodInterceptor.highestTrackableValue = highestTrackableValue;
-         MethodInterceptor.numberOfSignificantValueDigits = numberOfSignificantValueDigits;
-         AgentBuilder.Default agentBuilder = new AgentBuilder.Default();
-         agentBuilder
+         new AgentBuilder.Default()
                .type(ElementMatchers.isSubTypeOf(Class.forName(className)))
                .transform((builder, type, classLoader, module, protectionDomain) -> {
-                        return builder.method(named(methodName).and(takesArguments(argumentTypes))).intercept(MethodDelegation.to(MethodInterceptor.class));
+                  Class<MethodInterceptor> interceptor = MethodInterceptor.class;
+                  for (int i = 0; i < methodNameData.length; i++) {
+                     String innerMethodName = methodNameData[i].trim();
+                     String[] innerArguments = argumentsData[i].trim().split(",");
+                     Class<?>[] argumentTypes = new Class<?>[innerArguments.length];
+                     for (int j = 0; j < argumentTypes.length; j++) {
+                        try {
+                           argumentTypes[j] = Class.forName(innerArguments[j].trim());
+                        } catch (ClassNotFoundException e) {
+                           throw new RuntimeException(e);
+                        }
                      }
-               )
-               .installOn(ByteBuddyAgent.install());
+                     builder = builder.method(named(innerMethodName).and(takesArguments(argumentTypes))).intercept(MethodDelegation.to(interceptor));
+                  }
+                  return builder;
+               }).installOn(ByteBuddyAgent.install());
       } catch (ClassNotFoundException e) {
          throw new RuntimeException(e);
       }
