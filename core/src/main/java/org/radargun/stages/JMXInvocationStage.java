@@ -3,6 +3,7 @@ package org.radargun.stages;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -63,6 +64,9 @@ public class JMXInvocationStage extends AbstractDistStage {
    @Property(doc = "Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual workers.",
       complexConverter = PrimitiveValue.ObjectConverter.class)
    private PrimitiveValue expectedTotalResult;
+
+   @Property(doc = "Expected result value matching.")
+   private String expectedWorkerResultMatch;
 
    @InjectTrait
    private JmxConnectionProvider jmxConnectionProvider;
@@ -130,6 +134,20 @@ public class JMXInvocationStage extends AbstractDistStage {
                }
                if (expectedWorkerResult != null && !expectedWorkerResult.getElementValue().equals(result)) {
                   throw new JMXInvocationStageException(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedWorkerResult.getElementValue(), result));
+               }
+               if (expectedWorkerResultMatch != null) {
+                  boolean match = false;
+                  try {
+                     match = result.toString().matches(expectedWorkerResultMatch);
+                  } catch (Exception e) {
+                     // we are returnig the char array because you can compare with your java example
+                     // there is the XML to Java encoding
+                     String message = String.format("Error while parsing the regex: regex=%s value=%s.", Arrays.toString(expectedWorkerResultMatch.toCharArray()), Arrays.toString(result.toString().toCharArray()));
+                     throw new JMXInvocationStageException(message, e);
+                  }
+                  if (!match) {
+                     throw new JMXInvocationStageException(String.format("Method invocation returned incorrect result matching. Expected '%s', was '%s'.", expectedWorkerResultMatch, result));
+                  }
                }
                results.add(result);
             } catch (Exception e) {

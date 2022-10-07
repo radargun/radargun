@@ -165,6 +165,7 @@ Allows to invoke JMX-exposed methods and attributes.
 > exit-on-failure (**optional**) - If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.  
 > expected-total-result (**optional**) - Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual workers.  
 > expected-worker-result (**optional**) - Expected result value. If specified, results of method invocations are compared with this value.  
+> expected-worker-result-match (**optional**) - Expected result value matching.  
 > groups (**optional**) - Specifies in which groups this stage should actively run. The result set is intersection of specified workers, groups and roles. Default is all groups.  
 > method-parameters (**optional**) - Method parameters. If specified, the number of parameters must match the number of parameter signatures supplied.  
 > method-signatures (**optional**) - Method parameter signatures.  
