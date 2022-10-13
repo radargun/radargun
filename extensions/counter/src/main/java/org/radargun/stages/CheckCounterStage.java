@@ -1,6 +1,7 @@
 package org.radargun.stages;
 
 import java.util.List;
+
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Namespace;

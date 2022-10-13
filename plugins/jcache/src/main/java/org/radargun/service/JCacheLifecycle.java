@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
+
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 

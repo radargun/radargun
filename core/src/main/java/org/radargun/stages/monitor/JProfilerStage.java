@@ -2,6 +2,7 @@ package org.radargun.stages.monitor;
 
 import java.lang.management.ManagementFactory;
 import java.util.Collection;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 

@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import io.github.lukehutch.fastclasspathscanner.scanner.ClassInfo;
 import io.github.lukehutch.fastclasspathscanner.scanner.ScanResult;
-
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 

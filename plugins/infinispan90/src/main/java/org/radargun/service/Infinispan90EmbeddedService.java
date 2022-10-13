@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import java.util.concurrent.TimeUnit;
+
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.protocols.TP;
 import org.radargun.Service;

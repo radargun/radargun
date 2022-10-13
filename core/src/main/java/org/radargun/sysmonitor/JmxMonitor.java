@@ -3,6 +3,7 @@ package org.radargun.sysmonitor;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.text.NumberFormat;
+
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;

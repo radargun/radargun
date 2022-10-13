@@ -7,7 +7,6 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.Lifecycle;

@@ -3,6 +3,7 @@ package org.radargun.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;

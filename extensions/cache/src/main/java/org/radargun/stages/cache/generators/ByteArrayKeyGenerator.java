@@ -1,6 +1,7 @@
 package org.radargun.stages.cache.generators;
 
 import java.nio.ByteBuffer;
+
 import org.radargun.config.DefinitionElement;
 
 /**

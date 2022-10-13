@@ -3,6 +3,7 @@ package org.radargun.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.ConfigurationProvider;
