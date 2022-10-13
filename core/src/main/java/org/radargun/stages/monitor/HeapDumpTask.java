@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 import com.sun.management.HotSpotDiagnosticMXBean;
-
 import org.radargun.sysmonitor.JmxMonitor;
 import org.radargun.traits.JmxConnectionProvider;
+
+import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 public class HeapDumpTask extends JmxMonitor implements PeriodicStage.PeriodicTask {
 

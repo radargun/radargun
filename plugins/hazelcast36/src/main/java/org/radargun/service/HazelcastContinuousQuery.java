@@ -4,7 +4,6 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MapEvent;
-
 import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.Query;
 

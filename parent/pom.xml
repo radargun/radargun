@@ -797,7 +797,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-checkstyle-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>3.2.0</version>
             <configuration>
                <configLocation>main/resources/checkstyle.xml</configLocation>
                <suppressionsLocation>main/resources/checkstyle-suppressions.xml</suppressionsLocation>

@@ -1,6 +1,7 @@
 package org.radargun.stages.cache.generators;
 
 import java.util.Random;
+
 import org.radargun.config.DefinitionElement;
 
 /**

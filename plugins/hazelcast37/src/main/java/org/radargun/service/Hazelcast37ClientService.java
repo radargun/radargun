@@ -2,6 +2,7 @@ package org.radargun.service;
 
 import java.util.Collections;
 import java.util.List;
+
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;

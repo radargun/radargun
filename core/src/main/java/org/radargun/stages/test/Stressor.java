@@ -116,7 +116,7 @@ public class Stressor extends Thread {
                try {
                   logic.run(operation);
                   if (thinkTime > 0)
-                    sleep(thinkTime);
+                     sleep(thinkTime);
                } catch (OperationLogic.RequestException e) {
                   if (stage.exitOnFailure) {
                      // it will stop all stressor

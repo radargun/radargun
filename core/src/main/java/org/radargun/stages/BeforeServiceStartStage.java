@@ -2,6 +2,7 @@ package org.radargun.stages;
 
 import java.util.Collections;
 import java.util.Map;
+
 import org.radargun.DistStageAck;
 import org.radargun.ServiceContext;
 import org.radargun.config.Stage;

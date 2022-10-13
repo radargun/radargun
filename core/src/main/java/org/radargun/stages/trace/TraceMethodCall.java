@@ -12,7 +12,6 @@ import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
-
 import org.HdrHistogram.Histogram;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;

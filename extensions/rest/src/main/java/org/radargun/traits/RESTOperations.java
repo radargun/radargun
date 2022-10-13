@@ -1,9 +1,11 @@
 package org.radargun.traits;
 
 import java.util.List;
+
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import org.radargun.Operation;
 
 /**
