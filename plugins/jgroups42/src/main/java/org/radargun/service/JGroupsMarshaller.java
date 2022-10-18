@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class JGroups42Marshaller {
+public class JGroupsMarshaller {
 
    public byte[] toByteArray(Object key, Object value) {
       try (ByteArrayOutputStream bos = new ByteArrayOutputStream();

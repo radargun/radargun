@@ -6,18 +6,18 @@ import org.jgroups.Message;
 /**
  * Code copied from https://github.com/infinispan/infinispan/tree/13.0.x
  */
-public class JGroups42CacheOperationImpl implements JGroups42CacheOperation {
+public class JGroups42CacheOperationImpl implements JGroupsCacheOperation {
 
    public static final short REQUEST_FLAGS_PER_SENDER = Message.Flag.NO_TOTAL_ORDER.value();
    public static final short REQUEST_FLAGS_UNORDERED =
          (short) (Message.Flag.OOB.value() | Message.Flag.NO_TOTAL_ORDER.value());
 
-   private final JGroups42Marshaller marshaller;
+   private final JGroupsMarshaller marshaller;
    private final JChannel channel;
 
    public JGroups42CacheOperationImpl(JChannel channel) {
       this.channel = channel;
-      this.marshaller = new JGroups42Marshaller();
+      this.marshaller = new JGroupsMarshaller();
    }
 
    @Override

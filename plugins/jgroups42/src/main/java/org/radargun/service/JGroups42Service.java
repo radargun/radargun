@@ -48,7 +48,7 @@ public class JGroups42Service implements Lifecycle, Clustered, BasicOperations.C
    protected String configFile;
 
    protected JGroupsReceiver receiver;
-   protected JGroups42CacheOperation jGroupsCacheOperation;
+   protected JGroupsCacheOperation jGroupsCacheOperation;
 
    public JGroups42Service() {
    }
