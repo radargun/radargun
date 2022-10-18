@@ -12,7 +12,11 @@ public class JGroups52Service extends JGroups42Service {
    protected String ispnVersion = "14";
 
    protected void createCacheOperation() {
-      jGroupsCacheOperation = new JGroups52ISPN14CacheOperation(ch);
+      if ("14".equals(ispnVersion)) {
+         jGroupsCacheOperation = new JGroups52ISPN14CacheOperationImpl(ch);
+      } else if ("13".equals(ispnVersion)) {
+         jGroupsCacheOperation = new JGroups52ISPN14CacheOperationImpl(ch);
+      }
    }
 
    protected void setReceiver() {

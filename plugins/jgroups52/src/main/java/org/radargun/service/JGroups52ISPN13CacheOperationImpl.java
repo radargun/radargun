@@ -5,19 +5,18 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 
 /**
- * Code copied from https://github.com/infinispan/infinispan/tree/14.0.x
+ * Code copied from https://github.com/infinispan/infinispan/tree/13.0.x
  */
-public class JGroups52ISPN14CacheOperation implements JGroupsCacheOperation {
+public class JGroups52ISPN13CacheOperationImpl implements JGroupsCacheOperation {
 
-   private static final short REQUEST_FLAGS_PER_SENDER = Message.Flag.NO_TOTAL_ORDER.value();
-   private static final short REQUEST_FLAGS_UNORDERED =
-         (short) (Message.Flag.OOB.value() | Message.Flag.NO_TOTAL_ORDER.value() |
-               Message.Flag.DONT_BUNDLE.value());
+   public static final short REQUEST_FLAGS_PER_SENDER = Message.Flag.NO_TOTAL_ORDER.value();
+   public static final short REQUEST_FLAGS_UNORDERED =
+         (short) (Message.Flag.OOB.value() | Message.Flag.NO_TOTAL_ORDER.value());
 
    private final JGroupsMarshaller marshaller;
    private final JChannel channel;
 
-   public JGroups52ISPN14CacheOperation(JChannel channel) {
+   public JGroups52ISPN13CacheOperationImpl(JChannel channel) {
       this.channel = channel;
       this.marshaller = new JGroupsMarshaller();
    }
