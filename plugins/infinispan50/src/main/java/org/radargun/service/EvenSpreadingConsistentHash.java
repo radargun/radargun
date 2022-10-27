@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.DefaultConsistentHash;
-import org.infinispan.distribution.ch.TopologyInfo;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -79,20 +78,11 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
       this.keysPerThread = keysPerThread;
    }
 
-   /**
-    * No need to implement this: https://issues.jboss.org/browse/ISPN-899
-    */
    @Override
-   public int getHashId(Address a) {
-      return 0;
-   }
-
-   /**
-    * No need to implement this: https://issues.jboss.org/browse/ISPN-899
-    */
-   @Override
-   public int getHashSpace() {
-      return 0;
+   public List<Integer> getHashIds(Address address) {
+      List<Integer> hash = new ArrayList<>();
+      hash.add(0);
+      return hash;
    }
 
    //following methods should only be used during rehashing, so no point in implementing them
@@ -125,11 +115,6 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
             return o1.toString().compareTo(o2.toString());
          }
       });
-   }
-
-   @Override
-   public void setTopologyInfo(TopologyInfo topologyInfo) {
-      existing.setTopologyInfo(topologyInfo);
    }
 
    public Map<Object, List<Address>> locateAll(Collection<Object> keys, int replCount) {
