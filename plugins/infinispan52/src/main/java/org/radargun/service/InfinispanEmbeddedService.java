@@ -19,7 +19,6 @@ import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DataLocality;
 import org.infinispan.distribution.DistributionManager;
-import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
@@ -196,7 +195,6 @@ public class InfinispanEmbeddedService {
       for (String cacheName : cacheManager.getCacheNames()) {
          Cache cache = cacheManager.getCache(cacheName);
          blockForRehashing(cache);
-         injectEvenConsistentHash(cache);
       }
    }
 
@@ -210,20 +208,6 @@ public class InfinispanEmbeddedService {
             Thread.sleep(200);
          if (!isJoinComplete(cache)) {
             throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
-         }
-      }
-   }
-
-   protected void injectEvenConsistentHash(Cache<Object, Object> cache) {
-      if (isCacheDistributed(cache)) {
-         ConsistentHash ch = cache.getAdvancedCache().getDistributionManager().getConsistentHash();
-         if (ch instanceof EvenSpreadingConsistentHash) {
-            if (threadsPerNode < 0)
-               throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
-            if (keysPerThread < 0)
-               throw new IllegalStateException("When EvenSpreadingConsistentHash is used must also be set.");
-            ((EvenSpreadingConsistentHash) ch).init(threadsPerNode, keysPerThread);
-            log.info("Using an even consistent hash!");
          }
       }
    }

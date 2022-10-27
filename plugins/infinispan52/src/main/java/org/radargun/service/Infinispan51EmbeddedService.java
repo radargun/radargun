@@ -147,7 +147,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    }
 
    protected int membersCount(ConsistentHash consistentHash) {
-      return consistentHash.getCaches().size();
+      throw new IllegalStateException("As part of the plugins cleanup this method is not supported");
    }
 
    @Override
