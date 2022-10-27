@@ -13,12 +13,6 @@
             </setup>
         </config>
 
-        <config name="jgroups52-ispn14">
-            <setup plugin="jgroups52">
-                <jgroups xmlns="urn:radargun:plugins:jgroups52:3.0" ispn-version="14" file="/Users/dlovison/Documents/GitHub/radargun/radargun/plugins/jgroups52/src/main/resources/example/default-jgroups5-udp.xml" replicated="true" />
-            </setup>
-        </config>
-
         <config name="jgroups52-ispn13">
             <setup plugin="jgroups52">
                 <jgroups xmlns="urn:radargun:plugins:jgroups52:3.0" ispn-version="13" file="/Users/dlovison/Documents/GitHub/radargun/radargun/plugins/jgroups52/src/main/resources/example/default-jgroups5-udp.xml" replicated="true" />
