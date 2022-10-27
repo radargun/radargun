@@ -20,11 +20,6 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan50</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
