@@ -553,10 +553,11 @@
             <module>../plugins/jdg81</module>
             <module>../plugins/jdg82</module>
             <module>../plugins/jdg83</module>
+            <module>../plugins/jdg84</module>
          </modules>
          <properties>
-            <plugins.jdg-latest>jdg83</plugins.jdg-latest>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,jdg72,jdg73,jdg80,jdg81,jdg82,${plugins.jdg-latest}</plugins.jdg>
+            <plugins.jdg-latest>jdg84</plugins.jdg-latest>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,jdg72,jdg73,jdg80,jdg81,jdg82,jdg83,${plugins.jdg-latest}</plugins.jdg>
          </properties>
       </profile>
       <profile>
