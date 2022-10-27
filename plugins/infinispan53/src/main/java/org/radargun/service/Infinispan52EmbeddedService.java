@@ -119,7 +119,6 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
       sb.append(", canExpire=").append(ice.canExpire()).append(", isEvicted=").append(ice.isEvicted());
       sb.append(", isRemoved=").append(ice.isRemoved()).append(", isValid=").append(ice.isValid());
       sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
-      sb.append(", version=").append(ice.getVersion()).append(", lockPlaceholder=").append(ice.isLockPlaceholder());
       return sb.append(']').toString();
    }
 
