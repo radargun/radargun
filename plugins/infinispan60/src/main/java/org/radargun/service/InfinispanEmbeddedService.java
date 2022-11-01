@@ -32,8 +32,7 @@ import org.radargun.utils.Utils;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-@Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class InfinispanEmbeddedService {
+public abstract class InfinispanEmbeddedService {
    protected static final String SERVICE_DESCRIPTION = "Service hosting Infinispan in embedded (library) mode.";
 
    static {
@@ -177,9 +176,7 @@ public class InfinispanEmbeddedService {
       }
    }
 
-   protected String getJmxDomain() {
-      return cacheManager.getGlobalConfiguration().getJmxDomain();
-   }
+   protected abstract String getJmxDomain();
 
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
       DefaultCacheManager cm = new DefaultCacheManager(configFile, false);
@@ -222,13 +219,9 @@ public class InfinispanEmbeddedService {
 
    /* API that adapts to Infinispan version */
 
-   protected boolean isCacheDistributed(Cache<?, ?> cache) {
-      return cache.getConfiguration().getCacheMode().isDistributed();
-   }
+   protected abstract boolean isCacheDistributed(Cache<?, ?> cache);
 
-   protected boolean isCacheClustered(Cache<?, ?> cache) {
-      return cache.getConfiguration().getCacheMode().isClustered();
-   }
+   protected abstract boolean isCacheClustered(Cache<?, ?> cache);
 
    protected boolean isCacheTransactional(Cache<?, ?> cache) {
       return cache.getAdvancedCache().getTransactionManager() != null;
@@ -242,21 +235,7 @@ public class InfinispanEmbeddedService {
       return cache.getAdvancedCache().getDistributionManager().isJoinComplete();
    }
 
-   public int getNumOwners(Cache<?, ?> cache) {
-      switch (cache.getConfiguration().getCacheMode()) {
-         case LOCAL:
-            return 1;
-         case REPL_SYNC:
-         case REPL_ASYNC:
-            return cacheManager.getMembers().size();
-         case INVALIDATION_SYNC:
-         case INVALIDATION_ASYNC:
-         case DIST_SYNC:
-         case DIST_ASYNC:
-            return cache.getConfiguration().getNumOwners();
-      }
-      throw new IllegalStateException();
-   }
+   public abstract int getNumOwners(Cache<?, ?> cache);
 
    protected String getKeyInfo(AdvancedCache cache, Object key) {
       DistributionManager dm = cache.getDistributionManager();
