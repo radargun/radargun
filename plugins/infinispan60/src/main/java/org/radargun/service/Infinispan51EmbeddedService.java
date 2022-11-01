@@ -10,13 +10,11 @@ import org.infinispan.Cache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.Parser;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.TransactionMode;
 import org.jgroups.JChannel;
-import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
@@ -24,8 +22,7 @@ import org.radargun.utils.TimeConverter;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
+public abstract class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    @Property(doc = "Explicitely lock each modification. Default is false.")
    protected boolean explicitLocking = false;
 
@@ -142,9 +139,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
       return cm;
    }
 
-   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
-      return new Parser(getClass().getClassLoader()).parseFile(configFile);
-   }
+   protected abstract ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException;
 
    protected int membersCount(ConsistentHash consistentHash) {
       throw new IllegalStateException("As part of the plugins cleanup this method is not supported");

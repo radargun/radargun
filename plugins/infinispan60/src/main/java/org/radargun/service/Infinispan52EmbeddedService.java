@@ -1,21 +1,14 @@
 package org.radargun.service;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.util.FileLookupFactory;
-import org.radargun.Service;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
@@ -24,8 +17,7 @@ import org.radargun.traits.ProvidesTrait;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
-@Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
+public abstract class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    @Property(doc = "mapReduceDistributedReducePhase")
    protected boolean mapReduceDistributedReducePhase;
@@ -71,17 +63,6 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    @Init
    public void init() {
       distributedTaskExecutor = new InfinispanDistributedTask(this);
-   }
-
-   @Override
-   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
-      ClassLoader classLoader = getClass().getClassLoader();
-      try (InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, classLoader)) {
-         return new ParserRegistry(classLoader).parse(input);
-      } catch (IOException e) {
-         log.error("Failed to get configuration input stream", e);
-      }
-      return null;
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {
