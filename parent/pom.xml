@@ -510,21 +510,6 @@
          </properties>
       </profile>
 
-      <!-- JDG versions 6.0.0 to 6.2.0 were not released to external Maven repo -->
-      <profile>
-         <id>jdg-early</id>
-         <activation>
-            <property>
-               <name>jdg-early</name>
-            </property>
-         </activation>
-         <modules>
-            <module>../plugins/jdg62</module>
-         </modules>
-         <properties>
-            <plugins.jdg-early>jdg62</plugins.jdg-early>
-         </properties>
-      </profile>
       <profile>
          <id>jdg</id>
          <activation>
