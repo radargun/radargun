@@ -520,12 +520,10 @@
             </property>
          </activation>
          <modules>
-            <module>../plugins/jdg60</module>
-            <module>../plugins/jdg61</module>
             <module>../plugins/jdg62</module>
          </modules>
          <properties>
-            <plugins.jdg-early>jdg60,jdg61,jdg62</plugins.jdg-early>
+            <plugins.jdg-early>jdg62</plugins.jdg-early>
          </properties>
       </profile>
       <profile>
