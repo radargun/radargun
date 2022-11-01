@@ -27,6 +27,11 @@ public class Infinispan70HotrodService extends Infinispan60HotrodService {
    }
 
    @Override
+   protected InfinispanHotrodQueryable createQueryable() {
+      return new Infinispan70HotrodQueryable(this);
+   }
+
+   @Override
    protected void registerMarshallers(SerializationContext context) {
       for (RegisteredClass rc : classes) {
          try {

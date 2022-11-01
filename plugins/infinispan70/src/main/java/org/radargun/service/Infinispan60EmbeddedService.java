@@ -14,7 +14,6 @@ import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
-import org.radargun.Service;
 import org.radargun.config.Destroy;
 import org.radargun.config.Property;
 import org.radargun.traits.InternalsExposition;
@@ -27,8 +26,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
-@Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
-public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
+public abstract class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
 
    @Property(doc = "Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.")
    protected boolean jgroupsDumperEnabled = false;

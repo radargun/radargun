@@ -22,7 +22,7 @@ import org.radargun.utils.Utils;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
+public abstract class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    private static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remoting-jmx://%s:%d";
    protected static final Log log = LogFactory.getLog(InfinispanHotrodQueryable.class);
    protected final Infinispan60HotrodService service;
@@ -53,15 +53,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       throw new UnsupportedOperationException();
    }
 
-   protected void registerProtofilesLocal(SerializationContext context) {
-      for (String protofile : service.protofiles) {
-         try {
-            context.registerProtofile(protofile);
-         } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to read protofile " + protofile, e);
-         }
-      }
-   }
+   protected abstract void registerProtofilesLocal(SerializationContext context);
 
    protected void registerProtofilesRemote() {
       JMXConnector connector = null;

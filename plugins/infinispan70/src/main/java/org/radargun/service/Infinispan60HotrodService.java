@@ -19,7 +19,6 @@ import org.infinispan.client.hotrod.impl.ConfigurationProperties;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.protostream.SerializationContext;
-import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
@@ -30,8 +29,7 @@ import org.radargun.network.RadarGunInetAddress;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.traits.Queryable;
 
-@Service(doc = Infinispan60HotrodService.SERVICE_DESCRIPTION)
-public class Infinispan60HotrodService extends InfinispanHotrodService {
+public abstract class Infinispan60HotrodService extends InfinispanHotrodService {
    protected static final Pattern ADDRESS_PATTERN = Pattern
       .compile("(\\[([0-9A-Fa-f:]+)\\]|([^:/?#]*))(?::(\\d*))?");
    protected static final String CLASS_PATTERN = "([\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*";
@@ -139,24 +137,11 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       return addresses;
    }
 
-   protected InfinispanHotrodQueryable createQueryable() {
-      return new InfinispanHotrodQueryable(this);
-   }
+   protected abstract InfinispanHotrodQueryable createQueryable();
 
-   protected void registerMarshallers(SerializationContext context) {
-      for (RegisteredClass rc : classes) {
-         try {
-            context.registerMarshaller(rc.clazz, rc.getMarshaller());
-         } catch (Exception e) {
-            throw new IllegalArgumentException("Could not instantiate marshaller for " + rc.clazz, e);
-         }
-      }
-   }
+   protected abstract void registerMarshallers(SerializationContext context);
 
-   @ProvidesTrait
-   public Queryable getQueryable() {
-      return new InfinispanHotrodQueryable(this);
-   }
+   public abstract Queryable getQueryable();
 
    @ProvidesTrait
    public Infinispan60HotRodCacheInfo creeateCacheInfo() {

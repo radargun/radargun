@@ -14,7 +14,7 @@ import org.radargun.traits.ProvidesTrait;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Service(doc = JDG63EmbeddedService.SERVICE_DESCRIPTION)
-public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
+public class JDG63EmbeddedService extends Infinispan70EmbeddedService {
    protected static final String SERVICE_DESCRIPTION = "Service hosting JDG in embedded (library) mode.";
 
    @Override
