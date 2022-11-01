@@ -43,12 +43,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan60</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>${version.infinispan}</version>
@@ -118,6 +112,12 @@
          <artifactId>infinispan-persistence-soft-index</artifactId>
          <version>${version.infinispan}</version>
          <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-process</artifactId>
+         <version>${project.version}</version>
       </dependency>
 
    </dependencies>

@@ -12,9 +12,6 @@ public abstract class Infinispan53EmbeddedService extends Infinispan52EmbeddedSe
       return new Infinispan53MapReduce(this);
    }
 
-   @ProvidesTrait
    @Override
-   public InfinispanCacheInfo createCacheInformation() {
-      return new Infinispan53CacheInfo(this);
-   }
+   public abstract InfinispanCacheInfo createCacheInformation();
 }

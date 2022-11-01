@@ -45,12 +45,6 @@ public abstract class Infinispan52EmbeddedService extends Infinispan51EmbeddedSe
    }
 
    @ProvidesTrait
-   @Override
-   public InfinispanCacheInfo createCacheInformation() {
-      return new Infinispan52CacheInfo(this);
-   }
-
-   @ProvidesTrait
    public InfinispanDistributedTask getDistributedTaskExecutor() {
       return distributedTaskExecutor;
    }
