@@ -12,7 +12,7 @@ public class WORKER_PARTITION_36 extends WORKER_PARTITION_33 {
          case Event.MSG:
             Message msg = (Message) evt.getArg();
             // putHeader signature has changed
-            msg.putHeader(PROTOCOL_ID, new WorkerHeader(this.workerIndex));
+            msg.putHeader(WORKER_PARTITION.PROTOCOL_ID, new WORKER_PARTITION.WorkerHeader(this.workerIndex));
       }
       return down_prot.down(evt);
    }
