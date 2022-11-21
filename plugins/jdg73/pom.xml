@@ -35,11 +35,6 @@
 
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-jdg72</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.radargun</groupId>
          <artifactId>plugin-infinispan94</artifactId>
          <version>${project.version}</version>
       </dependency>

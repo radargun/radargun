@@ -8,19 +8,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commons.util.FileLookupFactory;
-import org.infinispan.commons.util.concurrent.jdk8backported.ForkJoinPool;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
-import org.radargun.config.Destroy;
 import org.radargun.config.Property;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
-import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -40,10 +37,7 @@ public abstract class Infinispan60EmbeddedService extends Infinispan53EmbeddedSe
    protected JGroupsDumper jgroupsDumper;
    protected ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
-   @ProvidesTrait
-   public InfinispanEmbeddedQueryable createQueryable() {
-      return new InfinispanEmbeddedQueryable(this);
-   }
+   public abstract InfinispanEmbeddedQueryable createQueryable();
 
    @ProvidesTrait
    public EmbeddedConfigurationProvider createConfigurationProvider() {
@@ -53,15 +47,6 @@ public abstract class Infinispan60EmbeddedService extends Infinispan53EmbeddedSe
    @ProvidesTrait
    public InternalsExposition createInternalsExposition() {
       return new Infinispan60InternalsExposition(this);
-   }
-
-   @Destroy
-   public void destroy() {
-      Utils.shutdownAndWait(scheduledExecutor);
-      Utils.setField(ForkJoinPool.class, "factory", ForkJoinPool.commonPool(), null);
-      ForkJoinPool common = ForkJoinPool.commonPool();
-      Utils.setField(ForkJoinPool.class, "common", ForkJoinPool.commonPool(), null);
-      Utils.shutdownAndWait(common);
    }
 
    @Override

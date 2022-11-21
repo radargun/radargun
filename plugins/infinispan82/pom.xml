@@ -39,12 +39,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan81</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>${version.infinispan}</version>
@@ -121,6 +115,23 @@
          <artifactId>infinispan-jcache</artifactId>
          <version>${version.infinispan}</version>
          <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-process</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-mapreduce</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>javax.cache</groupId>
+         <artifactId>cache-api</artifactId>
+         <version>1.1.1</version>
       </dependency>
 
    </dependencies>
