@@ -145,6 +145,19 @@
          <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-counter</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-multimap</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
    </dependencies>
 
    <dependencyManagement>
