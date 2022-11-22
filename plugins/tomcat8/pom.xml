@@ -36,7 +36,7 @@
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan82</artifactId>
+         <artifactId>plugin-infinispan90</artifactId>
          <version>${project.version}</version>
       </dependency>
    </dependencies>
