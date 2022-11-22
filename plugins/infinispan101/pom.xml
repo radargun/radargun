@@ -34,7 +34,7 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan100</artifactId>
+         <artifactId>plugin-infinispan94</artifactId>
          <version>${project.version}</version>
       </dependency>
 
@@ -173,6 +173,12 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-jboss-marshalling</artifactId>
          <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+         <version>2.13.4.2</version>
       </dependency>
 
    </dependencies>
