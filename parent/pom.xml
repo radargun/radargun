@@ -455,7 +455,6 @@
             </property>
          </activation>
          <modules>
-            <module>../plugins/infinispan82</module>
             <module>../plugins/infinispan90</module>
             <module>../plugins/infinispan91</module>
             <module>../plugins/infinispan92</module>
@@ -471,7 +470,7 @@
          </modules>
          <properties>
             <plugins.infinispan-latest>infinispan140</plugins.infinispan-latest>
-            <plugins.infinispan>infinispan82,infinispan90,infinispan91,infinispan92,infinispan93,infinispan94,infinispan100,infinispan101,infinispan110,infinispan120,infinispan121,infinispan130,${plugins.infinispan-latest}</plugins.infinispan>
+            <plugins.infinispan>infinispan90,infinispan91,infinispan92,infinispan93,infinispan94,infinispan100,infinispan101,infinispan110,infinispan120,infinispan121,infinispan130,${plugins.infinispan-latest}</plugins.infinispan>
          </properties>
       </profile>
       <profile>
