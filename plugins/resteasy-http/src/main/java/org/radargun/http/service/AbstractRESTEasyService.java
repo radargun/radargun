@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -13,10 +14,14 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.engines.URLConnectionEngine;
+import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient43Engine;
+import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -27,7 +32,7 @@ import org.radargun.utils.RESTAddressListConverter;
 import org.radargun.utils.TimeConverter;
 
 /**
- * Abstract REST client service using the JAX-RS 2.0 client api
+ * Abstract REST client service
  *
  */
 public abstract class AbstractRESTEasyService implements Lifecycle {
@@ -46,7 +51,7 @@ public abstract class AbstractRESTEasyService implements Lifecycle {
    private String contentType = "application/octet-stream";
 
    @Property(doc = "Timeout for socket. Default is 30 seconds.", converter = TimeConverter.class)
-   private long socketTimeout = 30000;
+   private int socketTimeout = 30000;
 
    @Property(doc = "Timeout for connection. Default is 30 seconds.", converter = TimeConverter.class)
    private long connectionTimeout = 30000;
@@ -85,30 +90,41 @@ public abstract class AbstractRESTEasyService implements Lifecycle {
          HttpsHelper.trustAll();
       }
 
-      httpClient = new ResteasyClientBuilder().httpEngine(new URLConnectionEngine())
-         .establishConnectionTimeout(connectionTimeout, TimeUnit.MILLISECONDS)
-         .socketTimeout(socketTimeout, TimeUnit.MILLISECONDS).connectionPoolSize(maxConnections)
-         .maxPooledPerRoute(maxConnectionsPerHost).hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
-         .register(new ClientRequestFilter() {
-            @Override
-            public void filter(ClientRequestContext clientRequestContext) throws IOException {
-               // Remove default RESTeasy http request headers
-               MultivaluedMap<String, Object> clientRequestHeaders = clientRequestContext.getHeaders();
-               clientRequestHeaders.put("Accept-Encoding", Collections.emptyList());
-               // Add custom headers
-               if (httpHeaders != null) {
-                  httpHeaders.forEach(keyValue ->
-                     clientRequestHeaders.put(keyValue.getKey(), Arrays.asList(keyValue.getValue()))
-                  );
-               }
-            }
-         }).build();
-
-      if (username != null) {
-         BasicAuthentication auth = new BasicAuthentication(username, password);
-         httpClient.register(auth);
+      PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+      if (maxConnections > 0) {
+         cm.setMaxTotal(maxConnections);
       }
+      if (maxConnectionsPerHost > 0) {
+         cm.setDefaultMaxPerRoute(maxConnectionsPerHost);
+      }
+      cm.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(socketTimeout).build());
+      CloseableHttpClient closeableHttpClient = HttpClients.custom().setConnectionManager(cm).build();
+      ApacheHttpClient43Engine engine = new ApacheHttpClient43Engine(closeableHttpClient);
 
+      ResteasyClientBuilder clientBuilder = new ResteasyClientBuilderImpl();
+      clientBuilder.httpEngine(engine);
+      clientBuilder.connectTimeout(connectionTimeout, TimeUnit.MILLISECONDS);
+      clientBuilder.hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY);
+      clientBuilder.register(new ClientRequestFilter() {
+         @Override
+         public void filter(ClientRequestContext clientRequestContext) throws IOException {
+            // Remove default RESTeasy http request headers
+            MultivaluedMap<String, Object> clientRequestHeaders = clientRequestContext.getHeaders();
+            if (username != null) {
+               String token = username + ":" + password;
+               String base64Token = Base64.getEncoder().encodeToString(token.getBytes());
+               clientRequestHeaders.put("Authorization", Arrays.asList("Basic " + base64Token));
+            }
+            clientRequestHeaders.put("Accept-Encoding", Collections.emptyList());
+            // Add custom headers
+            if (httpHeaders != null) {
+               httpHeaders.forEach(keyValue ->
+                     clientRequestHeaders.put(keyValue.getKey(), Arrays.asList(keyValue.getValue()))
+               );
+            }
+         }
+      });
+      httpClient = clientBuilder.build();
    }
 
    @Override

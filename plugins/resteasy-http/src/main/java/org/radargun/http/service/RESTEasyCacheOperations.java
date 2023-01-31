@@ -7,11 +7,9 @@ import java.io.ObjectOutputStream;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -59,7 +57,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
                Invocation get = service.getHttpClient().target(target).request().accept(service.getContentType())
                      .buildGet();
                response = get.invoke();
-               if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+               if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                   log.warn("RESTEasyCacheOperations.getInternal::Key: " + key + " does not exist in cache: "
                         + service.cacheName);
                } else {
@@ -94,10 +92,10 @@ public class RESTEasyCacheOperations implements BasicOperations {
             String target = service.buildUrl(key);
             Response response = null;
             response = service.getHttpClient().target(target).request().build(HttpMethod.HEAD).invoke();
-            if (response.getStatus() == Status.OK.getStatusCode()) {
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                return true;
             }
-            if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                return false;
             }
             throw new RuntimeException("RESTEasyCacheOperations.containsKey::Unexpected HttpStatus: "
@@ -116,7 +114,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
             Response response = null;
             try {
                String target = service.buildUrl(key);
-               Builder putBuilder = service.getHttpClient().target(target).request().accept(service.getContentType());
+               Invocation.Builder putBuilder = service.getHttpClient().target(target).request().accept(service.getContentType());
                if (eTag != null) {
                   // If the eTag doesn't match the current value for the key, then the put will fail
                   putBuilder = putBuilder.header(HttpHeaders.IF_MATCH, eTag.getValue());
@@ -125,8 +123,8 @@ public class RESTEasyCacheOperations implements BasicOperations {
                int status = response.getStatus();
                String reason = response.getStatusInfo().getReasonPhrase();
                response.close();
-               if (status != Status.OK.getStatusCode() && status != Status.CREATED.getStatusCode()
-                     && status != Status.NO_CONTENT.getStatusCode()) {
+               if (status != Response.Status.OK.getStatusCode() && status != Response.Status.CREATED.getStatusCode()
+                     && status != Response.Status.NO_CONTENT.getStatusCode()) {
                   throw new RuntimeException("RESTEasyCacheOperations.put::Unexpected HttpStatus: " + status + " "
                         + reason + " for request " + target);
                }
@@ -194,7 +192,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
 
       private boolean doDelete(String target, EntityTag eTag) {
          if (service.isRunning()) {
-            Builder deleteBuilder = service.getHttpClient().target(target).request().accept(service.getContentType());
+            Invocation.Builder deleteBuilder = service.getHttpClient().target(target).request().accept(service.getContentType());
             if (eTag != null) {
                // If the eTag doesn't match the current value for the key, then the delete will fail
                deleteBuilder = deleteBuilder.header(HttpHeaders.IF_MATCH, eTag.getValue());
@@ -203,10 +201,10 @@ public class RESTEasyCacheOperations implements BasicOperations {
             int status = response.getStatus();
             String reason = response.getStatusInfo().getReasonPhrase();
             response.close();
-            if (status == Status.OK.getStatusCode() || status == Status.NO_CONTENT.getStatusCode()) {
+            if (status == Response.Status.OK.getStatusCode() || status == Response.Status.NO_CONTENT.getStatusCode()) {
                return true;
             }
-            if (status == Status.NOT_FOUND.getStatusCode()) {
+            if (status == Response.Status.NOT_FOUND.getStatusCode()) {
                return false;
             }
             throw new RuntimeException("RESTEasyCacheOperations.doDelete::Unexpected HttpStatus: " + status + " "
@@ -224,5 +222,4 @@ public class RESTEasyCacheOperations implements BasicOperations {
       }
 
    }
-
 }
