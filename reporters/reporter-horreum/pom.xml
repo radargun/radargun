@@ -24,9 +24,8 @@
         </dependency>
         <dependency>
             <groupId>org.radargun</groupId>
-            <artifactId>reporter-default</artifactId>
+            <artifactId>reporter-data</artifactId>
             <version>${project.version}</version>
         </dependency>
-
     </dependencies>
 </project>
