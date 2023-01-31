@@ -297,6 +297,7 @@
          </activation>
          <modules>
             <module>../reporters/reporter-default</module>
+            <module>../reporters/reporter-data</module>
          </modules>
          <properties>
             <reporter.default>reporter-default</reporter.default>
@@ -325,6 +326,7 @@
          </activation>
          <modules>
             <module>../reporters/reporter-horreum</module>
+            <module>../reporters/reporter-data</module>
          </modules>
          <properties>
             <reporter.horreum>reporter-horreum</reporter.horreum>

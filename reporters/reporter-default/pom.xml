@@ -22,5 +22,10 @@
          <artifactId>freemarker</artifactId>
          <version>2.3.23</version>
       </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>reporter-data</artifactId>
+         <version>${project.version}</version>
+      </dependency>
    </dependencies>
 </project>
