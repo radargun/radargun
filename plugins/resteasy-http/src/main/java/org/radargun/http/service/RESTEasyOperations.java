@@ -8,7 +8,6 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -60,7 +59,7 @@ public class RESTEasyOperations implements RESTOperations {
                Invocation get = requestBuilder.accept(service.getContentType())
                   .buildGet();
                response = get.invoke();
-               if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+               if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                   log.warn("The requested URI does not exist");
                }
             } catch (Exception e) {

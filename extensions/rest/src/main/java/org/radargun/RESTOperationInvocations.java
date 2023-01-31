@@ -9,7 +9,6 @@ import javax.ws.rs.core.Response;
 import org.radargun.stages.test.Invocation;
 import org.radargun.traits.RESTOperations;
 
-
 /**
  * Provides {@link Invocation} implementations for operations from traits
  * {@link RESTOperationInvocations}
