@@ -13,7 +13,7 @@
         <config name="OpenShift Client Server Test">
             <setup group="client" plugin="infinispan140" lazy-init="true">
                 <hotrod xmlns="urn:radargun:plugins:infinispan140:3.0" cache="default">
-                    <servers>HOST_EXAMPLE:11222</servers>
+                    <servers>infinispan.myprojectradargun.svc.cluster.local:11222</servers>
                 </hotrod>
             </setup>
         </config>
@@ -52,12 +52,6 @@
     </rg:scenario>
 
     <reports>
-        <reporter type="serialized">
-            <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
-        </reporter>
-        <reporter type="csv">
-            <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
-        </reporter>
         <reporter type="html">
             <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
         </reporter>
