@@ -7,4 +7,5 @@ if [ $? -eq 0 ]; then
     exec sleep infinity
 else
     exec /opt/radargun/bin/main.sh -c ${RADARGUN_CONFIG} -t -m 0.0.0.0:2103 -J "${CUSTOM_JAVA_OPTS}"
+    # exec /opt/radargun/bin/main.sh -c ${RADARGUN_CONFIG} -t -m ${RADARGUN_MAIN}:2103 -J "${CUSTOM_JAVA_OPTS}"
 fi

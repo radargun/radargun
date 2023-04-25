@@ -1,10 +1,12 @@
-FROM centos:centos7
+FROM quay.io/centos/centos:stream9
 
 MAINTAINER Martin Gencur <mgencur@redhat.com>
 
-RUN yum -y update && \
-        yum -y install unzip java-1.8.0-openjdk-devel which hostname ls ps grep pwd id rsync && \
-        yum clean all -y
+RUN yum install -y epel-release && \
+        rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9 && \
+        yum -y update && \
+        yum -y install procps-ng unzip java-11-openjdk-devel hostname rsync iputils && \
+        yum -y clean all
 
 RUN mkdir /opt/radargun /opt/radargun-data 
 COPY RadarGun-3.0.0-SNAPSHOT /opt/radargun/

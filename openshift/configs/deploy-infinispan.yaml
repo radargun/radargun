@@ -1,0 +1,8 @@
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: infinispan
+spec:
+  replicas: 3
+  service:
+    type: DataGrid

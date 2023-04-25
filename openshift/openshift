@@ -13,7 +13,7 @@ FULL_IMAGE=${DOCKER_REGISTRY}/${TEST_PROJECT}/${RADARGUN_IMAGE}
 RADARGUN_MAIN="radargun-main.${TEST_PROJECT}.svc"
 CONFIG_DIR=${CONFIG_DIR:-"configs/"}
 RADARGUN_CONFIG="library-dist-reads.xml"
-DEFAULT_JAVA_OPTS="-XX:+UseG1GC -verbose:gc -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -XX:+PrintGCDateStamps -XX:+PrintGCDetails"
+DEFAULT_JAVA_OPTS="-XX:+UseG1GC -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=70 -Xlog:gc:file=gc-%p.log:time -version"
 CUSTOM_JAVA_OPTS=""
 TOTAL_CONTAINER_MEM_WORKER=1024
 NUMBER_OF_WORKERS=2
@@ -59,11 +59,14 @@ function build_radargun_image {
     # avoid running docker as sudo
     # https://docs.docker.com/install/linux/linux-postinstall/
     #------
-    # enable experimental -> vi /etc/docker/daemon.json
+    # enable experimental and insecure-registries if needed -> sudo vi /etc/docker/daemon.json
     # {
-    # "experimental": true
+    #     "experimental": true,
+    #     "insecure-registries" : [ "hostname.cloudapp.net:5000" ]
     # }
-    docker build --squash --compress -t ${RADARGUN_IMAGE} .
+    #------
+    # sudo service docker restart
+    docker build --compress -t ${RADARGUN_IMAGE} .
     docker login -u $(oc whoami) -p $(oc whoami -t) ${DOCKER_REGISTRY}
     docker tag ${RADARGUN_IMAGE} ${FULL_IMAGE}
     docker push ${FULL_IMAGE}
