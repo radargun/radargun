@@ -14,6 +14,8 @@
             <setup group="client" plugin="infinispan140" lazy-init="true">
                 <hotrod xmlns="urn:radargun:plugins:infinispan140:3.0" cache="default">
                     <servers>infinispan.myprojectradargun.svc.cluster.local:11222</servers>
+                    <!-- Enable this block if you need to configure specific connection parameters -->
+                    <!-- <properties-path>/opt/radargun-configs/hotrod-client.properties</properties-path> -->
                 </hotrod>
             </setup>
         </config>

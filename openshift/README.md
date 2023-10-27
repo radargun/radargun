@@ -41,6 +41,10 @@ Follow these steps to build and deploy RadarGun image in OpenShift and run perfo
 
 6) Create a subdirectory with configuration files for RadarGun and individual plugins. This directory will be mounted in main
      and worker pods in OpenShift as /opt/radargun-configs.
+    
+    You can include in this subdirectory additional configuration files. For example, a "hotrod-client.properties" file to configure the Hot Rod Java client. Also you can include a truststore/keystore file, etc.
+    
+    Then the files in this directory can be referenced in a benchmark configuration file as needed.
 
 7) Create RadarGun deployment via template.
     Install "Infinispan Operator" 
