@@ -1,0 +1,65 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+    <main bindAddress="${main.address:127.0.0.1}" port="${main.port:2103}"/>
+    <clusters>
+        <scale from="2" to="2">
+            <cluster />
+        </scale>
+    </clusters>
+    <configurations>
+
+        <config name="jgroups42">
+            <setup plugin="jgroups42">
+                <jgroups xmlns="urn:radargun:plugins:jgroups42:3.0" file="/Users/dlovison/Documents/GitHub/radargun/radargun/plugins/jgroups42/src/main/resources/example/default-jgroups4-udp.xml" replicated="true" />
+            </setup>
+        </config>
+
+        <config name="jgroups52-ispn13">
+            <setup plugin="jgroups52">
+                <jgroups xmlns="urn:radargun:plugins:jgroups52:3.0" ispn-version="13" file="/Users/dlovison/Documents/GitHub/radargun/radargun/plugins/jgroups52/src/main/resources/example/default-jgroups5-udp.xml" replicated="true" />
+            </setup>
+        </config>
+
+    </configurations>
+    <init/>
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns:l="urn:radargun:stages:legacy:3.0">
+        <define var="num.entries" value="1000" />
+        <define var="entry.size" value="100" />
+
+        <service-start />
+        <jvm-monitor-start />
+        <cluster-split-verify />
+
+        <l:basic-operations-test test-name="test" num-threads-per-node="1" duration="1m" entry-size="${entry.size}" get-ratio="0" put-ratio="1">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="${num.entries}" />
+            </l:key-selector>
+            <cache:cache-selector>
+                <cache:use-cache>
+                    <cache:cache>replCache</cache:cache>
+                </cache:use-cache>
+            </cache:cache-selector>
+            <cache:key-generator>
+                <cache:string />
+            </cache:key-generator>
+            <cache:value-generator>
+                <cache:byte-array/>
+            </cache:value-generator>
+            <statistics>
+                <common/>
+            </statistics>
+        </l:basic-operations-test>
+
+        <cluster-split-verify verify="true" />
+        <jvm-monitor-stop />
+        <service-stop />
+    </rg:scenario>
+    <cleanup check-memory="false" check-memory-released="false" check-threads="false"/>
+
+    <reports>
+        <reporter type="html" />
+    </reports>
+</benchmark>
+
